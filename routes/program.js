@@ -13,13 +13,18 @@ router.post("/generate", async (req, res) => {
     const missing = required.filter(k => !answers[k]);
     if (missing.length) return res.status(400).json({ error: `Champs manquants : ${missing.join(", ")}` });
 
-    // Auto-injecte le profil physique de l'utilisateur
-    const profRes = await pool.query(
-      "SELECT weight_kg, height_cm, age, gender, activity_level FROM users WHERE id=$1",
-      [req.session.userId]
-    );
-    const prof = profRes.rows[0] || {};
-    if (prof.weight_kg) Object.assign(answers, prof);
+    // Auto-injecte le profil physique — resilient si colonnes pas encore migrées
+    try {
+      const profRes = await pool.query(
+        "SELECT weight_kg, height_cm, age, gender, activity_level FROM users WHERE id=$1",
+        [req.session.userId]
+      );
+      const prof = profRes.rows[0] || {};
+      if (prof.weight_kg) Object.assign(answers, prof);
+    } catch (profileErr) {
+      // Colonnes profil pas encore en base (migration non faite) : on continue sans
+      console.warn("Profil physique ignoré (migration manquante) :", profileErr.message);
+    }
 
     const program = await generateProgram(answers);
 
