@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stats — Gym AI Coach</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/dashboard.html">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>
+    Gym AI Coach
+  </a>
+  <nav class="nav-links">
+    <a href="/dashboard.html">Programme</a>
+    <a href="/stats.html" class="active">Stats</a>
+    <a href="#" id="logout-link">Déconnexion</a>
+  </nav>
+</header>
+
+<div class="shell">
+  <div class="page-head">
+    <div>
+      <h1>Statistiques</h1>
+      <p class="sub muted">Toute ta progression au même endroit.</p>
+    </div>
+  </div>
+
+  <!-- KPI globaux -->
+  <div id="kpi-grid" class="kpi-grid"></div>
+
+  <!-- Fréquence 4 semaines + volume muscles -->
+  <div class="two-col" style="margin-bottom:24px">
+    <div class="card">
+      <div class="card-title">Fréquence (4 dernières semaines)</div>
+      <div id="freq-chart" class="freq-bars"></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px">Volume par groupe musculaire (30j)</div>
+      <div id="muscle-bars"></div>
+    </div>
+  </div>
+
+  <!-- Records persos -->
+  <h2 class="card-title" style="margin-bottom:14px;font-size:1.1rem">Records personnels 🏆</h2>
+  <div id="records-grid" class="records-grid" style="margin-bottom:28px"></div>
+
+  <!-- Courbe de progression par exercice -->
+  <div class="card">
+    <div class="flex-between" style="margin-bottom:16px">
+      <div class="card-title" style="margin:0">Progression — Poids soulevé</div>
+      <select id="exercise-select" style="width:auto;min-width:180px"></select>
+    </div>
+    <canvas id="progress-chart" height="90"></canvas>
+  </div>
+
+  <div id="empty-state" class="empty-state hidden" style="margin-top:20px">
+    <h3>Aucune donnée</h3>
+    <p class="muted" style="margin-top:8px">Logge ta première séance pour voir tes stats ici.</p>
+    <a class="btn btn-primary" href="/session.html" style="margin-top:18px">Commencer une séance</a>
+  </div>
+
+  <div class="spacer"></div>
+</div>
+
+<footer>Gym AI Coach</footer>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="/js/stats.js"></script>
+</body>
+</html>

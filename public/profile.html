@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mon profil — Gym AI Coach</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/dashboard.html">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>
+    Gym AI Coach
+  </a>
+  <nav class="nav-links">
+    <a href="/dashboard.html">Programme</a>
+    <a href="/stats.html">Stats</a>
+    <a href="/profile.html" class="active">Profil</a>
+  </nav>
+</header>
+
+<div class="shell">
+  <div class="page-head">
+    <div>
+      <h1>Mon profil</h1>
+      <p class="sub muted">Ces données sont utilisées automatiquement par l'IA pour personnaliser ton programme.</p>
+    </div>
+  </div>
+
+  <form id="profile-form" class="card" style="max-width:560px">
+
+    <div class="two-col">
+      <div class="field">
+        <label for="weight_kg">Poids (kg)</label>
+        <input id="weight_kg" name="weight_kg" type="number" step="0.1" min="30" max="300" placeholder="75" />
+      </div>
+      <div class="field">
+        <label for="height_cm">Taille (cm)</label>
+        <input id="height_cm" name="height_cm" type="number" min="100" max="250" placeholder="178" />
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="field">
+        <label for="age">Âge</label>
+        <input id="age" name="age" type="number" min="13" max="100" placeholder="25" />
+      </div>
+      <div class="field">
+        <label for="gender">Genre</label>
+        <select id="gender" name="gender">
+          <option value="">Non précisé</option>
+          <option value="homme">Homme</option>
+          <option value="femme">Femme</option>
+          <option value="autre">Autre</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="activity_level">Niveau d'activité quotidienne (hors sport)</label>
+      <select id="activity_level" name="activity_level">
+        <option value="">Non précisé</option>
+        <option value="sedentaire">Sédentaire (bureau toute la journée)</option>
+        <option value="legerement actif">Légèrement actif (quelques marches par jour)</option>
+        <option value="actif">Actif (travail physique ou beaucoup de marche)</option>
+        <option value="tres actif">Très actif (travail très physique ou sport quotidien)</option>
+      </select>
+    </div>
+
+    <div class="spacer-sm"></div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-primary" type="submit">Enregistrer</button>
+      <span id="save-status" class="muted" style="font-size:.85rem"></span>
+    </div>
+    <div id="profile-error"></div>
+
+    <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border);font-size:.82rem;color:var(--chalk-dim)">
+      💡 Après avoir mis à jour ton profil, regénère ton programme pour que l'IA prenne en compte tes nouvelles données.
+    </div>
+  </form>
+</div>
+
+<footer>Gym AI Coach</footer>
+<script src="/js/profile.js"></script>
+</body>
+</html>

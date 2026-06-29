@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gym AI Coach — Ton programme, généré pour toi</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>
+    Gym AI Coach
+  </a>
+</header>
+
+<div class="hero">
+  <div>
+    <h1>Ton programme de muscu,<br><span>généré par IA</span>,<br>charge après charge.</h1>
+    <p class="lede">Réponds à quelques questions, reçois un programme adapté à ton niveau et ton matériel, logge chaque série en 1 tap et suis ta progression en temps réel.</p>
+    <svg class="barbell" viewBox="0 0 340 70" fill="none" aria-hidden="true">
+      <rect x="4" y="32" width="8" height="6" fill="#4f7a8a"/>
+      <rect class="plate" x="16" y="18" width="9" height="34" rx="2" fill="#4f7a8a"/>
+      <rect class="plate" x="29" y="12" width="11" height="46" rx="2" fill="#4f7a8a"/>
+      <rect class="plate" x="44" y="5" width="13" height="60" rx="2" fill="#c94d28"/>
+      <rect x="57" y="33" width="226" height="4" fill="#7aa8b8"/>
+      <rect class="plate" x="283" y="5" width="13" height="60" rx="2" fill="#c94d28"/>
+      <rect class="plate" x="300" y="12" width="11" height="46" rx="2" fill="#4f7a8a"/>
+      <rect class="plate" x="315" y="18" width="9" height="34" rx="2" fill="#4f7a8a"/>
+      <rect x="328" y="32" width="8" height="6" fill="#4f7a8a"/>
+    </svg>
+  </div>
+
+  <div class="auth-card">
+    <div class="tabs">
+      <div class="tab active" data-tab="login">Connexion</div>
+      <div class="tab" data-tab="register">Créer un compte</div>
+    </div>
+
+    <form id="login-form">
+      <div class="field">
+        <label for="login-email">Email</label>
+        <input id="login-email" type="email" required autocomplete="email" />
+      </div>
+      <div class="field">
+        <label for="login-password">Mot de passe</label>
+        <input id="login-password" type="password" required autocomplete="current-password" />
+      </div>
+      <div class="spacer-sm"></div>
+      <button class="btn btn-primary btn-block" type="submit">Se connecter</button>
+      <div id="login-error"></div>
+    </form>
+
+    <form id="register-form" class="hidden">
+      <div class="field">
+        <label for="reg-name">Prénom</label>
+        <input id="reg-name" type="text" required autocomplete="given-name" />
+      </div>
+      <div class="field">
+        <label for="reg-email">Email</label>
+        <input id="reg-email" type="email" required autocomplete="email" />
+      </div>
+      <div class="field">
+        <label for="reg-password">Mot de passe</label>
+        <input id="reg-password" type="password" required minlength="6" autocomplete="new-password" />
+      </div>
+      <div class="spacer-sm"></div>
+      <button class="btn btn-primary btn-block" type="submit">Créer mon compte</button>
+      <div id="register-error"></div>
+    </form>
+  </div>
+</div>
+
+<footer>Gym AI Coach — programme généré par IA. Consulte un professionnel en cas de douleur.</footer>
+<script src="/js/auth.js"></script>
+</body>
+</html>

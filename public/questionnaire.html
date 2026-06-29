@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Questionnaire — Gym AI Coach</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/dashboard.html">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>
+    Gym AI Coach
+  </a>
+  <nav class="nav-links">
+    <a href="/dashboard.html">Programme</a>
+    <a href="/stats.html">Stats</a>
+  </nav>
+</header>
+
+<div class="shell">
+  <div class="page-head">
+    <div>
+      <h1>Construisons ton programme</h1>
+      <p class="sub muted">5 questions, 30 secondes. L'IA s'occupe du reste.</p>
+    </div>
+  </div>
+
+  <form id="quiz-form" class="card" style="max-width:720px">
+
+    <div class="field">
+      <label>Objectif principal</label>
+      <div class="radio-grid" data-group="objectif">
+        <label class="radio-card"><input type="radio" name="objectif" value="prise de masse / hypertrophie" required>Prise de masse</label>
+        <label class="radio-card"><input type="radio" name="objectif" value="perte de poids / seche">Perte de poids</label>
+        <label class="radio-card"><input type="radio" name="objectif" value="force pure">Force</label>
+        <label class="radio-card"><input type="radio" name="objectif" value="remise en forme generale / endurance">Remise en forme</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Niveau</label>
+      <div class="radio-grid" data-group="niveau">
+        <label class="radio-card"><input type="radio" name="niveau" value="debutant" required>Débutant</label>
+        <label class="radio-card"><input type="radio" name="niveau" value="intermediaire">Intermédiaire</label>
+        <label class="radio-card"><input type="radio" name="niveau" value="avance">Avancé</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Jours d'entraînement par semaine</label>
+      <div class="radio-grid" data-group="joursParSemaine">
+        <label class="radio-card"><input type="radio" name="joursParSemaine" value="2" required>2 jours</label>
+        <label class="radio-card"><input type="radio" name="joursParSemaine" value="3">3 jours</label>
+        <label class="radio-card"><input type="radio" name="joursParSemaine" value="4">4 jours</label>
+        <label class="radio-card"><input type="radio" name="joursParSemaine" value="5">5 jours</label>
+        <label class="radio-card"><input type="radio" name="joursParSemaine" value="6">6 jours</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Durée max par séance</label>
+      <div class="radio-grid" data-group="dureeSeance">
+        <label class="radio-card"><input type="radio" name="dureeSeance" value="30 minutes" required>30 min</label>
+        <label class="radio-card"><input type="radio" name="dureeSeance" value="45 minutes">45 min</label>
+        <label class="radio-card"><input type="radio" name="dureeSeance" value="1 heure">1h</label>
+        <label class="radio-card"><input type="radio" name="dureeSeance" value="1h30 ou plus">1h30+</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Matériel disponible</label>
+      <div class="radio-grid" data-group="materiel">
+        <label class="radio-card"><input type="radio" name="materiel" value="salle de sport complete avec machines et poids libres" required>Salle complète</label>
+        <label class="radio-card"><input type="radio" name="materiel" value="haltères et banc seulement">Haltères + banc</label>
+        <label class="radio-card"><input type="radio" name="materiel" value="poids du corps uniquement, pas de materiel">Poids du corps</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="limitations">Blessures ou limitations (optionnel)</label>
+      <textarea id="limitations" name="limitations" placeholder="Ex : douleur à l'épaule droite, genoux fragiles…"></textarea>
+    </div>
+
+    <!-- Champ caché pour les retours coach IA -->
+    <input type="hidden" id="feedback-input" name="feedback" value="" />
+
+    <div id="feedback-banner" class="hidden" style="background:var(--rust-bg);border:1px solid rgba(201,77,40,.25);border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:.85rem;color:var(--chalk-dim)">
+      ✅ Retours du coach IA pris en compte pour ce nouveau programme.
+    </div>
+
+    <div class="spacer-sm"></div>
+    <button class="btn btn-primary btn-block" type="submit" id="submit-btn">Générer mon programme ✨</button>
+    <div id="quiz-error"></div>
+  </form>
+</div>
+
+<footer>Gym AI Coach</footer>
+<script src="/js/questionnaire.js"></script>
+</body>
+</html>

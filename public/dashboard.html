@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mon programme — Gym AI Coach</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/dashboard.html">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>
+    Gym AI Coach
+  </a>
+  <nav class="nav-links">
+    <a href="/dashboard.html" class="active">Programme</a>
+    <a href="/stats.html">Stats</a>
+    <a href="#" id="logout-link">Déconnexion</a>
+  </nav>
+</header>
+
+<div class="shell">
+  <div class="page-head">
+    <div>
+      <h1 id="user-greeting">Chargement…</h1>
+      <p class="sub muted" id="program-subtitle"></p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btn btn-green" href="/session.html" id="start-session-btn">▶ Commencer la séance</a>
+      <a class="btn btn-ghost btn-sm" href="/questionnaire.html">Regénérer le programme</a>
+    </div>
+  </div>
+
+  <!-- Programme actif -->
+  <div id="program-summary" class="muted" style="margin-bottom:20px;font-size:.9rem"></div>
+  <div id="days-container"></div>
+  <div id="empty-state" class="empty-state hidden">
+    <h3>Pas encore de programme</h3>
+    <p class="muted" style="margin-top:8px">Réponds au questionnaire pour que l'IA génère un programme adapté.</p>
+    <a class="btn btn-primary" href="/questionnaire.html" style="margin-top:18px">Commencer</a>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- Chat Coach IA -->
+  <div class="page-head">
+    <div>
+      <h2 style="font-family:var(--font-display);text-transform:uppercase;letter-spacing:.04em">Coach IA</h2>
+      <p class="sub muted">Pose une question, signale ce qui te plait ou pas. L'IA connaît ton programme.</p>
+    </div>
+  </div>
+
+  <div class="chat-wrap" id="chat-wrap">
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-msg coach">Salut ! Je connais ton programme. Pose-moi une question sur tes exercices, dis-moi ce qui va ou pas, et je t'aiderai à ajuster. 💪</div>
+    </div>
+    <div id="regen-banner" class="chat-regen-banner hidden">
+      <span>Tu veux que j'applique ces changements ?</span>
+      <button class="btn btn-primary btn-sm" id="regen-btn">Regénérer avec mes retours</button>
+    </div>
+    <div class="chat-input-row">
+      <input id="chat-input" type="text" placeholder="Écris ton message…" autocomplete="off" />
+      <button class="btn btn-primary" id="chat-send-btn">Envoyer</button>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+</div>
+
+<footer>Gym AI Coach — programme généré par IA. Consulte un professionnel en cas de douleur.</footer>
+<script src="/js/dashboard.js"></script>
+</body>
+</html>

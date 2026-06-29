@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Séance — Gym AI Coach</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/dashboard.html">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>
+    Gym AI Coach
+  </a>
+  <nav class="nav-links">
+    <a href="/dashboard.html">Programme</a>
+    <a href="/stats.html">Stats</a>
+  </nav>
+</header>
+
+<div class="shell">
+
+  <!-- Étape 1 : choisir le jour -->
+  <div id="step-pick" class="hidden">
+    <div class="page-head">
+      <div><h1>Quelle séance aujourd'hui ?</h1></div>
+    </div>
+    <div id="day-pick-grid" class="radio-grid" style="gap:12px;margin-bottom:28px"></div>
+    <button class="btn btn-primary" id="pick-day-btn" style="min-width:200px">Commencer ▶</button>
+  </div>
+
+  <!-- Étape 2 : log rapide -->
+  <div id="step-session" class="hidden">
+    <div class="page-head">
+      <div>
+        <h1 id="session-day-title">Séance</h1>
+        <p class="sub muted" id="session-day-focus"></p>
+      </div>
+      <div id="session-timer" class="mono" style="font-size:1.5rem;color:var(--rust-soft)">00:00</div>
+    </div>
+    <div id="session-exercises"></div>
+    <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
+      <button class="btn btn-primary" id="finish-btn">Terminer la séance ✓</button>
+      <a class="btn btn-ghost" href="/dashboard.html">Annuler</a>
+    </div>
+  </div>
+
+  <!-- Étape 3 : récap -->
+  <div id="step-recap" class="hidden">
+    <div class="page-head">
+      <div><h1>Récap de la séance 🏆</h1></div>
+      <a class="btn btn-ghost" href="/dashboard.html">Retour au programme</a>
+    </div>
+    <div id="recap-stats" class="kpi-grid" style="margin-bottom:24px"></div>
+    <div id="recap-exercises"></div>
+    <div class="spacer-sm"></div>
+    <div class="chart-wrap">
+      <div class="card-title">Volume total par séance (kg)</div>
+      <canvas id="volume-chart" height="90"></canvas>
+    </div>
+  </div>
+
+  <div id="loading" class="empty-state" style="margin-top:40px">
+    <p class="muted">Chargement de ton programme…</p>
+  </div>
+
+</div>
+
+<footer>Gym AI Coach</footer>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="/js/session.js"></script>
+</body>
+</html>
