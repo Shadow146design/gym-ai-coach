@@ -15,6 +15,7 @@
   <nav class="nav-links">
     <a href="/dashboard.html">Programme</a>
     <a href="/stats.html">Stats</a>
+    <a href="/profile.html">Profil</a>
   </nav>
 </header>
 
@@ -54,6 +55,32 @@
     <div id="recap-stats" class="kpi-grid" style="margin-bottom:24px"></div>
     <div id="recap-exercises"></div>
     <div class="spacer-sm"></div>
+
+    <!-- Debrief IA -->
+    <div class="debrief-card" id="debrief-card">
+      <div class="debrief-header">
+        <span style="font-size:1.5rem">🤖</span>
+        <h3>Analyse du coach IA</h3>
+      </div>
+      <div class="debrief-body" id="debrief-body">
+        <div class="debrief-loading">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          <span>Ton coach analyse ta séance…</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat post-séance -->
+    <div class="post-session-chat" id="post-chat-wrap" style="display:none">
+      <div class="post-session-chat-title">💬 Pose une question à ton coach</div>
+      <div class="post-chat-messages" id="post-chat-messages"></div>
+      <div class="post-chat-input-row">
+        <input id="post-chat-input" type="text" placeholder="Ex : pourquoi je suis fatigué sur le squat ?" autocomplete="off" />
+        <button class="btn btn-primary btn-sm" id="post-chat-send">Envoyer</button>
+      </div>
+    </div>
+
+    <div class="spacer-sm"></div>
     <div class="chart-wrap">
       <div class="card-title">Volume total par séance (kg)</div>
       <canvas id="volume-chart" height="90"></canvas>
@@ -71,3 +98,4 @@
 <script src="/js/session.js"></script>
 </body>
 </html>
+<!-- Le debrief et le chat sont injectés dynamiquement dans step-recap -->

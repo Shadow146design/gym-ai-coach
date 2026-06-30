@@ -154,4 +154,70 @@ async function chatWithCoach(history, program) {
   return data.choices?.[0]?.message?.content || "Je n'ai pas pu répondre, réessaie.";
 }
 
-module.exports = { generateProgram, chatWithCoach };
+module.exports = { generateProgram, chatWithCoach, debriefSession };
+const DEBRIEF_SYSTEM = `Tu es un coach sportif expert qui analyse les séances de musculation.
+Tu reçois les données d'une séance (exercices, poids, reps, comparaison avec avant).
+Tu donnes un debriefing précis, bienveillant et constructif en français.
+
+Structure ta réponse EXACTEMENT comme ça (utilise ces titres avec les emojis) :
+
+✅ **Ce qui était bien**
+(2-3 points positifs concrets basés sur les données)
+
+⚠️ **Points à améliorer**
+(1-2 points constructifs, jamais négatifs, toujours avec une solution)
+
+💡 **Conseil pour la prochaine séance**
+(1 conseil précis et actionnable)
+
+🔄 **Récupération**
+(1 conseil nutrition/sommeil/étirements adapté à la séance)
+
+Sois direct, précis, encourage sans mentir. Si c'est une première séance, adapte ton analyse.
+Maximum 200 mots au total.`;
+
+async function debriefSession(sessionData) {
+  if (!process.env.GROQ_API_KEY)
+    throw new Error("GROQ_API_KEY manquante.");
+
+  const { exercises, totalVolume, durationMins, prs, programFocus } = sessionData;
+
+  const exerciseDetails = exercises.map(ex => {
+    const delta = ex.previousWeight !== null
+      ? `(${ex.weight > ex.previousWeight ? `+${ex.weight - ex.previousWeight}kg 🏆 PR` : ex.weight < ex.previousWeight ? `-${ex.previousWeight - ex.weight}kg` : `=même poids`})`
+      : "(première fois)";
+    return `- ${ex.name}: ${ex.weight}kg × ${ex.reps} reps ${delta}`;
+  }).join("\n");
+
+  const userPrompt = `Analyse cette séance et donne un debriefing :
+
+SÉANCE : ${programFocus || "Entraînement"}
+DURÉE : ${durationMins} minutes
+VOLUME TOTAL : ${Math.round(totalVolume)} kg
+RECORDS BATTUS : ${prs}
+
+EXERCICES RÉALISÉS :
+${exerciseDetails}
+
+Donne ton analyse de coach maintenant.`;
+
+  const response = await fetch(GROQ_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: MODEL(),
+      temperature: 0.65,
+      max_tokens: 500,
+      messages: [
+        { role: "system", content: DEBRIEF_SYSTEM },
+        { role: "user", content: userPrompt },
+      ],
+    }),
+  });
+
+  if (!response.ok) throw new Error(`Erreur Groq debrief (${response.status})`);
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "Je n'ai pas pu analyser ta séance.";
+}
+
+module.exports = { generateProgram, chatWithCoach, debriefSession };

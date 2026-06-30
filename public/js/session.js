@@ -5,6 +5,7 @@ let recentLogs = {};
 let sessionLogs = [];
 let timerInterval = null;
 let secondsElapsed = 0;
+let postChatHistory = [];
 
 // ── Init ──────────────────────────────────────────────────
 async function init() {
@@ -36,7 +37,7 @@ async function init() {
   document.getElementById("step-pick").classList.remove("hidden");
 }
 
-// ── Étape 1 : choisir le jour (clic direct = démarre) ────
+// ── Étape 1 : choisir le jour ─────────────────────────────
 function buildDayPicker() {
   const grid = document.getElementById("day-pick-grid");
   grid.innerHTML = "";
@@ -70,12 +71,15 @@ function startSession() {
     const defaultWeight = recent ? recent.weight : "";
     const sets = typeof ex.sets === "number" ? ex.sets : parseInt(ex.sets) || 3;
     const repsHint = ex.reps || "?";
-    const prevTxt = recent ? `Dernière fois : ${recent.weight} kg × ${recent.reps} reps` : "Première fois ici";
+    const prevTxt = recent
+      ? `Dernière fois : ${recent.weight} kg × ${recent.reps} reps`
+      : "Première fois ici";
 
     const card = document.createElement("div");
     card.className = "session-exercise-card";
     card.dataset.exercise = ex.name;
     card.dataset.muscleGroup = ex.muscle_group || "";
+    card.dataset.previousWeight = recent ? recent.weight : "null";
 
     let setsHtml = `<div style="padding:6px 18px 4px;font-size:.7rem;color:var(--chalk-dim);display:grid;grid-template-columns:28px 1fr 1fr 36px;gap:8px;text-transform:uppercase;letter-spacing:.04em">
       <span>#</span><span>Poids kg</span><span>Reps</span><span></span></div>`;
@@ -104,12 +108,10 @@ function startSession() {
     container.appendChild(card);
   });
 
-  // Boutons valider série
   container.querySelectorAll(".done-btn").forEach(btn => {
     btn.addEventListener("click", () => completeSet(btn));
   });
 
-  // Timer séance
   secondsElapsed = 0;
   timerInterval = setInterval(() => {
     secondsElapsed++;
@@ -137,16 +139,14 @@ function completeSet(btn) {
   sessionLogs.push({
     exercise_name: card.dataset.exercise,
     muscle_group: card.dataset.muscleGroup || null,
+    previous_weight: card.dataset.previousWeight === "null" ? null : parseFloat(card.dataset.previousWeight),
     weight, reps, sets: 1,
   });
 }
 
 // ── Terminer ──────────────────────────────────────────────
 document.getElementById("finish-btn").addEventListener("click", async () => {
-  if (sessionLogs.length === 0) {
-    alert("Valide au moins une série avant de terminer !");
-    return;
-  }
+  if (sessionLogs.length === 0) { alert("Valide au moins une série avant de terminer !"); return; }
   clearInterval(timerInterval);
   document.getElementById("finish-btn").disabled = true;
   document.getElementById("finish-btn").textContent = "Enregistrement…";
@@ -162,6 +162,7 @@ document.getElementById("finish-btn").addEventListener("click", async () => {
   document.getElementById("step-session").classList.add("hidden");
   await showRecap();
   document.getElementById("step-recap").classList.remove("hidden");
+  triggerDebrief();
 });
 
 // ── Récap ─────────────────────────────────────────────────
@@ -174,7 +175,7 @@ async function showRecap() {
   const { volume } = await volumeRes.json();
 
   const totalVolume = sessionLogs.reduce((a, r) => a + r.weight * r.reps, 0);
-  const prs = recap.filter(r => r.previous_weight === null || r.weight > r.previous_weight).length;
+  const prs = sessionLogs.filter(r => r.previous_weight === null || r.weight > r.previous_weight).length;
   const mins = Math.round(secondsElapsed / 60);
 
   document.getElementById("recap-stats").innerHTML = `
@@ -183,7 +184,6 @@ async function showRecap() {
     <div class="kpi-tile"><div class="kpi-label">Records 🏆</div><div class="kpi-value" style="color:var(--gold)">${prs}</div></div>
     <div class="kpi-tile"><div class="kpi-label">Durée</div><div class="kpi-value">${mins}<span style="font-size:.9rem"> min</span></div></div>`;
 
-  // Détail par exercice
   const byEx = {};
   recap.forEach(r => {
     if (!byEx[r.exercise_name]) byEx[r.exercise_name] = { rows: [], prev: r.previous_weight };
@@ -195,10 +195,10 @@ async function showRecap() {
   Object.entries(byEx).forEach(([exName, { rows, prev }]) => {
     const best = Math.max(...rows.map(r => r.weight));
     const delta = prev !== null ? best - prev : null;
-    let badge = delta === null
+    const badge = delta === null
       ? `<span class="delta-badge new">Nouveau 🌟</span>`
       : delta > 0 ? `<span class="delta-badge up">▲ +${delta} kg</span>`
-      : delta < 0 ? `<span class="delta-badge down">▼ ${delta} kg</span>`
+      : delta < 0 ? `<span class="delta-badge down">▼ ${Math.abs(delta)} kg</span>`
       : `<span class="delta-badge same">= Même poids</span>`;
 
     const card = document.createElement("div");
@@ -216,13 +216,121 @@ async function showRecap() {
   renderVolumeChart(volume);
 }
 
+// ── Debrief IA ────────────────────────────────────────────
+async function triggerDebrief() {
+  const totalVolume = sessionLogs.reduce((a, r) => a + r.weight * r.reps, 0);
+  const prs = sessionLogs.filter(r => r.previous_weight === null || r.weight > r.previous_weight).length;
+  const mins = Math.round(secondsElapsed / 60);
+
+  // Prépare les données pour l'IA (1 ligne par exercice, meilleur poids)
+  const byEx = {};
+  sessionLogs.forEach(log => {
+    if (!byEx[log.exercise_name] || log.weight > byEx[log.exercise_name].weight) {
+      byEx[log.exercise_name] = {
+        name: log.exercise_name,
+        weight: log.weight,
+        reps: log.reps,
+        previousWeight: log.previous_weight,
+      };
+    }
+  });
+
+  try {
+    const res = await fetch("/api/chat/debrief", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        exercises: Object.values(byEx),
+        totalVolume,
+        durationMins: mins,
+        prs,
+        programFocus: selectedDay?.focus || "",
+      }),
+    });
+    const { debrief } = await res.json();
+
+    // Affiche le debrief avec formatage Markdown basique
+    const formatted = debrief
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      .replace(/✅/g, '<span style="color:var(--green)">✅</span>')
+      .replace(/⚠️/g, '<span style="color:var(--gold)">⚠️</span>')
+      .replace(/💡/g, '<span style="color:var(--steel-soft)">💡</span>')
+      .replace(/🔄/g, '<span style="color:var(--rust-soft)">🔄</span>');
+
+    document.getElementById("debrief-body").innerHTML = formatted;
+
+    // Affiche le chat post-séance
+    const chatWrap = document.getElementById("post-chat-wrap");
+    chatWrap.style.display = "block";
+
+    // Message d'accueil du coach dans le chat
+    addPostChatMsg("coach", "Tu peux me poser toutes tes questions sur cette séance ! 💬");
+
+    // Initialise l'historique du chat avec le contexte de la séance
+    postChatHistory = [
+      {
+        role: "assistant",
+        content: `[Contexte séance] ${selectedDay?.focus || "Entraînement"}, ${mins} min, ${Math.round(totalVolume)} kg de volume, ${prs} PR.\n\nDebrief:\n${debrief}`
+      }
+    ];
+
+  } catch (err) {
+    document.getElementById("debrief-body").textContent = "Je n'ai pas pu analyser cette séance. Réessaie plus tard.";
+  }
+}
+
+// ── Chat post-séance ──────────────────────────────────────
+document.getElementById("post-chat-send").addEventListener("click", sendPostChat);
+document.getElementById("post-chat-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") { e.preventDefault(); sendPostChat(); }
+});
+
+async function sendPostChat() {
+  const input = document.getElementById("post-chat-input");
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = "";
+
+  addPostChatMsg("user", text);
+  postChatHistory.push({ role: "user", content: text });
+
+  const thinking = addPostChatMsg("coach", "…", true);
+
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ history: postChatHistory }),
+    });
+    const data = await res.json();
+    thinking.remove();
+    const reply = data.reply;
+    addPostChatMsg("coach", reply);
+    postChatHistory.push({ role: "assistant", content: reply });
+  } catch {
+    thinking.remove();
+    addPostChatMsg("coach", "Je n'arrive pas à répondre pour l'instant, réessaie.");
+  }
+}
+
+function addPostChatMsg(role, text, isThinking = false) {
+  const box = document.getElementById("post-chat-messages");
+  const el = document.createElement("div");
+  el.className = `chat-msg ${role}${isThinking ? " thinking" : ""}`;
+  el.textContent = text;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+  return el;
+}
+
+// ── Graphe volume ─────────────────────────────────────────
 function renderVolumeChart(volume) {
   const canvas = document.getElementById("volume-chart");
   if (typeof Chart === "undefined" || !volume || volume.length < 2) {
     canvas.replaceWith(Object.assign(document.createElement("p"), {
       className: "muted", style: "margin-top:8px",
       textContent: volume?.length < 2
-        ? "Reviens après ta 2ème séance pour voir la courbe de progression !"
+        ? "Reviens après ta 2ème séance pour voir la courbe !"
         : "Le graphique ne peut pas se charger.",
     }));
     return;

@@ -9,7 +9,7 @@ const authRoutes = require("./routes/auth");
 const programRoutes = require("./routes/program");
 const sessionsRoutes = require("./routes/sessions");
 const chatRoutes = require("./routes/chat");
-const coachRoutes = require("./routes/coach");
+const profileRoutes = require("./routes/profile");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -40,7 +40,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/program", programRoutes);
 app.use("/api/logs", sessionsRoutes);
 app.use("/api/chat", chatRoutes);
-app.use("/api/coach", coachRoutes);
+app.use("/api/profile", profileRoutes);
 
 app.use(express.static(path.join(__dirname, "public")));
 
