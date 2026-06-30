@@ -154,7 +154,6 @@ async function chatWithCoach(history, program) {
   return data.choices?.[0]?.message?.content || "Je n'ai pas pu répondre, réessaie.";
 }
 
-module.exports = { generateProgram, chatWithCoach, debriefSession };
 const DEBRIEF_SYSTEM = `Tu es un coach sportif expert qui analyse les séances de musculation.
 Tu reçois les données d'une séance (exercices, poids, reps, comparaison avec avant).
 Tu donnes un debriefing précis, bienveillant et constructif en français.
