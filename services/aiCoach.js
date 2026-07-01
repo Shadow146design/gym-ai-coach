@@ -1,101 +1,147 @@
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const MODEL = () => process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 
-// ── Règles précises par objectif et niveau ────────────────
+// ── Règles précises par objectif et niveau ─────────────────
 const PROGRAM_RULES = {
   "prise de masse / hypertrophie": {
-    debutant:       { sets:"3-4", reps:"8-12", rest:"60-90s", intensity:"60-70% RM", progression:"ajouter 2.5kg tous les 2 entraînements" },
-    intermediaire:  { sets:"4-5", reps:"6-12", rest:"60-90s", intensity:"70-80% RM", progression:"periodisation ondulatoire (semaine lourde/légère)" },
-    avance:         { sets:"4-6", reps:"6-15", rest:"60-90s", intensity:"70-85% RM", progression:"techniques avancées: drop sets, supersets, rest-pause" },
+    debutant:      { sets:"3-4", reps:"8-12", rest:"60-90s", intensity:"60-70% RM", progression:"ajouter 2.5kg tous les 2 entraînements" },
+    intermediaire: { sets:"4-5", reps:"6-12", rest:"60-90s", intensity:"70-80% RM", progression:"périodisation ondulatoire (semaine lourde/légère)" },
+    avance:        { sets:"4-6", reps:"6-15", rest:"60-90s", intensity:"70-85% RM", progression:"drop sets, supersets, rest-pause" },
   },
   "perte de poids / seche": {
-    debutant:       { sets:"3", reps:"12-15", rest:"30-45s", intensity:"50-60% RM", progression:"augmenter le volume avant la charge" },
-    intermediaire:  { sets:"3-4", reps:"12-20", rest:"30-45s", intensity:"55-65% RM", progression:"circuits et supersets pour maintenir le cardio" },
-    avance:         { sets:"4-5", reps:"15-20", rest:"20-30s", intensity:"55-70% RM", progression:"HIIT intégré, trisets, densité maximale" },
+    debutant:      { sets:"3",   reps:"12-15", rest:"30-45s", intensity:"50-60% RM", progression:"augmenter le volume avant la charge" },
+    intermediaire: { sets:"3-4", reps:"12-20", rest:"30-45s", intensity:"55-65% RM", progression:"circuits et supersets" },
+    avance:        { sets:"4-5", reps:"15-20", rest:"20-30s", intensity:"55-70% RM", progression:"HIIT intégré, trisets" },
   },
   "force pure": {
-    debutant:       { sets:"3", reps:"5", rest:"3-4min", intensity:"75-85% RM", progression:"ajouter 2.5-5kg par séance (débutant novice)" },
-    intermediaire:  { sets:"4-5", reps:"3-5", rest:"3-5min", intensity:"80-90% RM", progression:"progression sur 3 semaines + 1 semaine de décharge" },
-    avance:         { sets:"5-6", reps:"1-5", rest:"4-6min", intensity:"85-97.5% RM", progression:"périodisation linéaire / conjuguée avancée" },
+    debutant:      { sets:"3",   reps:"5",   rest:"3-4min", intensity:"75-85% RM", progression:"ajouter 2.5-5kg par séance" },
+    intermediaire: { sets:"4-5", reps:"3-5", rest:"3-5min", intensity:"80-90% RM", progression:"progression sur 3 semaines + 1 décharge" },
+    avance:        { sets:"5-6", reps:"1-5", rest:"4-6min", intensity:"85-97.5% RM", progression:"périodisation linéaire/conjuguée" },
   },
   "remise en forme generale / endurance": {
-    debutant:       { sets:"2-3", reps:"12-15", rest:"45-60s", intensity:"45-55% RM", progression:"consolider la technique avant d'ajouter charge" },
-    intermediaire:  { sets:"3", reps:"12-15", rest:"45s", intensity:"55-65% RM", progression:"ajouter complexité (unilatéral, instable)" },
-    avance:         { sets:"3-4", reps:"15-20", rest:"30-45s", intensity:"60-70% RM", progression:"augmenter la densité et varier les modalités" },
+    debutant:      { sets:"2-3", reps:"12-15", rest:"45-60s", intensity:"45-55% RM", progression:"consolider technique avant charge" },
+    intermediaire: { sets:"3",   reps:"12-15", rest:"45s",    intensity:"55-65% RM", progression:"ajouter complexité (unilatéral)" },
+    avance:        { sets:"3-4", reps:"15-20", rest:"30-45s", intensity:"60-70% RM", progression:"augmenter densité, varier modalités" },
   },
 };
 
-// ── Génération de programme ───────────────────────────────
-const PROGRAM_SYSTEM = `Tu es un préparateur physique certifié, spécialiste en programmation sportive.
-Tu crées des programmes de musculation RÉELLEMENT DIFFÉRENCIÉS selon l'objectif et le niveau,
-en appliquant strictement les règles de la science de l'entraînement.
+// ── Génération de programme ────────────────────────────────
+const PROGRAM_SYSTEM = `Tu es un préparateur physique certifié avec 15 ans d'expérience.
+Tu crées des programmes RÉELLEMENT DIFFÉRENCIÉS selon l'objectif ET le niveau.
+Tu prends en compte le profil physique de la personne pour adapter les charges et les exercices.
 
-RÈGLE ABSOLUE : Le programme doit être concrètement différent selon l'objectif ET le niveau.
-Ne jamais générer deux programmes similaires pour des objectifs différents.
+RÈGLES ABSOLUES :
+1. Les charges suggérées doivent être réalistes par rapport au poids de corps (ex: un débutant de 70kg ne soulevera pas 100kg au squat)
+2. L'âge impact les temps de repos (45+ ans = +30% de repos) et le volume (55+ ans = -20% volume)
+3. Le genre guide la priorité musculaire SAUF si l'objectif dit autre chose
+4. L'activité quotidienne module le volume total (sédentaire = -15%, très actif = +10%)
+5. La taille guide les exercices (grand >185cm = deadlift sumo préférable, machines pour les jambes)
 
-STRUCTURE DES EXERCICES :
-- Toujours indiquer le groupe musculaire (muscle_group) pour chaque exercice
-- Utiliser les noms précis des machines ou mouvements
-- Les séries/reps/repos doivent correspondre EXACTEMENT aux règles de l'objectif
-- Adapter à la blessure/limitation si mentionnée
+RÈGLE PROGRAMME :
+- Ne jamais générer deux programmes similaires pour des objectifs différents
+- Toujours indiquer muscle_group pour chaque exercice
+- Les notes doivent mentionner les charges de départ adaptées au profil si le poids de corps est connu
 
-Réponds UNIQUEMENT avec un JSON valide sans texte avant/après ni balises markdown :
+Réponds UNIQUEMENT avec un JSON valide, sans texte ni balises markdown :
 {
   "title": "Nom court et percutant",
-  "summary": "2-3 phrases sur la logique du programme",
+  "summary": "2-3 phrases sur la logique du programme et comment il est adapté au profil",
   "days": [
     {
       "day": "Jour 1",
       "focus": "Groupe musculaire / type de séance",
       "exercises": [
         {
-          "name": "Nom précis",
-          "muscle_group": "Poitrine / Dos / Épaules / Biceps / Triceps / Jambes / Abdos / Full body",
+          "name": "Nom précis de l'exercice ou machine",
+          "muscle_group": "Poitrine / Dos / Épaules / Biceps / Triceps / Jambes / Fessiers / Abdos / Full body",
           "sets": 4,
           "reps": "8-12",
           "rest_seconds": 90,
-          "notes": "Conseil technique court"
+          "notes": "Conseil technique + charge de départ conseillée si profil connu"
         }
       ]
     }
   ],
-  "advice": ["Conseil 1", "Conseil 2", "Conseil 3"]
+  "advice": ["Conseil général 1", "Conseil général 2", "Conseil général 3"]
 }`;
+
+// Calcule l'IMC et déduit les recommandations de charge
+function buildPhysicalContext(answers) {
+  if (!answers.weight_kg && !answers.height_cm && !answers.age) return "";
+
+  const lines = ["\n━━ PROFIL PHYSIQUE DE L'UTILISATEUR ━━"];
+
+  if (answers.weight_kg) lines.push(`• Poids : ${answers.weight_kg} kg`);
+  if (answers.height_cm) lines.push(`• Taille : ${answers.height_cm} cm`);
+  if (answers.weight_kg && answers.height_cm) {
+    const imc = (answers.weight_kg / Math.pow(answers.height_cm / 100, 2)).toFixed(1);
+    lines.push(`• IMC : ${imc}`);
+  }
+  if (answers.age) lines.push(`• Âge : ${answers.age} ans`);
+  if (answers.gender) lines.push(`• Genre : ${answers.gender}`);
+  if (answers.activity_level) lines.push(`• Activité quotidienne : ${answers.activity_level}`);
+
+  lines.push("\n━━ ADAPTATATIONS REQUISES POUR CE PROFIL ━━");
+
+  // Âge
+  if (answers.age >= 55) lines.push("⚠️ 55+ ans : réduis le volume de 20%, augmente les temps de repos, priorise la mobilité, évite les exercices à fort impact articulaire");
+  else if (answers.age >= 45) lines.push("⚠️ 45+ ans : augmente les temps de repos de 30%, inclus obligatoirement des exercices de mobilité");
+
+  // Activité quotidienne
+  if (answers.activity_level?.includes("sédentaire")) lines.push("🪑 Sédentaire : réduis le volume total de 15%, récupération plus lente");
+  if (answers.activity_level?.includes("très actif")) lines.push("🏃 Très actif : peut gérer +10% de volume, mais attention à la fatigue cumulée");
+
+  // Genre + objectif
+  if (answers.gender === "femme" && !answers.objectif?.includes("force")) {
+    lines.push("♀ Femme : priorise fessiers/cuisses/dos, réduis le volume des épaules/triceps, privilégie les exercices compound");
+  }
+
+  // Taille
+  if (answers.height_cm >= 185) lines.push("📏 Grande taille : préfère deadlift sumo, squat avec stance large, évite les exercices en position basse prolongée");
+
+  // Charges de départ si poids connu
+  if (answers.weight_kg && answers.niveau) {
+    const w = answers.weight_kg;
+    const mult = answers.niveau === "debutant" ? 0.4 : answers.niveau === "intermediaire" ? 0.65 : 0.9;
+    lines.push(`💪 Charge de départ estimée pour les grands mouvements (squat/press) : environ ${Math.round(w * mult)} kg (${Math.round(mult * 100)}% du poids de corps)`);
+  }
+
+  return lines.join("\n");
+}
 
 async function generateProgram(answers) {
   if (!process.env.GROQ_API_KEY)
-    throw new Error("GROQ_API_KEY manquante — configure-la dans les variables d'environnement.");
+    throw new Error("GROQ_API_KEY manquante.");
 
   const rules = PROGRAM_RULES[answers.objectif]?.[answers.niveau] || {};
-  const profile = answers.weight_kg
-    ? `\nPROFIL PHYSIQUE : ${answers.weight_kg}kg, ${answers.height_cm}cm, ${answers.age} ans, ${answers.gender || "non précisé"}, activité quotidienne : ${answers.activity_level || "non précisé"}.`
-    : "";
+  const physicalContext = buildPhysicalContext(answers);
 
-  const userPrompt = `${profile}
-RÉPONSES DU QUESTIONNAIRE :
-- Objectif : ${answers.objectif}
-- Niveau : ${answers.niveau}
-- Jours/semaine : ${answers.joursParSemaine}
-- Durée max/séance : ${answers.dureeSeance}
-- Matériel : ${answers.materiel}
-- Blessures/limitations : ${answers.limitations || "aucune"}
-${answers.feedback ? `- Retours sur l'ancien programme : ${answers.feedback}` : ""}
+  const userPrompt = `${physicalContext}
 
-RÈGLES À APPLIQUER OBLIGATOIREMENT POUR CET OBJECTIF (${answers.objectif}) NIVEAU (${answers.niveau}) :
-- Séries : ${rules.sets || "adapter"}
-- Répétitions : ${rules.reps || "adapter"}
-- Repos : ${rules.rest || "adapter"}
-- Intensité : ${rules.intensity || "adapter"}
-- Progression : ${rules.progression || "adapter"}
+━━ QUESTIONNAIRE ━━
+• Objectif : ${answers.objectif}
+• Niveau : ${answers.niveau}
+• Jours/semaine : ${answers.joursParSemaine}
+• Durée max/séance : ${answers.dureeSeance}
+• Matériel : ${answers.materiel}
+• Blessures/limitations : ${answers.limitations || "aucune"}
+${answers.feedback ? `• Retours sur l'ancien programme : ${answers.feedback}` : ""}
 
-Génère le programme JSON maintenant.`;
+━━ RÈGLES OBLIGATOIRES (${answers.objectif} / ${answers.niveau}) ━━
+• Séries : ${rules.sets || "adapter"}
+• Répétitions : ${rules.reps || "adapter"}
+• Repos : ${rules.rest || "adapter"}
+• Intensité : ${rules.intensity || "adapter"}
+• Progression : ${rules.progression || "adapter"}
+
+Génère maintenant le programme JSON adapté à CE profil spécifique.`;
 
   const response = await fetch(GROQ_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
     body: JSON.stringify({
       model: MODEL(),
-      temperature: 0.55,
+      temperature: 0.5,
       max_tokens: 3500,
       response_format: { type: "json_object" },
       messages: [
@@ -116,97 +162,81 @@ Génère le programme JSON maintenant.`;
 
   let program;
   try { program = JSON.parse(raw); }
-  catch { throw new Error("L'IA n'a pas renvoyé un JSON valide, réessaie."); }
+  catch { throw new Error("JSON invalide, réessaie."); }
   if (!program.days?.length) throw new Error("Programme incomplet, réessaie.");
 
   return program;
 }
 
-// ── Chat coach IA ─────────────────────────────────────────
-const CHAT_SYSTEM = `Tu es un coach sportif bienveillant, précis et expert en musculation.
-Tu connais le programme de l'utilisateur (fourni dans le contexte).
-Tu réponds en français, de manière concise et utile (3-5 phrases max sauf si question complexe).
-Si l'utilisateur se plaint d'un exercice ou veut changer son programme, dis-lui clairement
-qu'il peut cliquer sur "Regénérer avec mes retours" pour en générer un nouveau adapté.
-Ne jamais inventer des chiffres médicaux précis. Toujours conseiller un médecin pour les douleurs.`;
+// ── Chat coach ─────────────────────────────────────────────
+const CHAT_SYSTEM = `Tu es un coach sportif bienveillant, précis et expert.
+Tu connais le programme de l'utilisateur (fourni dans le contexte ci-dessous).
+Réponds en français, de manière concise (3-5 phrases max sauf si question complexe).
+Si l'utilisateur veut changer son programme, dis-lui de cliquer sur "Regénérer avec mes retours".
+Ne jamais inventer des données médicales. Conseille un médecin pour les douleurs persistantes.`;
 
 async function chatWithCoach(history, program) {
-  if (!process.env.GROQ_API_KEY)
-    throw new Error("GROQ_API_KEY manquante.");
+  if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY manquante.");
 
   const programContext = program
-    ? `\n\n[PROGRAMME ACTUEL DE L'UTILISATEUR]\nTitre: ${program.title}\nSommaire: ${program.summary}\nJours: ${(program.days||[]).map(d => `${d.day} (${d.focus}): ${(d.exercises||[]).map(e=>e.name).join(", ")}`).join(" | ")}`
+    ? `\n\n[PROGRAMME ACTUEL]\nTitre: ${program.title}\nSommaire: ${program.summary}\nJours: ${(program.days||[]).map(d => `${d.day} (${d.focus}): ${(d.exercises||[]).map(e=>e.name).join(", ")}`).join(" | ")}`
     : "";
-
-  const messages = [
-    { role: "system", content: CHAT_SYSTEM + programContext },
-    ...history.map(m => ({ role: m.role, content: m.content })),
-  ];
-
-  const response = await fetch(GROQ_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-    body: JSON.stringify({ model: MODEL(), temperature: 0.7, max_tokens: 600, messages }),
-  });
-
-  if (!response.ok) throw new Error(`Erreur Groq chat (${response.status})`);
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || "Je n'ai pas pu répondre, réessaie.";
-}
-
-const DEBRIEF_SYSTEM = `Tu es un coach sportif expert qui analyse les séances de musculation.
-Tu reçois les données d'une séance (exercices, poids, reps, comparaison avec avant).
-Tu donnes un debriefing précis, bienveillant et constructif en français.
-
-Structure ta réponse EXACTEMENT comme ça (utilise ces titres avec les emojis) :
-
-✅ **Ce qui était bien**
-(2-3 points positifs concrets basés sur les données)
-
-⚠️ **Points à améliorer**
-(1-2 points constructifs, jamais négatifs, toujours avec une solution)
-
-💡 **Conseil pour la prochaine séance**
-(1 conseil précis et actionnable)
-
-🔄 **Récupération**
-(1 conseil nutrition/sommeil/étirements adapté à la séance)
-
-Sois direct, précis, encourage sans mentir. Si c'est une première séance, adapte ton analyse.
-Maximum 200 mots au total.`;
-
-async function debriefSession(sessionData) {
-  if (!process.env.GROQ_API_KEY)
-    throw new Error("GROQ_API_KEY manquante.");
-
-  const { exercises, totalVolume, durationMins, prs, programFocus } = sessionData;
-
-  const exerciseDetails = exercises.map(ex => {
-    const delta = ex.previousWeight !== null
-      ? `(${ex.weight > ex.previousWeight ? `+${ex.weight - ex.previousWeight}kg 🏆 PR` : ex.weight < ex.previousWeight ? `-${ex.previousWeight - ex.weight}kg` : `=même poids`})`
-      : "(première fois)";
-    return `- ${ex.name}: ${ex.weight}kg × ${ex.reps} reps ${delta}`;
-  }).join("\n");
-
-  const userPrompt = `Analyse cette séance et donne un debriefing :
-
-SÉANCE : ${programFocus || "Entraînement"}
-DURÉE : ${durationMins} minutes
-VOLUME TOTAL : ${Math.round(totalVolume)} kg
-RECORDS BATTUS : ${prs}
-
-EXERCICES RÉALISÉS :
-${exerciseDetails}
-
-Donne ton analyse de coach maintenant.`;
 
   const response = await fetch(GROQ_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
     body: JSON.stringify({
-      model: MODEL(),
-      temperature: 0.65,
-      max_tokens: 500,
+      model: MODEL(), temperature: 0.7, max_tokens: 600,
+      messages: [
+        { role: "system", content: CHAT_SYSTEM + programContext },
+        ...history.map(m => ({ role: m.role, content: m.content })),
+      ],
+    }),
+  });
+
+  if (!response.ok) throw new Error(`Erreur Groq chat (${response.status})`);
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "Je n'arrive pas à répondre, réessaie.";
+}
+
+// ── Debrief post-séance ────────────────────────────────────
+const DEBRIEF_SYSTEM = `Tu es un coach sportif expert qui analyse les séances de musculation.
+Tu donnes un retour précis, bienveillant et actionnable en français.
+Structure ta réponse EXACTEMENT ainsi (4 sections, pas plus) :
+✅ CE QUI ÉTAIT BIEN : (1-2 points positifs concrets)
+📈 CE QUI PEUT S'AMÉLIORER : (1-2 points d'amélioration concrets)
+💡 CONSEIL POUR LA PROCHAINE FOIS : (1 conseil précis et applicable)
+🔋 RÉCUPÉRATION : (1 conseil sur le sommeil, la nutrition ou les étirements)
+Sois direct, précis, encourage sans sur-féliciter. Max 150 mots au total.`;
+
+async function debriefSession({ exercises, totalVolume, durationMins, prs, programFocus }) {
+  if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY manquante.");
+
+  const exLines = exercises.map(e => {
+    const prev = e.previousWeight !== null ? `(précédent : ${e.previousWeight}kg)` : "(première fois)";
+    const trend = e.previousWeight === null ? "🌟 nouveau"
+      : e.weight > e.previousWeight ? `▲ +${e.weight - e.previousWeight}kg`
+      : e.weight < e.previousWeight ? `▼ -${e.previousWeight - e.weight}kg`
+      : "= stable";
+    return `• ${e.name} : ${e.weight}kg × ${e.reps} reps ${prev} → ${trend}`;
+  }).join("\n");
+
+  const userPrompt = `Voici les données de la séance :
+Durée : ${durationMins} min
+Volume total : ${Math.round(totalVolume)} kg
+Records battus : ${prs}
+Focus du programme : ${programFocus || "non précisé"}
+
+Exercices effectués :
+${exLines}
+
+Fais le debrief de cette séance.`;
+
+  const response = await fetch(GROQ_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: MODEL(), temperature: 0.6, max_tokens: 400,
       messages: [
         { role: "system", content: DEBRIEF_SYSTEM },
         { role: "user", content: userPrompt },
@@ -216,7 +246,7 @@ Donne ton analyse de coach maintenant.`;
 
   if (!response.ok) throw new Error(`Erreur Groq debrief (${response.status})`);
   const data = await response.json();
-  return data.choices?.[0]?.message?.content || "Je n'ai pas pu analyser ta séance.";
+  return data.choices?.[0]?.message?.content || "Impossible de générer le debrief.";
 }
 
 module.exports = { generateProgram, chatWithCoach, debriefSession };

@@ -558,3 +558,102 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
   border-top: 1px solid var(--border);
   background: var(--bg);
 }
+
+/* =========================================================
+   MOBILE — responsive complet
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  /* Topbar : cache les liens texte, garde juste la brand */
+  .topbar { padding: 0 16px; height: 52px; }
+  .nav-links a span { display: none; }
+  .nav-links { gap: 2px; }
+  .nav-links a {
+    padding: 8px 10px;
+    font-size: .7rem;
+    letter-spacing: .01em;
+  }
+
+  /* Shell padding réduit */
+  .shell { padding: 0 14px; }
+
+  /* Hero : colonne unique */
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 40px 16px 32px;
+    gap: 32px;
+  }
+  .hero h1 { font-size: 2rem; }
+  .auth-card { max-width: 100%; margin: 0; }
+  .barbell { display: none; }
+
+  /* Page head */
+  .page-head { margin: 22px 0 16px; gap: 10px; }
+  .page-head h1 { font-size: 1.3rem; }
+  .page-head > div:last-child { width: 100%; display: flex; flex-wrap: wrap; gap: 8px; }
+  .page-head .btn { flex: 1; text-align: center; font-size: .75rem; padding: 10px 12px; }
+
+  /* Cards */
+  .card { padding: 16px; }
+
+  /* Programme : day cards */
+  .day-card summary { padding: 14px 16px; }
+  .exercise-row { padding: 11px 16px; font-size: .88rem; }
+
+  /* Séance : set rows plus grands pour les doigts */
+  .set-row { grid-template-columns: 24px 1fr 1fr 40px; gap: 8px; padding: 10px 14px; }
+  .set-row input { padding: 10px 8px; font-size: 1rem; text-align: center; }
+  .done-btn { width: 40px !important; height: 40px !important; font-size: 1.1rem !important; }
+  .session-exercise-header { padding: 14px 16px; }
+  .session-exercise-header h3 { font-size: .9rem; }
+
+  /* Boutons jour (picker) */
+  #day-pick-grid { grid-template-columns: 1fr !important; }
+  #day-pick-grid .btn { width: 100%; justify-content: flex-start; }
+
+  /* KPI grid : 2 colonnes sur mobile */
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi-tile { padding: 14px 14px; }
+  .kpi-tile .kpi-value { font-size: 1.5rem; }
+
+  /* Records : 2 colonnes */
+  .records-grid { grid-template-columns: 1fr 1fr; }
+
+  /* Two-col → une colonne */
+  .two-col { grid-template-columns: 1fr; }
+
+  /* Chat */
+  .chat-wrap { height: 360px; }
+  .chat-msg { max-width: 90%; font-size: .85rem; }
+
+  /* Profil : champs pleine largeur */
+  .profile-grid { grid-template-columns: 1fr !important; }
+
+  /* Recap cards */
+  .recap-card-header { font-size: .88rem; flex-wrap: wrap; gap: 6px; }
+  .delta-badge { font-size: .72rem; }
+
+  /* Débrief */
+  .debrief-card { padding: 16px; }
+
+  /* Bouton terminer séance */
+  #finish-btn { width: 100%; }
+
+  /* Stats chart */
+  .chart-wrap { padding: 14px; }
+
+  /* Footer */
+  footer { padding: 24px 14px; font-size: .72rem; }
+}
+
+@media (max-width: 480px) {
+  .topbar { padding: 0 12px; }
+  .brand { font-size: .95rem; }
+  .brand svg { width: 20px; height: 20px; }
+  .nav-links a { padding: 6px 8px; font-size: .68rem; }
+  .page-head h1 { font-size: 1.15rem; }
+  .kpi-tile .kpi-value { font-size: 1.3rem; }
+  .set-row { padding: 10px 12px; gap: 6px; }
+  .session-exercise-header h3 { font-size: .85rem; }
+}
