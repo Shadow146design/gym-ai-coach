@@ -1,21 +1,32 @@
--- Schema Gym AI Coach v2.1
+-- Schema Gym AI Coach v3
 -- Execution idempotente
 
 CREATE TABLE IF NOT EXISTS users (
   id            SERIAL PRIMARY KEY,
   email         TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
+  password_hash TEXT,
   name          TEXT NOT NULL,
+  google_id     TEXT UNIQUE,
+  avatar_url    TEXT,
+  weight_kg     NUMERIC,
+  height_cm     INTEGER,
+  age           INTEGER,
+  gender        TEXT,
+  activity_level TEXT,
+  theme         TEXT DEFAULT 'dark',
   created_at    TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Colonnes profil physique (ajout doux si elles n'existent pas)
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='weight_kg')   THEN ALTER TABLE users ADD COLUMN weight_kg NUMERIC; END IF;
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='height_cm')  THEN ALTER TABLE users ADD COLUMN height_cm INTEGER; END IF;
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='age')        THEN ALTER TABLE users ADD COLUMN age INTEGER; END IF;
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='gender')     THEN ALTER TABLE users ADD COLUMN gender TEXT; END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='google_id')     THEN ALTER TABLE users ADD COLUMN google_id TEXT UNIQUE; END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='avatar_url')    THEN ALTER TABLE users ADD COLUMN avatar_url TEXT; END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='weight_kg')     THEN ALTER TABLE users ADD COLUMN weight_kg NUMERIC; END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='height_cm')     THEN ALTER TABLE users ADD COLUMN height_cm INTEGER; END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='age')           THEN ALTER TABLE users ADD COLUMN age INTEGER; END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='gender')        THEN ALTER TABLE users ADD COLUMN gender TEXT; END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='activity_level') THEN ALTER TABLE users ADD COLUMN activity_level TEXT; END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='theme')         THEN ALTER TABLE users ADD COLUMN theme TEXT DEFAULT 'dark'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='password_hash') THEN ALTER TABLE users ADD COLUMN password_hash TEXT; END IF;
 END $$;
 
 CREATE TABLE IF NOT EXISTS programs (
@@ -55,5 +66,4 @@ CREATE TABLE IF NOT EXISTS "session" (
   "sess"   json NOT NULL,
   "expire" timestamp(6) NOT NULL
 ) WITH (OIDS=FALSE);
-
 CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");

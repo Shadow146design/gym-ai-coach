@@ -1,36 +1,31 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Séance — Gym AI Coach</title>
-<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/style.css"/>
 </head>
 <body>
 <header class="topbar">
-  <a class="brand" href="/dashboard.html">
+  <a class="brand" href="/home.html">
     <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>
     Gym AI Coach
   </a>
   <nav class="nav-links">
+    <a href="/home.html">Accueil</a>
     <a href="/dashboard.html">Programme</a>
     <a href="/stats.html">Stats</a>
-    <a href="/profile.html">Profil</a>
   </nav>
 </header>
 
 <div class="shell">
 
-  <!-- Étape 1 : choisir le jour -->
   <div id="step-pick" class="hidden">
-    <div class="page-head">
-      <div><h1>Quelle séance aujourd'hui ?</h1></div>
-    </div>
-    <div id="day-pick-grid" class="radio-grid" style="gap:12px;margin-bottom:28px"></div>
-    <button class="btn btn-primary" id="pick-day-btn" style="min-width:200px">Commencer ▶</button>
+    <div class="page-head"><div><h1>Quelle séance aujourd'hui ?</h1></div></div>
+    <div id="day-pick-grid" style="display:flex;flex-direction:column;gap:10px;max-width:500px"></div>
   </div>
 
-  <!-- Étape 2 : log rapide -->
   <div id="step-session" class="hidden">
     <div class="page-head">
       <div>
@@ -46,39 +41,16 @@
     </div>
   </div>
 
-  <!-- Étape 3 : récap -->
   <div id="step-recap" class="hidden">
     <div class="page-head">
       <div><h1>Récap de la séance 🏆</h1></div>
-      <a class="btn btn-ghost" href="/dashboard.html">Retour au programme</a>
+      <a class="btn btn-ghost" href="/home.html">Retour à l'accueil</a>
     </div>
-    <div id="recap-stats" class="kpi-grid" style="margin-bottom:24px"></div>
-    <div id="recap-exercises"></div>
-    <div class="spacer-sm"></div>
+    <div id="recap-stats" class="kpi-grid" style="margin-bottom:20px"></div>
+    <div id="recap-exercises" style="margin-bottom:20px"></div>
 
     <!-- Debrief IA -->
-    <div class="debrief-card" id="debrief-card">
-      <div class="debrief-header">
-        <span style="font-size:1.5rem">🤖</span>
-        <h3>Analyse du coach IA</h3>
-      </div>
-      <div class="debrief-body" id="debrief-body">
-        <div class="debrief-loading">
-          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-          <span>Ton coach analyse ta séance…</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Chat post-séance -->
-    <div class="post-session-chat" id="post-chat-wrap" style="display:none">
-      <div class="post-session-chat-title">💬 Pose une question à ton coach</div>
-      <div class="post-chat-messages" id="post-chat-messages"></div>
-      <div class="post-chat-input-row">
-        <input id="post-chat-input" type="text" placeholder="Ex : pourquoi je suis fatigué sur le squat ?" autocomplete="off" />
-        <button class="btn btn-primary btn-sm" id="post-chat-send">Envoyer</button>
-      </div>
-    </div>
+    <div id="debrief-card" class="card" style="display:none;margin-bottom:20px;border-left:3px solid var(--rust)"></div>
 
     <div class="spacer-sm"></div>
     <div class="chart-wrap">
@@ -88,7 +60,7 @@
   </div>
 
   <div id="loading" class="empty-state" style="margin-top:40px">
-    <p class="muted">Chargement de ton programme…</p>
+    <p class="muted">Chargement…</p>
   </div>
 
 </div>
@@ -97,3 +69,4 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="/js/session.js"></script>
 </body>
+</html>

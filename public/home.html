@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Accueil — Gym AI Coach</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/home.html">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>
+    Gym AI Coach
+  </a>
+  <nav class="nav-links">
+    <a href="/home.html" class="active">Accueil</a>
+    <a href="/dashboard.html">Programme</a>
+    <a href="/session.html">Séance</a>
+    <a href="/stats.html">Stats</a>
+    <a href="/profile.html">Profil</a>
+    <button class="btn-theme" id="theme-toggle" title="Changer le thème">🌙</button>
+    <a href="#" id="logout-link">Déco</a>
+  </nav>
+</header>
+
+<div class="shell">
+  <!-- Greeting + streak -->
+  <div class="page-head" style="margin-top:28px">
+    <div>
+      <h1 id="greeting">Bonjour !</h1>
+      <p class="sub muted" id="last-session-txt"></p>
+    </div>
+    <a class="btn btn-primary" href="/session.html">▶ Commencer la séance</a>
+  </div>
+
+  <!-- KPI rapides -->
+  <div class="kpi-grid" id="quick-kpi" style="margin-bottom:24px"></div>
+
+  <!-- Prochaine séance recommandée -->
+  <div class="card" id="next-session-card" style="margin-bottom:20px;border-left:3px solid var(--rust)">
+    <div class="card-title" style="margin-bottom:10px">📅 Prochaine séance recommandée</div>
+    <div id="next-session-content" class="muted">Chargement…</div>
+  </div>
+
+  <!-- Calendrier 12 semaines -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title" style="margin-bottom:14px">📆 Calendrier d'entraînement</div>
+    <div id="calendar-grid" class="cal-grid"></div>
+    <div style="display:flex;gap:14px;margin-top:10px;font-size:.75rem;color:var(--chalk-dim)">
+      <span style="display:flex;align-items:center;gap:5px"><span class="cal-day" style="width:14px;height:14px;background:var(--bg-hover)"></span>Repos</span>
+      <span style="display:flex;align-items:center;gap:5px"><span class="cal-day" style="width:14px;height:14px;background:var(--rust);opacity:.5"></span>Séance</span>
+      <span style="display:flex;align-items:center;gap:5px"><span class="cal-day" style="width:14px;height:14px;background:var(--rust)"></span>Bonne séance</span>
+    </div>
+  </div>
+
+  <!-- Dernier record battu -->
+  <div class="card" id="last-pr-card" style="margin-bottom:20px">
+    <div class="card-title">🏆 Derniers records</div>
+    <div id="last-pr-content" class="muted" style="margin-top:8px">Chargement…</div>
+  </div>
+
+  <div class="spacer"></div>
+</div>
+
+<footer>Gym AI Coach</footer>
+<script src="/js/home.js"></script>
+</body>
+</html>

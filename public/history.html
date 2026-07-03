@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Historique des programmes — Gym AI Coach</title>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/home.html">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>
+    Gym AI Coach
+  </a>
+  <nav class="nav-links">
+    <a href="/home.html">Accueil</a>
+    <a href="/dashboard.html">Programme</a>
+    <a href="/stats.html">Stats</a>
+    <a href="/profile.html">Profil</a>
+  </nav>
+</header>
+<div class="shell">
+  <div class="page-head">
+    <div><h1>Historique des programmes</h1><p class="sub muted">Tous tes programmes générés, dans l'ordre.</p></div>
+    <a class="btn btn-ghost btn-sm" href="/questionnaire.html">+ Nouveau programme</a>
+  </div>
+  <div id="history-list"></div>
+  <div id="empty" class="empty-state hidden"><h3>Aucun programme</h3><p class="muted" style="margin-top:8px">Génère ton premier programme.</p></div>
+</div>
+<footer>Gym AI Coach</footer>
+<script src="/js/history.js"></script>
+</body>
+</html>
