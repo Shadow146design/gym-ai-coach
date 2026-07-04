@@ -28,6 +28,19 @@ router.put("/users/:id/role", async (req, res) => {
   } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
 });
 
+router.get("/subscriptions", async (req, res) => {
+  try {
+    const r = await pool.query(`
+      SELECT s.id, s.plan, s.status, s.stripe_subscription_id, s.created_at,
+        u.id AS user_id, u.name, u.email
+      FROM subscriptions s
+      JOIN users u ON u.id = s.user_id
+      WHERE s.status = 'active'
+      ORDER BY s.created_at DESC`);
+    res.json({ subscriptions: r.rows });
+  } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
+});
+
 router.post("/users/:id/ban", async (req, res) => {
   try {
     const r = await pool.query(

@@ -906,6 +906,82 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
   .hstat-sep { display: none; }
 }
 
+/* ── Badge role navbar ── */
+.nav-user-badge {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .82rem;
+  color: var(--chalk-dim);
+  padding: 0 6px;
+}
+.role-badge {
+  font-family: var(--font-mono);
+  font-size: .65rem;
+  letter-spacing: .05em;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.role-badge-premium { color: var(--gold); background: var(--gold-bg); }
+.role-badge-coach   { color: var(--steel-soft); background: rgba(79,122,138,.15); }
+
+/* ── Pricing (page premium) ── */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+@media (max-width: 800px) { .pricing-grid { grid-template-columns: 1fr; } }
+.pricing-card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.pricing-card.featured {
+  border-color: var(--rust);
+  box-shadow: 0 0 0 1px var(--rust);
+}
+.pricing-badge {
+  position: absolute;
+  top: -12px; right: 20px;
+  background: var(--rust);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+.pricing-title {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-size: 1.05rem;
+}
+.pricing-price {
+  font-family: var(--font-mono);
+  font-size: 2.2rem;
+  color: var(--chalk);
+}
+.pricing-price span { font-size: .9rem; color: var(--chalk-dim); }
+.pricing-features { list-style: none; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.pricing-features li {
+  font-size: .88rem;
+  color: var(--chalk-dim);
+  padding-left: 20px;
+  position: relative;
+}
+.pricing-features li::before {
+  content: '✓';
+  position: absolute; left: 0;
+  color: var(--green);
+}
+
 /* ── Conversations ── */
 .conv-item {
   padding: 12px 14px;

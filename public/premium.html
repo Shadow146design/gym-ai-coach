@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Premium — Gym AI Coach</title>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/home.html">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>
+    Gym AI Coach
+  </a>
+  <nav class="nav-links">
+    <span id="nav-role-link"></span>
+    <a href="/home.html">Accueil</a>
+    <a href="/dashboard.html">Programme</a>
+    <a href="/stats.html">Stats</a>
+    <a href="/profile.html">Profil</a>
+    <a href="/premium.html" class="active">Premium</a>
+    <a href="#" id="logout-link">Déconnexion</a>
+  </nav>
+</header>
+
+<div class="shell">
+  <div class="page-head">
+    <div>
+      <h1>Passe au niveau supérieur</h1>
+      <p class="sub muted">Choisis la formule qui correspond à tes objectifs.</p>
+    </div>
+  </div>
+
+  <div id="banner"></div>
+
+  <div class="pricing-grid">
+    <div class="pricing-card">
+      <div class="pricing-title">Gratuit</div>
+      <div class="pricing-price">0€<span>/mois</span></div>
+      <ul class="pricing-features">
+        <li>Programme généré par IA</li>
+        <li>Suivi des séances</li>
+        <li>Statistiques de base</li>
+      </ul>
+      <button class="btn btn-ghost btn-block" data-plan="user" disabled>Formule actuelle</button>
+    </div>
+
+    <div class="pricing-card featured">
+      <div class="pricing-badge">Populaire</div>
+      <div class="pricing-title">Premium</div>
+      <div class="pricing-price">9.99€<span>/mois</span></div>
+      <ul class="pricing-features">
+        <li>Tout le gratuit</li>
+        <li>Debrief IA détaillé post-séance</li>
+        <li>Historique illimité des programmes</li>
+      </ul>
+      <button class="btn btn-primary btn-block" data-plan="premium" onclick="subscribe('premium')">Devenir Premium</button>
+    </div>
+
+    <div class="pricing-card">
+      <div class="pricing-title">Bénéficier d'un coach</div>
+      <div class="pricing-price">19.99€<span>/mois</span></div>
+      <ul class="pricing-features">
+        <li>Tout le Premium</li>
+        <li>Un vrai coach assigné</li>
+        <li>Messagerie directe avec ton coach</li>
+      </ul>
+      <button class="btn btn-primary btn-block" data-plan="coach" onclick="subscribe('coach')">Bénéficier d'un coach</button>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+  <div id="cancel-zone" class="hidden" style="text-align:center">
+    <button class="btn btn-ghost btn-sm" onclick="cancelSubscription()">Annuler mon abonnement</button>
+  </div>
+  <div class="spacer"></div>
+</div>
+
+<footer>Gym AI Coach</footer>
+<script src="/js/premium.js"></script>
+<script src="/js/nav.js"></script>
+</body>
+</html>

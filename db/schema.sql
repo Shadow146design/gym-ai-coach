@@ -99,6 +99,18 @@ CREATE INDEX IF NOT EXISTS idx_logs_user     ON logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_logs_exercise ON logs(user_id, exercise_name);
 CREATE INDEX IF NOT EXISTS idx_logs_day      ON logs(user_id, (performed_at::date));
 
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id                     SERIAL PRIMARY KEY,
+  user_id                INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  stripe_customer_id     TEXT,
+  stripe_subscription_id TEXT UNIQUE,
+  plan                   TEXT NOT NULL,
+  status                 TEXT NOT NULL DEFAULT 'active',
+  created_at             TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at             TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
+
 CREATE TABLE IF NOT EXISTS "session" (
   "sid"    varchar NOT NULL COLLATE "default" PRIMARY KEY,
   "sess"   json NOT NULL,

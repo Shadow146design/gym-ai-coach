@@ -14,11 +14,17 @@ const oauthRoutes    = require("./routes/oauth");
 const coachRoutes    = require("./routes/coach");
 const messagesRoutes = require("./routes/messages");
 const adminRoutes    = require("./routes/admin");
+const stripeRoutes   = require("./routes/stripe");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
 app.set("trust proxy", 1);
+
+// Webhook Stripe : body brut (Buffer) requis pour verifier la signature,
+// donc monte AVANT express.json() qui parserait/consommerait le stream.
+app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), stripeRoutes.webhookHandler);
+
 app.use(express.json());
 
 app.use(session({
@@ -41,6 +47,7 @@ app.use("/api/profile",  profileRoutes);
 app.use("/api/coaches",  coachRoutes);
 app.use("/api/messages", messagesRoutes);
 app.use("/api/admin",    adminRoutes);
+app.use("/api/stripe",   stripeRoutes.router);
 app.use("/auth",         oauthRoutes);
 
 app.use(express.static(path.join(__dirname, "public")));
