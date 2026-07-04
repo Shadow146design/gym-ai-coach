@@ -73,7 +73,7 @@ router.get("/me", async (req, res) => {
   if (!req.session.userId) {
     return res.status(401).json({ error: "Non connecte." });
   }
-  const result = await pool.query("SELECT id, email, name FROM users WHERE id = $1", [
+  const result = await pool.query("SELECT id, email, name, role, avatar_url FROM users WHERE id = $1", [
     req.session.userId,
   ]);
   if (!result.rows[0]) {
