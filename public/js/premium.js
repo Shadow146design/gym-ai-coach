@@ -6,7 +6,6 @@ async function init() {
   updateButtons();
 
   const params = new URLSearchParams(location.search);
-  if (params.get("success")) showBanner("success", "Paiement réussi ! Ton compte a été mis à jour.");
   if (params.get("canceled")) showBanner("error", "Paiement annulé.");
 }
 

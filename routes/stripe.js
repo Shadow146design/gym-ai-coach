@@ -29,9 +29,10 @@ router.post("/create-checkout-session", requireAuth, async (req, res) => {
       payment_method_types: ["card"],
       customer_email: userR.rows[0].email,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${origin}/premium.html?success=1`,
+      success_url: `${origin}/premium-success.html`,
       cancel_url: `${origin}/premium.html?canceled=1`,
       metadata: { userId: String(req.session.userId), plan },
+      subscription_data: { metadata: { userId: String(req.session.userId), plan } },
     });
 
     res.json({ url: session.url });
@@ -72,19 +73,14 @@ async function webhookHandler(req, res) {
   }
 
   try {
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object;
-      const userId = parseInt(session.metadata.userId, 10);
-      const plan = session.metadata.plan;
-      const role = PRICE_IDS[plan] ? plan : "user";
-
-      await pool.query("UPDATE users SET role=$1 WHERE id=$2", [role, userId]);
-      await pool.query(
-        `INSERT INTO subscriptions (user_id, stripe_customer_id, stripe_subscription_id, plan, status)
-         VALUES ($1,$2,$3,$4,'active')
-         ON CONFLICT (stripe_subscription_id) DO UPDATE SET status='active'`,
-        [userId, session.customer, session.subscription, plan]
-      );
+    if (event.type === "customer.subscription.created") {
+      await syncSubscriptionFromStripeObject(event.data.object);
+    } else if (event.type === "invoice.payment_succeeded") {
+      const invoice = event.data.object;
+      if (invoice.subscription) {
+        const sub = await stripe.subscriptions.retrieve(invoice.subscription);
+        await syncSubscriptionFromStripeObject(sub);
+      }
     } else if (event.type === "customer.subscription.deleted") {
       const sub = event.data.object;
       const r = await pool.query(
@@ -100,6 +96,32 @@ async function webhookHandler(req, res) {
     console.error("Erreur traitement webhook Stripe :", e.message);
     res.status(500).json({ error: "Erreur serveur." });
   }
+}
+
+// Met a jour le role de l'utilisateur et la table subscriptions a partir d'un
+// objet Subscription Stripe, en determinant le plan via le price_id de l'item.
+async function syncSubscriptionFromStripeObject(sub) {
+  const priceId = sub.items?.data?.[0]?.price?.id;
+  const plan = priceId === PRICE_IDS.coach ? "coach" : priceId === PRICE_IDS.premium ? "premium" : null;
+  if (!plan) return;
+
+  let userId = parseInt(sub.metadata?.userId, 10);
+  if (!userId) {
+    const r = await pool.query(
+      "SELECT user_id FROM subscriptions WHERE stripe_customer_id=$1 ORDER BY created_at DESC LIMIT 1",
+      [sub.customer]
+    );
+    if (!r.rows.length) return;
+    userId = r.rows[0].user_id;
+  }
+
+  await pool.query("UPDATE users SET role=$1 WHERE id=$2", [plan, userId]);
+  await pool.query(
+    `INSERT INTO subscriptions (user_id, stripe_customer_id, stripe_subscription_id, plan, status)
+     VALUES ($1,$2,$3,$4,'active')
+     ON CONFLICT (stripe_subscription_id) DO UPDATE SET plan=$4, status='active', updated_at=NOW()`,
+    [userId, sub.customer, sub.id, plan]
+  );
 }
 
 module.exports = { router, webhookHandler };
