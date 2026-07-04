@@ -283,11 +283,22 @@ async function triggerDebrief(totalVolume, prs, durationMins) {
     <p class="muted" style="font-size:.88rem">L'IA analyse ta séance…</p>`;
   debriefEl.style.display = "block";
 
+  // Construit la liste des exercices avec progression
+  const exercises = sessionLogs.map(log => ({
+    name: log.exercise_name,
+    weight: log.weight,
+    reps: log.reps,
+    previousWeight: null, // le serveur a déjà les données
+  }));
+
   try {
     const res = await fetch("/api/chat/debrief", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        exercises,
+        totalVolume,
+        prs,
         durationMins,
         programFocus: selectedDay?.focus || null,
       }),

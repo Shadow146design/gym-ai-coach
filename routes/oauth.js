@@ -4,10 +4,13 @@ const router = express.Router();
 
 const GOOGLE_CLIENT_ID     = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI         = process.env.GOOGLE_REDIRECT_URI || "https://gym-ai-coach-1wls.onrender.com/auth/google/callback";
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI
+  || "https://gym-ai-coach-1wls.onrender.com/auth/google/callback";
 
-// Redirige vers Google
 router.get("/google", (req, res) => {
+  if (!GOOGLE_CLIENT_ID) {
+    return res.redirect("/?error=google_not_configured");
+  }
   const params = new URLSearchParams({
     client_id:     GOOGLE_CLIENT_ID,
     redirect_uri:  REDIRECT_URI,
@@ -19,13 +22,12 @@ router.get("/google", (req, res) => {
   res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
 });
 
-// Callback Google
 router.get("/google/callback", async (req, res) => {
   const { code, error } = req.query;
   if (error || !code) return res.redirect("/?error=google_denied");
 
   try {
-    // Échange le code contre un token
+    // Échange code → access token
     const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -37,40 +39,55 @@ router.get("/google/callback", async (req, res) => {
         grant_type:    "authorization_code",
       }),
     });
-    const tokenData = await tokenRes.json();
-    if (!tokenData.access_token) return res.redirect("/?error=google_token");
 
-    // Récupère les infos utilisateur
+    const tokenData = await tokenRes.json();
+    if (tokenData.error || !tokenData.access_token) {
+      console.error("Google token error:", tokenData);
+      return res.redirect("/?error=google_token");
+    }
+
+    // Récupère les infos utilisateur Google
     const userRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
     const googleUser = await userRes.json();
-    if (!googleUser.id) return res.redirect("/?error=google_user");
+    if (!googleUser.id || !googleUser.email) {
+      console.error("Google user error:", googleUser);
+      return res.redirect("/?error=google_user");
+    }
 
-    // Trouve ou crée l'utilisateur en base
-    let user = await pool.query("SELECT * FROM users WHERE google_id=$1", [googleUser.id]);
-    if (!user.rows.length) {
-      // Vérifie si l'email existe déjà (compte classique)
-      const byEmail = await pool.query("SELECT * FROM users WHERE email=$1", [googleUser.email]);
+    // Trouve ou crée l'utilisateur
+    let userId;
+    const byGoogle = await pool.query("SELECT id FROM users WHERE google_id=$1", [googleUser.id]);
+
+    if (byGoogle.rows.length) {
+      userId = byGoogle.rows[0].id;
+      // Met à jour l'avatar si changé
+      await pool.query("UPDATE users SET avatar_url=$1 WHERE id=$2", [googleUser.picture, userId]);
+    } else {
+      const byEmail = await pool.query("SELECT id FROM users WHERE email=$1", [googleUser.email.toLowerCase()]);
       if (byEmail.rows.length) {
-        // Lie le compte Google au compte existant
+        // Lie le compte Google au compte email existant
+        userId = byEmail.rows[0].id;
         await pool.query("UPDATE users SET google_id=$1, avatar_url=$2 WHERE id=$3",
-          [googleUser.id, googleUser.picture, byEmail.rows[0].id]);
-        user = await pool.query("SELECT * FROM users WHERE id=$1", [byEmail.rows[0].id]);
+          [googleUser.id, googleUser.picture, userId]);
       } else {
-        // Crée un nouveau compte
-        const newUser = await pool.query(
-          "INSERT INTO users (email, name, google_id, avatar_url, password_hash) VALUES ($1,$2,$3,$4,NULL) RETURNING *",
-          [googleUser.email, googleUser.given_name || googleUser.name, googleUser.id, googleUser.picture]
+        // Nouveau compte
+        const r = await pool.query(
+          "INSERT INTO users (email, name, google_id, avatar_url, role) VALUES ($1,$2,$3,$4,'user') RETURNING id",
+          [googleUser.email.toLowerCase(), googleUser.given_name || googleUser.name, googleUser.id, googleUser.picture]
         );
-        user = { rows: [newUser.rows[0]] };
+        userId = r.rows[0].id;
       }
     }
 
-    req.session.userId = user.rows[0].id;
-    res.redirect("/dashboard.html");
+    req.session.userId = userId;
+    // Redirige vers questionnaire si nouveau, sinon home
+    const prog = await pool.query("SELECT id FROM programs WHERE user_id=$1 LIMIT 1", [userId]);
+    res.redirect(prog.rows.length ? "/home.html" : "/questionnaire.html");
+
   } catch (err) {
-    console.error("Erreur Google OAuth :", err);
+    console.error("Erreur Google OAuth:", err);
     res.redirect("/?error=google_server");
   }
 });

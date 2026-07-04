@@ -786,3 +786,122 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
+
+/* =========================================================
+   HOME PAGE v2
+   ========================================================= */
+
+.home-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 36px 0 28px;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.home-hero-left { flex: 1; min-width: 220px; }
+.home-greeting {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  line-height: 1.1;
+}
+.home-last {
+  color: var(--chalk-dim);
+  font-size: .88rem;
+  margin-top: 6px;
+}
+
+.streak-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid rgba(201,77,40,.3);
+  border-radius: var(--radius-lg);
+  padding: 20px 32px;
+  min-width: 130px;
+}
+.streak-fire { font-size: 2rem; line-height: 1; }
+.streak-num {
+  font-family: var(--font-mono);
+  font-size: 3rem;
+  color: var(--rust-soft);
+  line-height: 1.1;
+  margin: 4px 0;
+}
+.streak-lbl { font-size: .72rem; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: .05em; }
+
+/* Stats bar */
+.home-stats-bar {
+  display: flex;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 0;
+  margin-bottom: 20px;
+  justify-content: space-around;
+}
+.hstat { text-align: center; flex: 1; }
+.hstat-val { font-family: var(--font-mono); font-size: 1.5rem; color: var(--chalk); }
+.hstat-lbl { font-size: .7rem; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: .04em; margin-top: 3px; }
+.hstat-sep { width: 1px; height: 36px; background: var(--border); }
+
+/* Home cards */
+.home-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+.home-card-title {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-size: .9rem;
+  margin-bottom: 14px;
+  color: var(--chalk);
+}
+
+/* Next session exercices */
+.next-ex-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: .88rem;
+}
+.next-ex-row:last-child { border: none; }
+
+/* Records */
+.home-record-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: .9rem;
+}
+.home-record-row:last-child { border: none; }
+.home-record-val { font-family: var(--font-mono); color: var(--gold); font-size: 1rem; }
+
+/* Calendrier légende */
+.cal-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  font-size: .72rem;
+  color: var(--chalk-dim);
+}
+.cal-dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+
+@media (max-width: 480px) {
+  .home-hero { flex-direction: column; align-items: flex-start; }
+  .streak-block { flex-direction: row; gap: 12px; align-items: center; padding: 14px 18px; width: 100%; }
+  .streak-num { font-size: 2rem; }
+  .home-stats-bar { flex-wrap: wrap; gap: 10px; padding: 14px; }
+  .hstat-sep { display: none; }
+}

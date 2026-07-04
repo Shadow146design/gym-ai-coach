@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="fr" data-theme="dark">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Accueil — Gym AI Coach</title>
-<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/style.css"/>
 </head>
 <body>
 <header class="topbar">
@@ -18,45 +18,57 @@
     <a href="/session.html">Séance</a>
     <a href="/stats.html">Stats</a>
     <a href="/profile.html">Profil</a>
-    <button class="btn-theme" id="theme-toggle" title="Changer le thème">🌙</button>
+    <button class="btn-theme" id="theme-toggle">🌙</button>
     <a href="#" id="logout-link">Déco</a>
   </nav>
 </header>
 
 <div class="shell">
-  <!-- Greeting + streak -->
-  <div class="page-head" style="margin-top:28px">
-    <div>
-      <h1 id="greeting">Bonjour !</h1>
-      <p class="sub muted" id="last-session-txt"></p>
+
+  <!-- Hero : greeting + streak + CTA -->
+  <div class="home-hero">
+    <div class="home-hero-left">
+      <div class="home-greeting" id="greeting">Bonjour !</div>
+      <div class="home-last" id="last-session-txt"></div>
+      <a class="btn btn-primary" href="/session.html" style="margin-top:18px;width:fit-content">▶ Commencer la séance</a>
     </div>
-    <a class="btn btn-primary" href="/session.html">▶ Commencer la séance</a>
+    <div class="streak-block">
+      <div class="streak-fire">🔥</div>
+      <div class="streak-num" id="streak-num">—</div>
+      <div class="streak-lbl">jours de suite</div>
+    </div>
   </div>
 
-  <!-- KPI rapides -->
-  <div class="kpi-grid" id="quick-kpi" style="margin-bottom:24px"></div>
-
-  <!-- Prochaine séance recommandée -->
-  <div class="card" id="next-session-card" style="margin-bottom:20px;border-left:3px solid var(--rust)">
-    <div class="card-title" style="margin-bottom:10px">📅 Prochaine séance recommandée</div>
-    <div id="next-session-content" class="muted">Chargement…</div>
+  <!-- Barre stats rapides -->
+  <div class="home-stats-bar">
+    <div class="hstat"><div class="hstat-val" id="stat-sessions">—</div><div class="hstat-lbl">Séances</div></div>
+    <div class="hstat-sep"></div>
+    <div class="hstat"><div class="hstat-val" id="stat-best">—</div><div class="hstat-lbl">Record streak</div></div>
+    <div class="hstat-sep"></div>
+    <div class="hstat"><div class="hstat-val" id="stat-assiduite">—</div><div class="hstat-lbl">Assiduité 4 sem.</div></div>
   </div>
 
-  <!-- Calendrier 12 semaines -->
-  <div class="card" style="margin-bottom:20px">
-    <div class="card-title" style="margin-bottom:14px">📆 Calendrier d'entraînement</div>
+  <!-- Prochaine séance -->
+  <div class="home-card" style="border-left:3px solid var(--rust)">
+    <div class="home-card-title">📅 Prochaine séance recommandée</div>
+    <div id="next-session-card"><span class="muted" style="font-size:.88rem">Chargement…</span></div>
+  </div>
+
+  <!-- Calendrier -->
+  <div class="home-card">
+    <div class="home-card-title">📆 Calendrier — 12 semaines</div>
     <div id="calendar-grid" class="cal-grid"></div>
-    <div style="display:flex;gap:14px;margin-top:10px;font-size:.75rem;color:var(--chalk-dim)">
-      <span style="display:flex;align-items:center;gap:5px"><span class="cal-day" style="width:14px;height:14px;background:var(--bg-hover)"></span>Repos</span>
-      <span style="display:flex;align-items:center;gap:5px"><span class="cal-day" style="width:14px;height:14px;background:var(--rust);opacity:.5"></span>Séance</span>
-      <span style="display:flex;align-items:center;gap:5px"><span class="cal-day" style="width:14px;height:14px;background:var(--rust)"></span>Bonne séance</span>
+    <div class="cal-legend">
+      <span><span class="cal-dot" style="background:var(--bg-hover)"></span>Repos</span>
+      <span><span class="cal-dot" style="background:var(--rust);opacity:.5"></span>Séance</span>
+      <span><span class="cal-dot" style="background:var(--rust)"></span>Bonne séance</span>
     </div>
   </div>
 
-  <!-- Dernier record battu -->
-  <div class="card" id="last-pr-card" style="margin-bottom:20px">
-    <div class="card-title">🏆 Derniers records</div>
-    <div id="last-pr-content" class="muted" style="margin-top:8px">Chargement…</div>
+  <!-- Records -->
+  <div class="home-card">
+    <div class="home-card-title">🏆 Records personnels</div>
+    <div id="records-list"></div>
   </div>
 
   <div class="spacer"></div>
