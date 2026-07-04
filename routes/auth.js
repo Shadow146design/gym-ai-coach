@@ -45,13 +45,16 @@ router.post("/login", async (req, res) => {
     }
 
     const result = await pool.query(
-      "SELECT id, email, name, password_hash FROM users WHERE email = $1",
+      "SELECT id, email, name, password_hash, banned FROM users WHERE email = $1",
       [email.toLowerCase().trim()]
     );
     const user = result.rows[0];
 
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ error: "Email ou mot de passe incorrect." });
+    }
+    if (user.banned) {
+      return res.status(403).json({ error: "Ce compte a ete banni." });
     }
 
     req.session.userId = user.id;

@@ -7,7 +7,7 @@ router.use(requireRole("admin"));
 router.get("/users", async (req, res) => {
   try {
     const r = await pool.query(`
-      SELECT u.id, u.name, u.email, u.role, u.avatar_url, u.created_at,
+      SELECT u.id, u.name, u.email, u.role, u.avatar_url, u.banned, u.created_at,
         (SELECT COUNT(*) FROM logs WHERE user_id=u.id) AS logs_count,
         (SELECT MAX(performed_at) FROM logs WHERE user_id=u.id) AS last_session
       FROM users u ORDER BY u.created_at DESC`);
@@ -24,6 +24,25 @@ router.put("/users/:id/role", async (req, res) => {
     if (role === "coach") {
       await pool.query(`INSERT INTO coach_profiles (user_id) VALUES ($1) ON CONFLICT DO NOTHING`, [req.params.id]);
     }
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
+});
+
+router.post("/users/:id/ban", async (req, res) => {
+  try {
+    const r = await pool.query(
+      "UPDATE users SET banned = NOT banned WHERE id=$1 RETURNING banned",
+      [req.params.id]
+    );
+    if (!r.rows.length) return res.status(404).json({ error: "Utilisateur introuvable." });
+    res.json({ ok: true, banned: r.rows[0].banned });
+  } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
+});
+
+router.delete("/users/:id", async (req, res) => {
+  try {
+    const r = await pool.query("DELETE FROM users WHERE id=$1", [req.params.id]);
+    if (!r.rowCount) return res.status(404).json({ error: "Utilisateur introuvable." });
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
 });

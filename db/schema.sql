@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
   gender          TEXT,
   activity_level  TEXT,
   theme           TEXT DEFAULT 'dark',
+  banned          BOOLEAN NOT NULL DEFAULT FALSE,
   created_at      TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -27,6 +28,7 @@ DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='gender')         THEN ALTER TABLE users ADD COLUMN gender TEXT; END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='activity_level') THEN ALTER TABLE users ADD COLUMN activity_level TEXT; END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='theme')          THEN ALTER TABLE users ADD COLUMN theme TEXT DEFAULT 'dark'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='banned')         THEN ALTER TABLE users ADD COLUMN banned BOOLEAN NOT NULL DEFAULT FALSE; END IF;
 END $$;
 
 CREATE TABLE IF NOT EXISTS coach_profiles (

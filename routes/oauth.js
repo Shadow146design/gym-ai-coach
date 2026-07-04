@@ -58,15 +58,17 @@ router.get("/google/callback", async (req, res) => {
 
     // Trouve ou crée l'utilisateur
     let userId;
-    const byGoogle = await pool.query("SELECT id FROM users WHERE google_id=$1", [googleUser.id]);
+    const byGoogle = await pool.query("SELECT id, banned FROM users WHERE google_id=$1", [googleUser.id]);
 
     if (byGoogle.rows.length) {
+      if (byGoogle.rows[0].banned) return res.redirect("/?error=account_banned");
       userId = byGoogle.rows[0].id;
       // Met à jour l'avatar si changé
       await pool.query("UPDATE users SET avatar_url=$1 WHERE id=$2", [googleUser.picture, userId]);
     } else {
-      const byEmail = await pool.query("SELECT id FROM users WHERE email=$1", [googleUser.email.toLowerCase()]);
+      const byEmail = await pool.query("SELECT id, banned FROM users WHERE email=$1", [googleUser.email.toLowerCase()]);
       if (byEmail.rows.length) {
+        if (byEmail.rows[0].banned) return res.redirect("/?error=account_banned");
         // Lie le compte Google au compte email existant
         userId = byEmail.rows[0].id;
         await pool.query("UPDATE users SET google_id=$1, avatar_url=$2 WHERE id=$3",

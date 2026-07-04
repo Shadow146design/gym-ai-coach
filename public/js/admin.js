@@ -52,7 +52,31 @@ function renderUsers(users) {
       <td style="padding:10px 8px">
         <a href="/messages.html?with=${u.id}" style="font-size:.78rem;color:var(--chalk-dim)">💬</a>
       </td>
+      <td style="padding:10px 8px;white-space:nowrap">
+        <button onclick="toggleBan(${u.id}, ${!!u.banned})" class="btn btn-ghost btn-sm">${u.banned ? "Débannir" : "Bannir"}</button>
+        <button onclick="deleteUser(${u.id})" class="btn btn-ghost btn-sm" style="color:var(--rust-soft)">Supprimer</button>
+      </td>
     </tr>`).join("");
+}
+
+async function toggleBan(userId, currentlyBanned) {
+  const msg = currentlyBanned
+    ? "Débannir cet utilisateur ?"
+    : "Bannir cet utilisateur ? Il ne pourra plus se connecter.";
+  if (!confirm(msg)) return;
+  const r = await fetch(`/api/admin/users/${userId}/ban`, { method: "POST" }).then(r=>r.json());
+  if (!r.ok) return alert(r.error);
+  const u = allUsers.find(u=>u.id===userId);
+  if (u) u.banned = r.banned;
+  renderUsers(allUsers);
+}
+
+async function deleteUser(userId) {
+  if (!confirm("Supprimer definitivement cet utilisateur ? Cette action est irreversible.")) return;
+  const r = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" }).then(r=>r.json());
+  if (!r.ok) return alert(r.error);
+  allUsers = allUsers.filter(u=>u.id!==userId);
+  renderUsers(allUsers);
 }
 
 async function changeRole(userId, role) {
