@@ -1,16 +1,19 @@
 require("dotenv").config();
-const express = require("express");
-const path = require("path");
-const session = require("express-session");
+const express   = require("express");
+const path      = require("path");
+const session   = require("express-session");
 const pgSession = require("connect-pg-simple")(session);
 
-const pool = require("./db/pool");
-const authRoutes    = require("./routes/auth");
-const programRoutes = require("./routes/program");
-const sessionsRoutes= require("./routes/sessions");
-const chatRoutes    = require("./routes/chat");
-const profileRoutes = require("./routes/profile");
-const oauthRoutes   = require("./routes/oauth");
+const pool           = require("./db/pool");
+const authRoutes     = require("./routes/auth");
+const programRoutes  = require("./routes/program");
+const sessionsRoutes = require("./routes/sessions");
+const chatRoutes     = require("./routes/chat");
+const profileRoutes  = require("./routes/profile");
+const oauthRoutes    = require("./routes/oauth");
+const coachRoutes    = require("./routes/coach");
+const messagesRoutes = require("./routes/messages");
+const adminRoutes    = require("./routes/admin");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -30,14 +33,17 @@ app.use(session({
   },
 }));
 
-app.use("/api/auth",    authRoutes);
-app.use("/api/program", programRoutes);
-app.use("/api/logs",    sessionsRoutes);
-app.use("/api/chat",    chatRoutes);
-app.use("/api/profile", profileRoutes);
-app.use("/auth",        oauthRoutes);
+app.use("/api/auth",     authRoutes);
+app.use("/api/program",  programRoutes);
+app.use("/api/logs",     sessionsRoutes);
+app.use("/api/chat",     chatRoutes);
+app.use("/api/profile",  profileRoutes);
+app.use("/api/coaches",  coachRoutes);
+app.use("/api/messages", messagesRoutes);
+app.use("/api/admin",    adminRoutes);
+app.use("/auth",         oauthRoutes);
 
 app.use(express.static(path.join(__dirname, "public")));
 app.get("/healthz", (req, res) => res.json({ ok: true }));
 
-app.listen(PORT, () => console.log(`Gym AI Coach lance sur le port ${PORT}`));
+app.listen(PORT, () => console.log(`Gym AI Coach v4 — port ${PORT}`));

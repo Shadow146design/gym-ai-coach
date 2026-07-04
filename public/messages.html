@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Messages — Gym AI Coach</title>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/home.html"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>Gym AI Coach</a>
+  <nav class="nav-links">
+    <a href="/home.html">Accueil</a>
+    <a href="/dashboard.html">Programme</a>
+    <a href="/coaches.html">Coaches</a>
+    <a href="/messages.html" class="active">💬 Messages</a>
+    <a href="/profile.html">Profil</a>
+  </nav>
+</header>
+<div class="shell" style="max-width:800px">
+  <div class="page-head"><h1>Messages</h1></div>
+  <div style="display:grid;grid-template-columns:240px 1fr;gap:0;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;height:550px">
+    <!-- Liste conversations -->
+    <div style="border-right:1px solid var(--border);overflow-y:auto">
+      <div style="padding:12px 14px;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--chalk-dim);border-bottom:1px solid var(--border)">Conversations</div>
+      <div id="conv-list"></div>
+      <div id="conv-empty" class="hidden" style="padding:20px 14px;font-size:.85rem;color:var(--chalk-dim)">Aucune conversation.</div>
+    </div>
+    <!-- Zone de chat -->
+    <div style="display:flex;flex-direction:column">
+      <div id="chat-header" style="padding:14px 16px;border-bottom:1px solid var(--border);font-weight:600;min-height:50px"></div>
+      <div id="chat-msgs" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px"></div>
+      <div id="chat-form" class="hidden" style="padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px">
+        <input id="msg-input" type="text" placeholder="Écris ton message…" style="flex:1" autocomplete="off"/>
+        <button class="btn btn-primary btn-sm" onclick="sendMsg()">Envoyer</button>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>Gym AI Coach</footer>
+<script src="/js/messages.js"></script>
+</body>
+</html>

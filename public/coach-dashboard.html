@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard Coach — Gym AI Coach</title>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/coach-dashboard.html"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>Gym AI Coach</a>
+  <nav class="nav-links">
+    <a href="/coach-dashboard.html" class="active">Mes clients</a>
+    <a href="/messages.html">💬 Messages</a>
+    <a href="/profile.html">Profil</a>
+    <a href="#" id="logout-link">Déco</a>
+  </nav>
+</header>
+<div class="shell">
+  <div class="page-head">
+    <div><h1 id="coach-greeting">Dashboard Coach</h1><p class="sub muted" id="coach-stats-line"></p></div>
+    <button class="btn btn-ghost btn-sm" onclick="toggleProfileEdit()">Modifier mon profil coach</button>
+  </div>
+
+  <!-- Profil coach éditable -->
+  <div id="profile-edit" class="card hidden" style="margin-bottom:20px">
+    <div class="card-title">Mon profil coach</div>
+    <div class="field"><label>Bio</label><textarea id="cp-bio" rows="3" placeholder="Décris ton approche, tes méthodes…"></textarea></div>
+    <div class="field"><label>Spécialités (séparées par des virgules)</label><input id="cp-specs" type="text" placeholder="Prise de masse, Force, Cardio…"/></div>
+    <div class="field"><label>Tarif mensuel (€, 0 = gratuit)</label><input id="cp-price" type="number" min="0" value="0"/></div>
+    <div class="field" style="display:flex;align-items:center;gap:10px">
+      <input id="cp-available" type="checkbox" checked style="width:auto"/>
+      <label style="margin:0;text-transform:none;letter-spacing:0">Disponible pour de nouveaux clients</label>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="saveProfile()" style="margin-top:8px">Sauvegarder</button>
+    <div id="profile-msg" style="margin-top:8px;font-size:.85rem"></div>
+  </div>
+
+  <!-- Demandes en attente -->
+  <div id="pending-section" class="hidden" style="margin-bottom:20px">
+    <h2 style="font-family:var(--font-display);text-transform:uppercase;letter-spacing:.04em;font-size:.95rem;margin-bottom:12px">⏳ Demandes en attente</h2>
+    <div id="pending-list" style="display:flex;flex-direction:column;gap:10px"></div>
+  </div>
+
+  <!-- Clients actifs -->
+  <h2 style="font-family:var(--font-display);text-transform:uppercase;letter-spacing:.04em;font-size:.95rem;margin-bottom:12px">👥 Mes clients actifs</h2>
+  <div id="clients-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px"></div>
+  <div id="no-clients" class="empty-state hidden"><h3>Aucun client actif</h3><p class="muted" style="margin-top:8px">Tes clients apparaîtront ici une fois leur demande acceptée.</p></div>
+</div>
+<footer>Gym AI Coach</footer>
+<script src="/js/coach-dashboard.js"></script>
+</body>
+</html>

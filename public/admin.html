@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin — Gym AI Coach</title>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/admin.html"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>Admin</a>
+  <nav class="nav-links">
+    <a href="/home.html">Retour au site</a>
+    <a href="/coach-dashboard.html">Coach</a>
+    <a href="#" id="logout-link">Déco</a>
+  </nav>
+</header>
+<div class="shell">
+  <div class="page-head"><h1>Panneau d'administration</h1></div>
+
+  <!-- KPI globaux -->
+  <div id="admin-kpis" class="kpi-grid" style="margin-bottom:24px"></div>
+
+  <!-- Utilisateurs -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <div class="card-title" style="margin:0">Tous les utilisateurs</div>
+      <input id="search-users" type="text" placeholder="Rechercher…" style="width:220px" oninput="filterUsers(this.value)"/>
+    </div>
+    <div style="overflow-x:auto">
+      <table id="users-table" style="width:100%;border-collapse:collapse;font-size:.85rem">
+        <thead>
+          <tr style="color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.04em;font-size:.72rem">
+            <th style="padding:8px;text-align:left">Nom</th>
+            <th style="padding:8px;text-align:left">Email</th>
+            <th style="padding:8px;text-align:left">Rôle</th>
+            <th style="padding:8px;text-align:right">Séances</th>
+            <th style="padding:8px;text-align:left">Dernière séance</th>
+            <th style="padding:8px"></th>
+          </tr>
+        </thead>
+        <tbody id="users-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<footer>Gym AI Coach</footer>
+<script src="/js/admin.js"></script>
+</body>
+</html>

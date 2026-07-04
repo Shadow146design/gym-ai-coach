@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Client — Coach Dashboard</title>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/coach-dashboard.html"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>Gym AI Coach</a>
+  <nav class="nav-links">
+    <a href="/coach-dashboard.html">← Mes clients</a>
+    <a href="/messages.html" id="msg-btn">💬 Envoyer un message</a>
+  </nav>
+</header>
+<div class="shell">
+  <div class="page-head">
+    <div>
+      <h1 id="client-name">Client</h1>
+      <p class="sub muted" id="client-meta"></p>
+    </div>
+    <button class="btn btn-primary" onclick="toggleProgForm()">+ Créer un programme</button>
+  </div>
+
+  <!-- Créer programme pour le client -->
+  <div id="prog-form" class="card hidden" style="margin-bottom:20px">
+    <div class="card-title">Créer un programme pour ce client</div>
+    <div class="profile-grid">
+      <div class="field"><label>Objectif</label>
+        <select id="pf-objectif">
+          <option value="prise de masse / hypertrophie">Prise de masse</option>
+          <option value="perte de poids / seche">Perte de poids</option>
+          <option value="force pure">Force</option>
+          <option value="remise en forme generale / endurance">Remise en forme</option>
+        </select></div>
+      <div class="field"><label>Niveau</label>
+        <select id="pf-niveau"><option value="debutant">Débutant</option><option value="intermediaire">Intermédiaire</option><option value="avance">Avancé</option></select></div>
+      <div class="field"><label>Jours/semaine</label>
+        <select id="pf-jours"><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="2">2</option></select></div>
+      <div class="field"><label>Durée max</label>
+        <select id="pf-duree"><option value="1 heure">1h</option><option value="45 minutes">45 min</option><option value="1h30 ou plus">1h30+</option></select></div>
+      <div class="field"><label>Matériel</label>
+        <select id="pf-materiel"><option value="salle de sport complete avec machines et poids libres">Salle complète</option><option value="haltères et banc seulement">Haltères</option><option value="poids du corps uniquement">Poids du corps</option></select></div>
+    </div>
+    <div class="field"><label>Limitations / blessures</label><textarea id="pf-limitations" rows="2" placeholder="Optionnel…"></textarea></div>
+    <button class="btn btn-primary" onclick="createProgram()" id="prog-btn">Générer avec l'IA</button>
+    <div id="prog-msg" style="margin-top:8px;font-size:.85rem"></div>
+  </div>
+
+  <!-- Stats client -->
+  <div class="two-col" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-title">Profil</div>
+      <div id="client-profile" class="muted" style="font-size:.88rem">Chargement…</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Stats globales</div>
+      <div id="client-stats" class="muted" style="font-size:.88rem">Chargement…</div>
+    </div>
+  </div>
+
+  <!-- Programme actif -->
+  <div id="client-program-section" class="hidden card" style="margin-bottom:20px">
+    <div class="card-title">Programme actif</div>
+    <div id="client-program-content"></div>
+  </div>
+
+  <!-- Records -->
+  <div class="card">
+    <div class="card-title">Records personnels</div>
+    <div id="client-records"></div>
+  </div>
+</div>
+<footer>Gym AI Coach</footer>
+<script src="/js/coach-client.js"></script>
+</body>
+</html>
