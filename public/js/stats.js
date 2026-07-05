@@ -113,10 +113,4 @@ function esc(str) {
   return d.innerHTML;
 }
 
-document.getElementById("logout-link").addEventListener("click", async e => {
-  e.preventDefault();
-  await fetch("/api/auth/logout", { method: "POST" });
-  window.location.href = "/";
-});
-
 init();

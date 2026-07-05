@@ -127,13 +127,6 @@ document.getElementById("regen-btn").addEventListener("click", () => {
   window.location.href = `/questionnaire.html?${params.toString()}`;
 });
 
-// ── Déconnexion ───────────────────────────────────────────
-document.getElementById("logout-link").addEventListener("click", async e => {
-  e.preventDefault();
-  await fetch("/api/auth/logout", { method: "POST" });
-  window.location.href = "/";
-});
-
 function esc(str) {
   const d = document.createElement("div");
   d.textContent = str;
