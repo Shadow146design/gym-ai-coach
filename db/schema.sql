@@ -16,6 +16,9 @@ CREATE TABLE IF NOT EXISTS users (
   main_goal       TEXT,
   goal_date       DATE,
   personal_note   TEXT,
+  target_weight_kg NUMERIC,
+  profile_visible_to_coaches BOOLEAN NOT NULL DEFAULT TRUE,
+  stats_visible_to_coaches   BOOLEAN NOT NULL DEFAULT TRUE,
   theme           TEXT DEFAULT 'dark',
   banned          BOOLEAN NOT NULL DEFAULT FALSE,
   created_at      TIMESTAMP NOT NULL DEFAULT NOW()
@@ -35,6 +38,9 @@ DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='main_goal')      THEN ALTER TABLE users ADD COLUMN main_goal TEXT; END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='goal_date')      THEN ALTER TABLE users ADD COLUMN goal_date DATE; END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='personal_note')  THEN ALTER TABLE users ADD COLUMN personal_note TEXT; END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='target_weight_kg') THEN ALTER TABLE users ADD COLUMN target_weight_kg NUMERIC; END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='profile_visible_to_coaches') THEN ALTER TABLE users ADD COLUMN profile_visible_to_coaches BOOLEAN NOT NULL DEFAULT TRUE; END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='stats_visible_to_coaches')   THEN ALTER TABLE users ADD COLUMN stats_visible_to_coaches BOOLEAN NOT NULL DEFAULT TRUE; END IF;
 END $$;
 
 CREATE TABLE IF NOT EXISTS coach_profiles (

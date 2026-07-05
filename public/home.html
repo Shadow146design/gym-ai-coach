@@ -18,9 +18,16 @@
       <a class="btn btn-primary btn-huge" href="/session.html" style="margin-top:18px;width:fit-content">▶ Commencer la séance</a>
     </div>
     <div class="streak-block">
-      <div class="streak-fire">🔥</div>
-      <div class="streak-num" id="streak-num">—</div>
-      <div class="streak-lbl">jours de suite</div>
+      <div class="streak-ring-wrap">
+        <svg class="streak-ring" viewBox="0 0 100 100">
+          <circle class="streak-ring-bg" cx="50" cy="50" r="42"></circle>
+          <circle class="streak-ring-fg" id="streak-ring-fg" cx="50" cy="50" r="42"></circle>
+        </svg>
+        <div class="streak-ring-center">
+          <div class="streak-num" id="streak-num">—</div>
+        </div>
+      </div>
+      <div class="streak-lbl">jours consécutifs</div>
     </div>
   </div>
 

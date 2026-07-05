@@ -178,11 +178,7 @@ document.documentElement.setAttribute("data-theme", localStorage.getItem("theme"
     });
 
     document.querySelectorAll(".sidebar-lang-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        window.i18n?.setLang(btn.dataset.lang);
-        document.querySelectorAll(".sidebar-lang-btn").forEach(b => b.classList.toggle("active", b === btn));
-        relabelNav();
-      });
+      btn.addEventListener("click", () => window.i18n?.setLang(btn.dataset.lang));
     });
 
     function relabelNav() {
@@ -193,6 +189,13 @@ document.documentElement.setAttribute("data-theme", localStorage.getItem("theme"
       const logout = document.getElementById("sidebar-logout");
       if (logout) logout.title = t("nav_logout");
     }
+
+    // Reagit a un changement de langue declenche depuis n'importe ou sur la page
+    // (sidebar elle-meme, ou le selecteur de la page Parametres).
+    document.addEventListener("langchange", e => {
+      relabelNav();
+      document.querySelectorAll(".sidebar-lang-btn").forEach(b => b.classList.toggle("active", b.dataset.lang === e.detail.lang));
+    });
 
     async function refreshBadges() {
       try {

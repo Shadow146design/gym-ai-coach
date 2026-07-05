@@ -16,63 +16,133 @@
     </div>
   </div>
 
-  <!-- Section 1 — Sécurité -->
+  <!-- Section — Apparence -->
   <div class="profile-section">
-    <div class="profile-section-title">🔒 Sécurité</div>
+    <div class="profile-section-title" data-i18n="settings_appearance">🎨 Apparence</div>
+    <div class="stat-row">
+      <span data-i18n="settings_theme">Thème</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" id="theme-dark-btn" type="button" onclick="setTheme('dark')" data-i18n="settings_theme_dark">Sombre</button>
+        <button class="btn btn-ghost btn-sm" id="theme-light-btn" type="button" onclick="setTheme('light')" data-i18n="settings_theme_light">Clair</button>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span data-i18n="settings_language">Langue</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" id="lang-fr-btn" type="button" onclick="setLanguage('fr')">Français</button>
+        <button class="btn btn-ghost btn-sm" id="lang-en-btn" type="button" onclick="setLanguage('en')">English</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section — Sécurité -->
+  <div class="profile-section">
+    <div class="profile-section-title" data-i18n="settings_security">🔒 Sécurité</div>
     <form id="password-form">
-      <div class="field"><label for="old-password">Mot de passe actuel</label><input id="old-password" type="password" autocomplete="current-password"/></div>
-      <div class="field"><label for="new-password">Nouveau mot de passe</label><input id="new-password" type="password" autocomplete="new-password"/></div>
-      <div class="field"><label for="confirm-password">Confirmer le nouveau mot de passe</label><input id="confirm-password" type="password" autocomplete="new-password"/></div>
-      <button class="btn btn-primary btn-sm" type="submit">Changer le mot de passe</button>
+      <div class="field"><label for="old-password" data-i18n="settings_pwd_old">Mot de passe actuel</label><input id="old-password" type="password" autocomplete="current-password"/></div>
+      <div class="field"><label for="new-password" data-i18n="settings_pwd_new">Nouveau mot de passe</label><input id="new-password" type="password" autocomplete="new-password"/></div>
+      <div class="field"><label for="confirm-password" data-i18n="settings_pwd_confirm">Confirmer le nouveau mot de passe</label><input id="confirm-password" type="password" autocomplete="new-password"/></div>
+      <button class="btn btn-primary btn-sm" type="submit" data-i18n="settings_pwd_submit">Changer le mot de passe</button>
       <div id="password-msg" style="margin-top:8px;font-size:.85rem"></div>
     </form>
   </div>
 
-  <!-- Section 2 — Préférences -->
+  <!-- Section — Notifications -->
   <div class="profile-section">
-    <div class="profile-section-title">🎨 Préférences</div>
+    <div class="profile-section-title" data-i18n="settings_notifications">🔔 Notifications</div>
     <div class="stat-row">
-      <span>Thème</span>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost btn-sm" id="theme-dark-btn" type="button" onclick="setTheme('dark')">Sombre</button>
-        <button class="btn btn-ghost btn-sm" id="theme-light-btn" type="button" onclick="setTheme('light')">Clair</button>
-      </div>
+      <span data-i18n="settings_notif_coach">Me notifier quand mon coach m'envoie un message</span>
+      <label class="toggle-switch"><input type="checkbox" id="notif-coach-msg"/><span class="toggle-slider"></span></label>
     </div>
-    <div class="stat-row"><span>Langue</span><span class="stat-val">Français</span></div>
-    <div class="stat-row"><span>Notifications email</span>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-        <input type="checkbox" id="email-notif-toggle"/> Activer
-      </label>
+    <div class="stat-row">
+      <span data-i18n="settings_notif_streak">Me rappeler si je n'ai pas fait de séance depuis 3 jours</span>
+      <label class="toggle-switch"><input type="checkbox" id="notif-streak-reminder"/><span class="toggle-slider"></span></label>
+    </div>
+    <div class="stat-row">
+      <span data-i18n="settings_notif_newsletter">Newsletter hebdomadaire de progression</span>
+      <label class="toggle-switch"><input type="checkbox" id="notif-newsletter"/><span class="toggle-slider"></span></label>
     </div>
   </div>
 
-  <!-- Section 3 — Données -->
+  <!-- Section — Objectifs -->
   <div class="profile-section">
-    <div class="profile-section-title">📦 Données</div>
+    <div class="profile-section-title" data-i18n="settings_goals">🎯 Objectifs</div>
+    <form id="goals-form">
+      <div class="field">
+        <label for="main_goal" data-i18n="settings_goal_main">Mon objectif principal</label>
+        <input id="main_goal" name="main_goal" type="text" maxlength="200" placeholder="Ex : Perdre 5kg avant l'été"/>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label for="goal_date" data-i18n="settings_goal_date">Date cible</label>
+          <input id="goal_date" name="goal_date" type="date"/>
+        </div>
+        <div class="field">
+          <label for="target_weight_kg" data-i18n="settings_goal_weight">Poids objectif (kg)</label>
+          <input id="target_weight_kg" name="target_weight_kg" type="number" step="0.1" min="30" max="300" placeholder="70"/>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" type="submit" data-i18n="btn_save">Enregistrer</button>
+      <span id="goals-save-status" class="muted" style="font-size:.85rem;margin-left:8px"></span>
+    </form>
+  </div>
+
+  <!-- Section — Confidentialité -->
+  <div class="profile-section">
+    <div class="profile-section-title" data-i18n="settings_privacy">🔐 Confidentialité</div>
+    <div class="stat-row">
+      <span data-i18n="settings_privacy_profile">Rendre mon profil visible aux coaches</span>
+      <label class="toggle-switch"><input type="checkbox" id="privacy-profile"/><span class="toggle-slider"></span></label>
+    </div>
+    <div class="stat-row">
+      <span data-i18n="settings_privacy_stats">Autoriser les coaches à voir mes stats</span>
+      <label class="toggle-switch"><input type="checkbox" id="privacy-stats"/><span class="toggle-slider"></span></label>
+    </div>
+  </div>
+
+  <!-- Section — Compte connecté -->
+  <div class="profile-section">
+    <div class="profile-section-title" data-i18n="settings_connected">🔗 Compte connecté</div>
+    <div class="account-row">
+      <span>Google</span>
+      <div id="google-status"></div>
+    </div>
+  </div>
+
+  <!-- Section — Abonnement -->
+  <div class="profile-section">
+    <div class="profile-section-title" data-i18n="settings_subscription">💳 Abonnement</div>
+    <div class="stat-row"><span data-i18n="settings_sub_plan">Formule actuelle</span><span class="stat-val" id="sub-plan">Gratuit</span></div>
+    <div style="margin-top:14px"><a class="btn btn-primary btn-sm" href="/premium.html" data-i18n="settings_sub_manage">Gérer mon abonnement</a></div>
+  </div>
+
+  <!-- Section — Données -->
+  <div class="profile-section">
+    <div class="profile-section-title" data-i18n="settings_data">📦 Données</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn btn-ghost btn-sm" type="button" onclick="exportData()">Télécharger mes données</button>
-      <button class="btn btn-ghost btn-sm" type="button" onclick="clearHistory()">Effacer mon historique de séances</button>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="exportData()" data-i18n="settings_data_export">Télécharger mes données</button>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="clearHistory()" data-i18n="settings_data_clear">Effacer mon historique de séances</button>
     </div>
     <div id="data-msg" style="margin-top:10px;font-size:.85rem"></div>
   </div>
 
-  <!-- Section 4 — Zone danger -->
+  <!-- Section — Zone danger -->
   <div class="profile-section" style="border-color:var(--red)">
-    <div class="profile-section-title" style="color:var(--red)">⚠️ Zone danger</div>
-    <p class="muted" style="font-size:.85rem;margin-bottom:14px">Cette action est définitive et supprime toutes tes données (programmes, séances, messages).</p>
+    <div class="profile-section-title" style="color:var(--red)" data-i18n="settings_danger">⚠️ Zone danger</div>
+    <p class="muted" style="font-size:.85rem;margin-bottom:14px" data-i18n="settings_danger_desc">Cette action est définitive et supprime toutes tes données (programmes, séances, messages).</p>
     <div class="field">
-      <label for="delete-confirm">Tape <strong>SUPPRIMER</strong> pour confirmer</label>
+      <label for="delete-confirm"><span data-i18n="settings_danger_confirm_label">Tape</span> <strong>SUPPRIMER</strong> <span data-i18n="settings_danger_confirm_label2">pour confirmer</span></label>
       <input id="delete-confirm" type="text" placeholder="SUPPRIMER"/>
     </div>
-    <button class="btn btn-ghost btn-sm" style="border-color:var(--red);color:var(--red)" type="button" onclick="deleteAccount()">Supprimer mon compte définitivement</button>
+    <button class="btn btn-ghost btn-sm" style="border-color:var(--red);color:var(--red)" type="button" onclick="deleteAccount()" data-i18n="settings_danger_btn">Supprimer mon compte définitivement</button>
     <div id="delete-msg" style="margin-top:8px;font-size:.85rem"></div>
   </div>
 </div>
 
 <footer>Gym AI Coach</footer>
 </div>
-<script src="/js/settings.js"></script>
 <script src="/js/i18n.js"></script>
+<script src="/js/settings.js"></script>
 <script src="/js/sidebar.js"></script>
 </body>
 </html>

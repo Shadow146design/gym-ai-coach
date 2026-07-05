@@ -67,6 +67,7 @@ async function loadKPIs() {
     const best   = Number(streakData.best)   || 0;
 
     document.getElementById("streak-num").textContent = streak;
+    updateStreakRing(streak);
     document.getElementById("stat-sessions").textContent = dashData.totalSessions || 0;
     document.getElementById("stat-best").textContent = `${best}j`;
     document.getElementById("stat-assiduite").textContent =
@@ -80,6 +81,47 @@ async function loadKPIs() {
   } catch(e) {
     document.getElementById("streak-num").textContent = "0";
   }
+}
+
+// Anneau de progression vers le prochain palier (7j, 30j, 100j)
+function updateStreakRing(streak) {
+  const ring = document.getElementById("streak-ring-fg");
+  if (!ring) return;
+  const tiers = [7, 30, 100];
+  let prevTier = 0, progress = 1;
+  for (const tier of tiers) {
+    if (streak < tier) { progress = (streak - prevTier) / (tier - prevTier); break; }
+    prevTier = tier;
+  }
+  const r = 42;
+  const circumference = 2 * Math.PI * r;
+  ring.style.strokeDasharray = `${circumference}`;
+  ring.style.strokeDashoffset = `${circumference * (1 - progress)}`;
+}
+
+// Jours de semaine en francais, index 0 = lundi (aligne sur un vrai calendrier,
+// contrairement a Date.getDay() ou 0 = dimanche).
+const WEEKDAYS_FR = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
+
+// Trouve le jour du programme le plus proche dans le futur (aujourd'hui inclus)
+// en se basant sur le vrai jour de la semaine. Retourne null si le programme
+// n'utilise pas de vrais noms de jours (anciens programmes generes avant la
+// mise a jour du prompt IA), pour permettre un repli sur l'ancienne logique.
+function findNextProgramDay(days) {
+  const withWeekday = days.map(d => {
+    const label = (d.day || "").toLowerCase();
+    return { ...d, weekdayIdx: WEEKDAYS_FR.findIndex(w => label.includes(w)) };
+  });
+  const known = withWeekday.filter(d => d.weekdayIdx !== -1);
+  if (!known.length) return null;
+
+  const todayIdx = (new Date().getDay() + 6) % 7; // JS: 0=dimanche -> on veut 0=lundi
+  let best = null, bestDelta = Infinity;
+  known.forEach(d => {
+    const delta = (d.weekdayIdx - todayIdx + 7) % 7;
+    if (delta < bestDelta) { bestDelta = delta; best = d; }
+  });
+  return best;
 }
 
 async function loadNextSession() {
@@ -96,8 +138,10 @@ async function loadNextSession() {
       return;
     }
     const days = progRes.program.content.days || [];
+    // Programmes recents : vrais jours de semaine -> jour le plus proche dans le futur.
+    // Anciens programmes ("Jour 1", "Jour 2"...) : repli sur la rotation par streak.
     const streak = Number(streakRes.current ?? streakRes.streak) || 0;
-    const next = days[streak % days.length];
+    const next = findNextProgramDay(days) || days[streak % days.length];
     const exList = (next.exercises || []).slice(0, 4).map(e =>
       `<div class="next-ex-row"><span>${esc(e.name)}</span><span class="mono" style="font-size:.78rem;color:var(--chalk-dim)">${e.sets}×${e.reps}</span></div>`
     ).join("");

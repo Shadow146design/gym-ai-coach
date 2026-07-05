@@ -73,13 +73,32 @@ router.post("/dashboard/assignments/:id/:action", requireRole("coach","admin"), 
 router.get("/dashboard/clients/:clientId/stats", requireRole("coach","admin"), async (req, res) => {
   try {
     const { clientId } = req.params;
-    const [userR, progR, logsR, recsR] = await Promise.all([
-      pool.query("SELECT id,name,email,avatar_url,weight_kg,height_cm,age,gender,activity_level FROM users WHERE id=$1", [clientId]),
+    const userR = await pool.query(
+      "SELECT id,name,email,avatar_url,weight_kg,height_cm,age,gender,activity_level,profile_visible_to_coaches,stats_visible_to_coaches FROM users WHERE id=$1",
+      [clientId]
+    );
+    const client = userR.rows[0];
+    if (!client) return res.status(404).json({ error: "Client introuvable." });
+
+    if (!client.profile_visible_to_coaches) {
+      return res.json({ client: { id: client.id, name: client.name }, hidden: true, program: null, stats: null, records: [] });
+    }
+
+    const [progR, logsR, recsR] = await Promise.all([
       pool.query("SELECT title,content,created_at FROM programs WHERE user_id=$1 AND is_active=TRUE LIMIT 1", [clientId]),
-      pool.query("SELECT COUNT(DISTINCT performed_at::date) AS sessions, SUM(weight*reps*sets) AS volume FROM logs WHERE user_id=$1", [clientId]),
-      pool.query("SELECT exercise_name, MAX(weight) AS max_weight FROM logs WHERE user_id=$1 GROUP BY exercise_name ORDER BY max_weight DESC LIMIT 6", [clientId]),
+      client.stats_visible_to_coaches
+        ? pool.query("SELECT COUNT(DISTINCT performed_at::date) AS sessions, SUM(weight*reps*sets) AS volume FROM logs WHERE user_id=$1", [clientId])
+        : Promise.resolve({ rows: [null] }),
+      client.stats_visible_to_coaches
+        ? pool.query("SELECT exercise_name, MAX(weight) AS max_weight FROM logs WHERE user_id=$1 GROUP BY exercise_name ORDER BY max_weight DESC LIMIT 6", [clientId])
+        : Promise.resolve({ rows: [] }),
     ]);
-    res.json({ client: userR.rows[0], program: progR.rows[0]||null, stats: logsR.rows[0], records: recsR.rows });
+    res.json({
+      client, program: progR.rows[0]||null,
+      stats: client.stats_visible_to_coaches ? logsR.rows[0] : null,
+      records: recsR.rows,
+      statsHidden: !client.stats_visible_to_coaches,
+    });
   } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
 });
 

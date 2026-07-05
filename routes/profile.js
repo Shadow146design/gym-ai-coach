@@ -33,7 +33,8 @@ router.get("/full", async (req, res) => {
     const userR = await pool.query(
       `SELECT name, email, role, avatar_url, created_at, google_id,
               weight_kg, height_cm, age, gender, activity_level,
-              main_goal, goal_date, personal_note
+              main_goal, goal_date, personal_note, target_weight_kg,
+              profile_visible_to_coaches, stats_visible_to_coaches
        FROM users WHERE id=$1`,
       [uid]
     );
@@ -109,17 +110,32 @@ router.put("/", async (req, res) => {
   }
 });
 
-// Met a jour l'objectif principal, la date cible et la note personnelle
+// Met a jour l'objectif principal, la date cible, le poids objectif et la note personnelle
 router.put("/goals", async (req, res) => {
   try {
-    const { main_goal, goal_date, personal_note } = req.body;
+    const { main_goal, goal_date, personal_note, target_weight_kg } = req.body;
     await pool.query(
-      `UPDATE users SET main_goal=$1, goal_date=$2, personal_note=$3 WHERE id=$4`,
-      [main_goal?.trim() || null, goal_date || null, personal_note?.trim() || null, req.session.userId]
+      `UPDATE users SET main_goal=$1, goal_date=$2, personal_note=$3, target_weight_kg=$4 WHERE id=$5`,
+      [main_goal?.trim() || null, goal_date || null, personal_note?.trim() || null, target_weight_kg || null, req.session.userId]
     );
     res.json({ ok: true });
   } catch (err) {
     console.error("Erreur PUT /profile/goals :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+// Met a jour les preferences de confidentialite vis-a-vis des coaches
+router.put("/privacy", async (req, res) => {
+  try {
+    const { profile_visible_to_coaches, stats_visible_to_coaches } = req.body;
+    await pool.query(
+      `UPDATE users SET profile_visible_to_coaches=$1, stats_visible_to_coaches=$2 WHERE id=$3`,
+      [!!profile_visible_to_coaches, !!stats_visible_to_coaches, req.session.userId]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Erreur PUT /profile/privacy :", err);
     res.status(500).json({ error: "Erreur serveur." });
   }
 });
@@ -136,6 +152,22 @@ router.put("/identity", async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error("Erreur PUT /profile/identity :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+// Delie le compte Google, uniquement si un mot de passe est deja defini
+// (sinon l'utilisateur se retrouverait bloque hors de son compte).
+router.post("/unlink-google", async (req, res) => {
+  try {
+    const r = await pool.query("SELECT password_hash FROM users WHERE id=$1", [req.session.userId]);
+    if (!r.rows[0]?.password_hash) {
+      return res.status(400).json({ error: "Définis d'abord un mot de passe avant de délier Google (sinon tu ne pourrais plus te connecter)." });
+    }
+    await pool.query("UPDATE users SET google_id=NULL WHERE id=$1", [req.session.userId]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Erreur POST /profile/unlink-google :", err);
     res.status(500).json({ error: "Erreur serveur." });
   }
 });

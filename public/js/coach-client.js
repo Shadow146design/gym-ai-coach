@@ -10,10 +10,16 @@ async function init() {
   const r = await fetch(`/api/coaches/dashboard/clients/${clientId}/stats`).then(r=>r.json());
   if (r.error) return window.location.href="/coach-dashboard.html";
 
-  const { client, program, stats, records } = r;
+  const { client, program, stats, records, hidden, statsHidden } = r;
 
   document.getElementById("client-name").textContent = client.name;
-  document.getElementById("client-meta").textContent = client.email;
+  document.getElementById("client-meta").textContent = client.email || "";
+
+  if (hidden) {
+    document.getElementById("client-profile").innerHTML = `<span class="muted">Ce client a restreint la visibilité de son profil.</span>`;
+    document.getElementById("client-stats").innerHTML = `<span class="muted">Données non partagées.</span>`;
+    return;
+  }
 
   // Profil physique
   const profileItems = [
@@ -29,9 +35,10 @@ async function init() {
     : `<span class="muted">Profil non renseigné</span>`;
 
   // Stats
-  document.getElementById("client-stats").innerHTML = `
-    <div style="padding:5px 0;border-bottom:1px solid var(--border-soft)">Séances : <strong>${stats.sessions || 0}</strong></div>
-    <div style="padding:5px 0">Volume total : <strong>${Math.round((stats.total_volume||0)/1000)} T</strong></div>`;
+  document.getElementById("client-stats").innerHTML = statsHidden
+    ? `<span class="muted">Ce client n'a pas partagé ses statistiques.</span>`
+    : `<div style="padding:5px 0;border-bottom:1px solid var(--border-soft)">Séances : <strong>${stats?.sessions || 0}</strong></div>
+       <div style="padding:5px 0">Volume total : <strong>${Math.round((stats?.total_volume||0)/1000)} T</strong></div>`;
 
   // Programme
   if (program) {

@@ -25,6 +25,23 @@ const PROGRAM_RULES = {
   },
 };
 
+// Repartit les jours d'entrainement sur des vrais jours de semaine, en
+// espaçant au maximum le repos (utilise par le prompt ET par l'UI pour
+// recommander la "prochaine séance" en fonction du jour reel).
+const WEEKDAY_SCHEDULES = {
+  1: ["Lundi"],
+  2: ["Lundi", "Jeudi"],
+  3: ["Lundi", "Mercredi", "Vendredi"],
+  4: ["Lundi", "Mardi", "Jeudi", "Vendredi"],
+  5: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"],
+  6: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"],
+  7: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"],
+};
+function suggestWeekdays(joursParSemaine) {
+  const n = Math.min(7, Math.max(1, parseInt(joursParSemaine, 10) || 3));
+  return WEEKDAY_SCHEDULES[n];
+}
+
 // ── Génération de programme ────────────────────────────────
 const PROGRAM_SYSTEM = `Tu es un préparateur physique certifié avec 15 ans d'expérience.
 Tu crées des programmes RÉELLEMENT DIFFÉRENCIÉS selon l'objectif ET le niveau.
@@ -41,6 +58,9 @@ RÈGLE PROGRAMME :
 - Ne jamais générer deux programmes similaires pour des objectifs différents
 - Toujours indiquer muscle_group pour chaque exercice
 - Les notes doivent mentionner les charges de départ adaptées au profil si le poids de corps est connu
+- Le champ "day" DOIT être un vrai jour de la semaine (Lundi, Mardi, Mercredi, Jeudi, Vendredi,
+  Samedi ou Dimanche), jamais "Jour 1" ou un nom générique. La liste exacte et l'ordre des jours
+  à utiliser sont fournis dans le message utilisateur ci-dessous : respecte-les strictement.
 
 Réponds UNIQUEMENT avec un JSON valide, sans texte ni balises markdown :
 {
@@ -48,7 +68,7 @@ Réponds UNIQUEMENT avec un JSON valide, sans texte ni balises markdown :
   "summary": "2-3 phrases sur la logique du programme et comment il est adapté au profil",
   "days": [
     {
-      "day": "Jour 1",
+      "day": "Lundi",
       "focus": "Groupe musculaire / type de séance",
       "exercises": [
         {
@@ -131,6 +151,7 @@ async function generateProgram(answers) {
   const rules = PROGRAM_RULES[answers.objectif]?.[answers.niveau] || {};
   const physicalContext = buildPhysicalContext(answers);
   const goalContext = buildGoalContext(answers);
+  const weekdays = suggestWeekdays(answers.joursParSemaine);
 
   const userPrompt = `${physicalContext}${goalContext}
 
@@ -149,6 +170,9 @@ ${answers.feedback ? `• Retours sur l'ancien programme : ${answers.feedback}` 
 • Repos : ${rules.rest || "adapter"}
 • Intensité : ${rules.intensity || "adapter"}
 • Progression : ${rules.progression || "adapter"}
+
+━━ JOURS À UTILISER (obligatoire, dans cet ordre exact) ━━
+${weekdays.map((d, i) => `${i + 1}. ${d}`).join("\n")}
 
 Génère maintenant le programme JSON adapté à CE profil spécifique.`;
 
