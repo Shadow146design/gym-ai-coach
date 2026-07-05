@@ -178,37 +178,63 @@ async function loadNextSession() {
   } catch { el.innerHTML = `<p class="muted" style="font-size:.88rem">Impossible de charger.</p>`; }
 }
 
+// Convertit une Date locale en "YYYY-MM-DD" sans passer par toISOString() (qui
+// decale d'un jour hors UTC) : meme bug que cote serveur, mais cote navigateur
+// cette fois (le fuseau du visiteur, pas celui du serveur).
+function localDayStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 async function loadCalendar() {
   try {
     const r = await fetch("/api/logs/calendar").then(r => r.json());
+    console.log("Calendrier — données reçues :", r);
     const dayMap = {};
     (r.days || []).forEach(d => {
-      dayMap[String(d.day).slice(0,10)] = { exercises: parseInt(d.exercises), volume: Math.round(d.volume) };
+      dayMap[String(d.day).slice(0, 10)] = { exercises: parseInt(d.exercises), volume: Math.round(d.volume) };
     });
 
     const grid = document.getElementById("calendar-grid");
+    const monthsRow = document.getElementById("calendar-months");
     if (!grid) return;
     grid.innerHTML = "";
+    if (monthsRow) monthsRow.innerHTML = "";
     const today = new Date();
+    let lastMonth = null;
 
     for (let w = 11; w >= 0; w--) {
       const week = document.createElement("div");
       week.className = "cal-week";
+
+      // Le premier jour de cette colonne determine le mois affiche au-dessus.
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - (w * 7 + 6));
+      const monthLabel = weekStart.toLocaleDateString("fr-FR", { month: "short" });
+      if (monthsRow) {
+        const label = document.createElement("div");
+        label.className = "cal-month-label";
+        if (monthLabel !== lastMonth) { label.textContent = monthLabel; lastMonth = monthLabel; }
+        monthsRow.appendChild(label);
+      }
+
       for (let d = 6; d >= 0; d--) {
         const date = new Date(today);
         date.setDate(today.getDate() - (w * 7 + d));
-        const key = date.toISOString().slice(0, 10);
+        const key = localDayStr(date);
         const data = dayMap[key];
         const cell = document.createElement("div");
-        cell.className = "cal-day";
+        const dateLabel = date.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+
         if (date > today) {
-          cell.style.cssText = "background:transparent;border:1px dashed rgba(237,232,223,.1)";
-        } else if (data) {
-          const i = Math.min(1, data.exercises / 6);
-          cell.style.background = `rgba(201,77,40,${0.3 + i * 0.7})`;
-          cell.title = `${date.toLocaleDateString("fr-FR")} — ${data.exercises} exercices, ${data.volume} kg`;
+          cell.className = "cal-day future";
+          cell.title = dateLabel;
+        } else if (data && data.exercises > 0) {
+          const tier = data.exercises >= 4 ? "good" : "light";
+          cell.className = `cal-day ${tier}`;
+          cell.title = `${dateLabel} — ${data.exercises} exercice${data.exercises > 1 ? "s" : ""}, ${data.volume} kg`;
         } else {
-          cell.style.background = "var(--bg-hover)";
+          cell.className = "cal-day rest";
+          cell.title = `${dateLabel} — Repos`;
         }
         week.appendChild(cell);
       }

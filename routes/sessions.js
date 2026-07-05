@@ -90,9 +90,12 @@ router.get("/exercises", async (req, res) => {
 // ── GET /records ──────────────────────────────────────────
 router.get("/records", async (req, res) => {
   try {
+    // Note : MAX(weight * (1 + MAX(reps)::float/30)) plantait ("aggregate function
+    // calls cannot be nested") car un agregat ne peut pas en contenir un autre.
+    // Le calcul doit se faire par ligne (weight * (1 + reps/30)) puis etre agrege.
     const r = await pool.query(
       `SELECT exercise_name, MAX(weight) AS max_weight,
-              MAX(weight * (1 + MAX(reps)::float/30)) AS estimated_1rm
+              MAX(weight * (1 + reps::float/30)) AS estimated_1rm
        FROM logs WHERE user_id=$1
        GROUP BY exercise_name ORDER BY max_weight DESC`,
       [req.session.userId]
@@ -197,27 +200,6 @@ router.get("/streak", async (req, res) => {
     best = Math.max(best, streak, current);
 
     res.json({ current, best, totalSessions: days.length });
-  } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
-});
-
-// ── GET /calendar (données pour le calendrier) ────────────
-router.get("/calendar", async (req, res) => {
-  try {
-    const { month, year } = req.query;
-    const m = parseInt(month) || new Date().getMonth() + 1;
-    const y = parseInt(year) || new Date().getFullYear();
-
-    const r = await pool.query(
-      `SELECT performed_at::date AS day,
-              COUNT(DISTINCT exercise_name) AS exercises,
-              SUM(weight * reps * sets) AS volume
-       FROM logs WHERE user_id=$1
-       AND EXTRACT(MONTH FROM performed_at) = $2
-       AND EXTRACT(YEAR FROM performed_at) = $3
-       GROUP BY day`,
-      [req.session.userId, m, y]
-    );
-    res.json({ sessions: r.rows });
   } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
 });
 
@@ -482,8 +464,6 @@ router.get("/plateau", async (req, res) => {
   }
 });
 
-module.exports = router;
-
 // ── Calendrier : jours d'entraînement sur 12 semaines ─────
 router.get("/calendar", async (req, res) => {
   try {
@@ -493,68 +473,8 @@ router.get("/calendar", async (req, res) => {
        GROUP BY day ORDER BY day`,
       [req.session.userId]
     );
-    res.json({ days: r.rows });
-  } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
-});
-
-// ── Streak ─────────────────────────────────────────────────
-router.get("/streak", async (req, res) => {
-  try {
-    const r = await pool.query(
-      `SELECT DISTINCT performed_at::date AS day FROM logs WHERE user_id=$1 ORDER BY day DESC`,
-      [req.session.userId]
-    );
-    const days = r.rows.map(x => dayStr(x.day));
-    if (!days.length) return res.json({ streak: 0, best: 0 });
-
-    let streak = 0, best = 0, cur = 0;
-    const today = dayStr(new Date());
-    const yesterday = dayStr(new Date(Date.now() - 86400000));
-
-    if (days[0] === today || days[0] === yesterday) {
-      cur = 1;
-      for (let i = 1; i < days.length; i++) {
-        const diff = (new Date(days[i-1]) - new Date(days[i])) / 86400000;
-        if (diff === 1) { cur++; }
-        else break;
-      }
-      streak = cur;
-    }
-
-    let tmp = 1;
-    for (let i = 1; i < days.length; i++) {
-      const diff = (new Date(days[i-1]) - new Date(days[i])) / 86400000;
-      if (diff === 1) tmp++;
-      else { best = Math.max(best, tmp); tmp = 1; }
-    }
-    best = Math.max(best, tmp, streak);
-
-    res.json({ streak, best });
-  } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
-});
-
-// ── Modifier un log ────────────────────────────────────────
-router.put("/:id", async (req, res) => {
-  try {
-    const { weight, reps, note } = req.body;
-    const r = await pool.query(
-      `UPDATE logs SET weight=$1, reps=$2, note=$3 WHERE id=$4 AND user_id=$5 RETURNING *`,
-      [weight, reps, note||null, req.params.id, req.session.userId]
-    );
-    if (!r.rows.length) return res.status(404).json({ error: "Log introuvable." });
-    res.json({ log: r.rows[0] });
-  } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
-});
-
-// ── Supprimer un log ───────────────────────────────────────
-router.delete("/:id", async (req, res) => {
-  try {
-    const r = await pool.query(
-      "DELETE FROM logs WHERE id=$1 AND user_id=$2 RETURNING id",
-      [req.params.id, req.session.userId]
-    );
-    if (!r.rows.length) return res.status(404).json({ error: "Log introuvable." });
-    res.json({ ok: true });
+    const days = r.rows.map(row => ({ ...row, day: dayStr(row.day) }));
+    res.json({ days });
   } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
 });
 
@@ -604,3 +524,5 @@ router.get("/imbalances", async (req, res) => {
     res.json({ muscles: r.rows });
   } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
 });
+
+module.exports = router;

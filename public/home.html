@@ -71,11 +71,12 @@
   <!-- Calendrier -->
   <div class="home-card">
     <div class="home-card-title">📆 Calendrier — 12 semaines</div>
+    <div id="calendar-months" class="cal-months"></div>
     <div id="calendar-grid" class="cal-grid"></div>
     <div class="cal-legend">
-      <span><span class="cal-dot" style="background:var(--bg-hover)"></span>Repos</span>
-      <span><span class="cal-dot" style="background:var(--rust);opacity:.5"></span>Séance</span>
-      <span><span class="cal-dot" style="background:var(--rust)"></span>Bonne séance</span>
+      <span><span class="cal-dot cal-dot-rest"></span>Repos</span>
+      <span><span class="cal-dot cal-dot-light"></span>Séance légère</span>
+      <span><span class="cal-dot cal-dot-good"></span>Bonne séance</span>
     </div>
   </div>
 
@@ -87,7 +88,10 @@
 
   <!-- Records -->
   <div class="home-card">
-    <div class="home-card-title">🏅 Tous mes records</div>
+    <div class="home-card-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>🏅 Tous mes records</span>
+      <a href="/stats.html" style="font-size:.78rem;color:var(--chalk-dim);text-transform:none;letter-spacing:0;font-weight:500">Voir tous →</a>
+    </div>
     <div id="records-list"></div>
   </div>
 

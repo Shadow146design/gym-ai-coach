@@ -756,6 +756,20 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
 /* =========================================================
    CALENDRIER
    ========================================================= */
+.cal-months {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 4px;
+}
+.cal-month-label {
+  width: 16px;
+  flex-shrink: 0;
+  font-size: .68rem;
+  color: var(--chalk-dim);
+  text-transform: capitalize;
+  white-space: nowrap;
+  overflow: visible;
+}
 .cal-grid {
   display: flex;
   gap: 3px;
@@ -774,9 +788,17 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
   transition: transform .15s var(--ease-snap);
 }
 .cal-day:hover { transform: scale(1.3); }
+.cal-day.rest { background: var(--bg-hover); }
+.cal-day.light { background: rgba(201,77,40,.4); }
+.cal-day.good { background: var(--rust); }
+.cal-day.future { background: transparent; border: 1px dashed var(--border-strong); }
+.cal-dot-rest { background: var(--bg-hover); }
+.cal-dot-light { background: rgba(201,77,40,.4); }
+.cal-dot-good { background: var(--rust); }
 
 @media (max-width: 768px) {
   .cal-day { width: 12px; height: 12px; }
+  .cal-month-label { width: 12px; font-size: .6rem; }
 }
 
 /* =========================================================
