@@ -15,6 +15,7 @@ const coachRoutes    = require("./routes/coach");
 const messagesRoutes = require("./routes/messages");
 const adminRoutes    = require("./routes/admin");
 const stripeRoutes   = require("./routes/stripe");
+const notificationsRoutes = require("./routes/notifications");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -48,6 +49,7 @@ app.use("/api/coaches",  coachRoutes);
 app.use("/api/messages", messagesRoutes);
 app.use("/api/admin",    adminRoutes);
 app.use("/api/stripe",   stripeRoutes.router);
+app.use("/api/notifications", notificationsRoutes);
 app.use("/auth",         oauthRoutes);
 
 app.use(express.static(path.join(__dirname, "public")));

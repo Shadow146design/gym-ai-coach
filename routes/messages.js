@@ -50,6 +50,16 @@ router.post("/:toId", async (req, res) => {
     const r = await pool.query(
       "INSERT INTO messages (from_id,to_id,content) VALUES ($1,$2,$3) RETURNING *",
       [req.session.userId, req.params.toId, content.trim()]);
+
+    pool.query("SELECT name, role FROM users WHERE id=$1", [req.session.userId]).then(senderRes => {
+      const sender = senderRes.rows[0];
+      const label = sender?.role === "coach" ? "Ton coach" : sender?.name || "Quelqu'un";
+      return pool.query(
+        `INSERT INTO notifications (user_id, type, message, link) VALUES ($1,'new_message',$2,'/messages.html')`,
+        [req.params.toId, `💬 ${label} t'a envoyé un message.`]
+      );
+    }).catch(e => console.error("Erreur notif message :", e));
+
     res.status(201).json({ message: r.rows[0] });
   } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
 });

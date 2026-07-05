@@ -75,6 +75,13 @@ async function webhookHandler(req, res) {
   try {
     if (event.type === "customer.subscription.created") {
       await syncSubscriptionFromStripeObject(event.data.object);
+      const userId = parseInt(event.data.object.metadata?.userId, 10);
+      if (userId) {
+        await pool.query(
+          `INSERT INTO notifications (user_id, type, message, link) VALUES ($1,'payment_confirmed',$2,'/profile.html')`,
+          [userId, "✅ Paiement confirmé, bienvenue dans ta nouvelle formule !"]
+        ).catch(e => console.error("Erreur notif paiement :", e));
+      }
     } else if (event.type === "invoice.payment_succeeded") {
       const invoice = event.data.object;
       if (invoice.subscription) {

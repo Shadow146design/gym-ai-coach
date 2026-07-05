@@ -6,17 +6,41 @@ const { dailyTip } = require("../services/aiCoach");
 const router = express.Router();
 router.use(requireAuth);
 
+// node-postgres parse les colonnes DATE en minuit LOCAL : utiliser les
+// getters locaux (pas toISOString, qui decale d'un jour hors UTC) pour
+// reconstruire "YYYY-MM-DD" de facon fiable quel que soit le fuseau du serveur.
+function dayStr(d) {
+  const dt = new Date(d);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+}
+
 // ── POST : enregistre une série ───────────────────────────
 router.post("/", async (req, res) => {
   try {
     const { exercise_name, muscle_group, weight, reps, sets, note } = req.body;
     if (!exercise_name || weight === undefined || !reps)
       return res.status(400).json({ error: "exercise_name, weight et reps sont requis." });
+
+    const uid = req.session.userId;
+    const prevRes = await pool.query(
+      "SELECT MAX(weight) AS max FROM logs WHERE user_id=$1 AND exercise_name=$2",
+      [uid, exercise_name.trim()]
+    );
+    const previousMax = prevRes.rows[0].max !== null ? Number(prevRes.rows[0].max) : null;
+
     const r = await pool.query(
       `INSERT INTO logs (user_id, exercise_name, muscle_group, weight, reps, sets, note)
        VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-      [req.session.userId, exercise_name.trim(), muscle_group||null, weight, reps, sets||1, note||null]
+      [uid, exercise_name.trim(), muscle_group||null, weight, reps, sets||1, note||null]
     );
+
+    if (previousMax !== null && Number(weight) > previousMax) {
+      pool.query(
+        `INSERT INTO notifications (user_id, type, message, link) VALUES ($1,'new_record',$2,'/stats.html')`,
+        [uid, `🏆 Nouveau record : ${exercise_name.trim()} à ${weight}kg !`]
+      ).catch(e => console.error("Erreur notif nouveau record :", e));
+    }
+
     res.status(201).json({ log: r.rows[0] });
   } catch (err) { console.error(err); res.status(500).json({ error: "Erreur serveur." }); }
 });
@@ -139,11 +163,11 @@ router.get("/streak", async (req, res) => {
        WHERE user_id=$1 GROUP BY day ORDER BY day DESC`,
       [req.session.userId]
     );
-    const days = r.rows.map(x => x.day.toISOString().slice(0,10));
+    const days = r.rows.map(x => dayStr(x.day));
     if (!days.length) return res.json({ current: 0, best: 0, totalSessions: 0 });
 
-    const today = new Date().toISOString().slice(0,10);
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+    const today = dayStr(new Date());
+    const yesterday = dayStr(new Date(Date.now() - 86400000));
 
     let current = 0;
     let best = 0;
@@ -219,9 +243,9 @@ router.get("/summary", async (req, res) => {
       ),
     ]);
 
-    const days = streakRes.rows.map(x => x.day.toISOString().slice(0,10));
-    const today = new Date().toISOString().slice(0,10);
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+    const days = streakRes.rows.map(x => dayStr(x.day));
+    const today = dayStr(new Date());
+    const yesterday = dayStr(new Date(Date.now() - 86400000));
     let streak = 0;
     if (days.length && (days[0] === today || days[0] === yesterday)) {
       streak = 1;
@@ -259,9 +283,9 @@ router.get("/daily-tip", async (req, res) => {
       ),
     ]);
 
-    const days = streakRes.rows.map(x => x.day.toISOString().slice(0,10));
-    const today = new Date().toISOString().slice(0,10);
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+    const days = streakRes.rows.map(x => dayStr(x.day));
+    const today = dayStr(new Date());
+    const yesterday = dayStr(new Date(Date.now() - 86400000));
     let streak = 0;
     if (days.length && (days[0] === today || days[0] === yesterday)) {
       streak = 1;
@@ -429,12 +453,12 @@ router.get("/streak", async (req, res) => {
       `SELECT DISTINCT performed_at::date AS day FROM logs WHERE user_id=$1 ORDER BY day DESC`,
       [req.session.userId]
     );
-    const days = r.rows.map(x => x.day.toISOString().slice(0,10));
+    const days = r.rows.map(x => dayStr(x.day));
     if (!days.length) return res.json({ streak: 0, best: 0 });
 
     let streak = 0, best = 0, cur = 0;
-    const today = new Date().toISOString().slice(0,10);
-    const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+    const today = dayStr(new Date());
+    const yesterday = dayStr(new Date(Date.now() - 86400000));
 
     if (days[0] === today || days[0] === yesterday) {
       cur = 1;

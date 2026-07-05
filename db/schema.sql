@@ -111,6 +111,18 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 );
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
 
+CREATE TABLE IF NOT EXISTS notifications (
+  id         SERIAL PRIMARY KEY,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type       TEXT NOT NULL,
+  message    TEXT NOT NULL,
+  link       TEXT,
+  read_at    TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(user_id, read_at);
+
 CREATE TABLE IF NOT EXISTS "session" (
   "sid"    varchar NOT NULL COLLATE "default" PRIMARY KEY,
   "sess"   json NOT NULL,

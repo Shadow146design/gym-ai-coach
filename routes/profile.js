@@ -5,6 +5,14 @@ const { requireAuth } = require("../middleware/auth");
 const router = express.Router();
 router.use(requireAuth);
 
+// node-postgres parse les colonnes DATE en minuit LOCAL : utiliser les
+// getters locaux (pas toISOString, qui decale d'un jour hors UTC) pour
+// reconstruire "YYYY-MM-DD" de facon fiable quel que soit le fuseau du serveur.
+function dayStr(d) {
+  const dt = new Date(d);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+}
+
 router.get("/", async (req, res) => {
   try {
     const r = await pool.query(
@@ -35,9 +43,9 @@ router.get("/full", async (req, res) => {
       "SELECT DISTINCT performed_at::date AS day FROM logs WHERE user_id=$1 ORDER BY day DESC",
       [uid]
     );
-    const days = daysR.rows.map(r => r.day.toISOString().slice(0, 10));
-    const today = new Date().toISOString().slice(0, 10);
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const days = daysR.rows.map(r => dayStr(r.day));
+    const today = dayStr(new Date());
+    const yesterday = dayStr(new Date(Date.now() - 86400000));
     let streak = 0, best = 0;
     if (days.length) {
       if (days[0] === today || days[0] === yesterday) {

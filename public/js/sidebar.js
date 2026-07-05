@@ -49,6 +49,12 @@ document.documentElement.setAttribute("data-theme", localStorage.getItem("theme"
       unread = u?.unread || 0;
     } catch {}
 
+    let notifUnread = 0;
+    try {
+      const n = await fetch("/api/notifications/unread/count").then(r => r.ok ? r.json() : null);
+      notifUnread = n?.unread || 0;
+    } catch {}
+
     const items = NAV_ITEMS.filter(it => !(it.hideForRoles && it.hideForRoles.includes(role)));
 
     if (role === "coach" || role === "admin") {
@@ -82,10 +88,22 @@ document.documentElement.setAttribute("data-theme", localStorage.getItem("theme"
     const lang = window.i18n ? window.i18n.getLang() : "fr";
     const sidebarHtml = `
       <aside class="sidebar">
-        <a class="sidebar-logo" href="/home.html">
-          <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>
-          <span>Gym AI Coach</span>
-        </a>
+        <div class="sidebar-logo-row">
+          <a class="sidebar-logo" href="/home.html">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>
+            <span>Gym AI Coach</span>
+          </a>
+          <button type="button" class="sidebar-bell" id="sidebar-bell" title="Notifications">
+            🔔${notifUnread > 0 ? `<span class="sidebar-bell-badge">${notifUnread > 9 ? "9+" : notifUnread}</span>` : ""}
+          </button>
+        </div>
+        <div class="notif-panel hidden" id="notif-panel">
+          <div class="notif-panel-head">
+            <span>Notifications</span>
+            <button type="button" class="notif-mark-all" id="notif-mark-all">Tout marquer lu</button>
+          </div>
+          <div class="notif-panel-list" id="notif-panel-list"></div>
+        </div>
         <nav class="sidebar-nav">${navHtml}</nav>
         <div class="sidebar-lang">
           <button type="button" class="sidebar-lang-btn${lang === "fr" ? " active" : ""}" data-lang="fr">FR</button>
@@ -116,6 +134,47 @@ document.documentElement.setAttribute("data-theme", localStorage.getItem("theme"
       e.preventDefault();
       await fetch("/api/auth/logout", { method: "POST" });
       window.location.href = "/";
+    });
+
+    const bellBtn = document.getElementById("sidebar-bell");
+    const notifPanel = document.getElementById("notif-panel");
+    bellBtn?.addEventListener("click", async () => {
+      const willOpen = notifPanel.classList.contains("hidden");
+      notifPanel.classList.toggle("hidden");
+      if (willOpen) await loadNotifPanel();
+    });
+    document.addEventListener("click", e => {
+      if (!notifPanel.classList.contains("hidden") && !notifPanel.contains(e.target) && e.target !== bellBtn) {
+        notifPanel.classList.add("hidden");
+      }
+    });
+
+    async function loadNotifPanel() {
+      const list = document.getElementById("notif-panel-list");
+      list.innerHTML = `<div class="notif-empty">Chargement…</div>`;
+      try {
+        const r = await fetch("/api/notifications").then(r => r.json());
+        const notifs = r.notifications || [];
+        if (!notifs.length) { list.innerHTML = `<div class="notif-empty">Aucune notification.</div>`; return; }
+        list.innerHTML = notifs.map(n => `
+          <a href="${esc(n.link || "#")}" class="notif-item${n.read_at ? "" : " unread"}" data-id="${n.id}">
+            <div class="notif-msg">${esc(n.message)}</div>
+            <div class="notif-date">${new Date(n.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
+          </a>`).join("");
+        list.querySelectorAll(".notif-item").forEach(el => {
+          el.addEventListener("click", () => {
+            fetch(`/api/notifications/${el.dataset.id}/read`, { method: "POST" }).catch(() => {});
+          });
+        });
+      } catch {
+        list.innerHTML = `<div class="notif-empty">Impossible de charger.</div>`;
+      }
+    }
+
+    document.getElementById("notif-mark-all")?.addEventListener("click", async () => {
+      await fetch("/api/notifications/read-all", { method: "POST" }).catch(() => {});
+      bellBtn.querySelector(".sidebar-bell-badge")?.remove();
+      document.querySelectorAll(".notif-item.unread").forEach(el => el.classList.remove("unread"));
     });
 
     document.querySelectorAll(".sidebar-lang-btn").forEach(btn => {
