@@ -8,9 +8,18 @@ const router = express.Router();
 // Les vrais appels Stripe echoueront proprement tant que STRIPE_SECRET_KEY n'est pas defini.
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder");
 
+// Un seul plan paye sur la plateforme : Premium. Les coaches humains fixent
+// leur propre tarif mensuel (coach_profiles.price_monthly) et ne passent pas
+// par un plan Stripe fixe ici.
+//
+// TODO (marketplace coaches) : la commission de 20% prise par la plateforme
+// sur les abonnements coach sera implementee via Stripe Connect (Standard ou
+// Express) : chaque coach aurait un compte connecte, le client paierait via
+// un Payment Intent avec `application_fee_amount` = 20% du prix du coach
+// (ou `transfer_data.destination` + fee), et Stripe reverserait 80% au coach
+// automatiquement. Non implemente pour l'instant.
 const PRICE_IDS = {
   premium: process.env.STRIPE_PREMIUM_PRICE_ID,
-  coach: process.env.STRIPE_COACH_PRICE_ID,
 };
 
 // Cree une session Stripe Checkout pour l'abonnement choisi
@@ -109,7 +118,7 @@ async function webhookHandler(req, res) {
 // objet Subscription Stripe, en determinant le plan via le price_id de l'item.
 async function syncSubscriptionFromStripeObject(sub) {
   const priceId = sub.items?.data?.[0]?.price?.id;
-  const plan = priceId === PRICE_IDS.coach ? "coach" : priceId === PRICE_IDS.premium ? "premium" : null;
+  const plan = priceId === PRICE_IDS.premium ? "premium" : null;
   if (!plan) return;
 
   let userId = parseInt(sub.metadata?.userId, 10);

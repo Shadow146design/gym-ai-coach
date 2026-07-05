@@ -15,9 +15,12 @@ function renderSkeletons() {
   `).join("");
 }
 
+let myRole = "user";
+
 async function init() {
   const me = await fetch("/api/auth/me").then(r=>r.json());
   if (!me.user) return window.location.href="/";
+  myRole = me.user.role;
 
   renderSkeletons();
 
@@ -53,7 +56,18 @@ async function init() {
 
     const alreadyMine = mineRes.assignment?.coach_id === coach.id;
     const specs = (coach.specialties || []).map(s => `<span style="font-size:.72rem;background:var(--bg-hover);padding:3px 8px;border-radius:4px;color:var(--chalk-dim)">${esc(s)}</span>`).join(" ");
-    const price = coach.price_monthly > 0 ? `${coach.price_monthly}€/mois` : "Gratuit";
+    const isPaid = coach.price_monthly > 0;
+    const price = isPaid ? `${coach.price_monthly}€/mois` : "Gratuit";
+    const needsPremium = isPaid && !["premium", "admin"].includes(myRole);
+
+    let ctaHtml;
+    if (alreadyMine) {
+      ctaHtml = `<div style="text-align:center;font-size:.82rem;color:var(--green)">✅ Ton coach actuel</div>`;
+    } else if (needsPremium) {
+      ctaHtml = `<a class="btn btn-ghost btn-sm" href="/premium.html">⭐ Passer Premium pour choisir ce coach</a>`;
+    } else {
+      ctaHtml = `<button class="btn btn-primary btn-sm" onclick="requestCoach(${coach.id},this)">Choisir ce coach</button>`;
+    }
 
     card.innerHTML = `
       <div style="display:flex;align-items:center;gap:12px">
@@ -62,14 +76,15 @@ async function init() {
         </div>
         <div>
           <div style="font-weight:600">${esc(coach.name)}</div>
-          <div style="font-size:.78rem;color:var(--chalk-dim)">${coach.client_count} client${coach.client_count>1?"s":""} • ${price}</div>
+          <div style="font-size:.78rem;color:var(--chalk-dim);display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span>${coach.client_count} client${coach.client_count>1?"s":""} • ${price}</span>
+            ${needsPremium ? `<span class="sidebar-badge badge-premium">Premium requis</span>` : ""}
+          </div>
         </div>
       </div>
       ${coach.bio ? `<p style="font-size:.87rem;color:var(--chalk-dim);margin:0">${esc(coach.bio)}</p>` : ""}
       ${specs ? `<div style="display:flex;flex-wrap:wrap;gap:6px">${specs}</div>` : ""}
-      ${alreadyMine
-        ? `<div style="text-align:center;font-size:.82rem;color:var(--green)">✅ Ton coach actuel</div>`
-        : `<button class="btn btn-primary btn-sm" onclick="requestCoach(${coach.id},this)">Choisir ce coach</button>`}`;
+      ${ctaHtml}`;
     grid.appendChild(card);
   });
 }

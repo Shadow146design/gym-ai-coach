@@ -10,7 +10,7 @@ async function init() {
 }
 
 function updateButtons() {
-  document.querySelectorAll('[data-plan="premium"], [data-plan="coach"]').forEach(btn => {
+  document.querySelectorAll('[data-plan="premium"]').forEach(btn => {
     if (btn.dataset.plan === currentRole) {
       btn.textContent = "Formule actuelle";
       btn.disabled = true;
@@ -18,7 +18,7 @@ function updateButtons() {
   });
 
   const cancelZone = document.getElementById("cancel-zone");
-  cancelZone.classList.toggle("hidden", currentRole !== "premium" && currentRole !== "coach");
+  cancelZone.classList.toggle("hidden", currentRole !== "premium");
 
   document.getElementById("premium-sticky-cta")?.classList.toggle("visible", currentRole === "user");
 }

@@ -21,7 +21,11 @@
     <div class="card-title">Mon profil coach</div>
     <div class="field"><label>Bio</label><textarea id="cp-bio" rows="3" placeholder="Décris ton approche, tes méthodes…"></textarea></div>
     <div class="field"><label>Spécialités (séparées par des virgules)</label><input id="cp-specs" type="text" placeholder="Prise de masse, Force, Cardio…"/></div>
-    <div class="field"><label>Tarif mensuel (€, 0 = gratuit)</label><input id="cp-price" type="number" min="0" value="0"/></div>
+    <div class="field">
+      <label>Tarif mensuel (€, 0 = gratuit)</label>
+      <input id="cp-price" type="number" min="0" value="0"/>
+      <p class="muted" style="font-size:.78rem;margin-top:6px">Tu fixes librement ton tarif. La plateforme prélève une commission de 20% sur les abonnements coach payants (le reversement automatique via Stripe Connect arrive bientôt — pour l'instant géré manuellement).</p>
+    </div>
     <div class="field" style="display:flex;align-items:center;gap:10px">
       <input id="cp-available" type="checkbox" checked style="width:auto"/>
       <label style="margin:0;text-transform:none;letter-spacing:0">Disponible pour de nouveaux clients</label>

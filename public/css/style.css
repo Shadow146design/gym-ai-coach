@@ -1065,6 +1065,7 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
   gap: 22px;
   align-items: stretch;
 }
+.pricing-grid.cols-2 { grid-template-columns: repeat(2, 1fr); max-width: 640px; margin: 0 auto; }
 @media (max-width: 800px) { .pricing-grid { grid-template-columns: 1fr; } }
 .pricing-card {
   position: relative;

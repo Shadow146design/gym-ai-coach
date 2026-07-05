@@ -23,6 +23,20 @@ router.post("/:id/request", requireAuth, async (req, res) => {
     const coachId = parseInt(req.params.id);
     const clientId = req.session.userId;
     if (coachId === clientId) return res.status(400).json({ error: "Tu ne peux pas être ton propre coach." });
+
+    // Les coaches payants (price_monthly > 0) sont reserves aux abonnes Premium.
+    // La plateforme prendra 20% de commission sur ces tarifs coach (via Stripe
+    // Connect, a implementer plus tard) ; Premium reste un abonnement plateforme
+    // classique, distinct du paiement du coach lui-meme.
+    const coachR = await pool.query("SELECT price_monthly FROM coach_profiles WHERE user_id=$1", [coachId]);
+    if (!coachR.rows.length) return res.status(404).json({ error: "Coach introuvable." });
+    if (Number(coachR.rows[0].price_monthly) > 0) {
+      const userR = await pool.query("SELECT role FROM users WHERE id=$1", [clientId]);
+      if (!["premium", "admin"].includes(userR.rows[0]?.role)) {
+        return res.status(403).json({ error: "Abonnement Premium requis pour accéder aux coaches payants." });
+      }
+    }
+
     const existing = await pool.query(
       "SELECT id FROM coach_assignments WHERE client_id=$1 AND status IN ('pending','active')", [clientId]);
     if (existing.rows.length) return res.status(409).json({ error: "Demande déjà envoyée ou coach déjà actif." });

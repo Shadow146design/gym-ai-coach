@@ -21,13 +21,13 @@
 
   <div id="banner"></div>
 
-  <div class="pricing-grid">
+  <div class="pricing-grid cols-2">
     <div class="pricing-card">
       <div class="pricing-icon">🔓</div>
       <div class="pricing-title">Gratuit</div>
       <div class="pricing-price">0€<span>/mois</span></div>
       <ul class="pricing-features">
-        <li>Programme généré par IA</li>
+        <li>1 programme généré par IA</li>
         <li>Suivi des séances</li>
         <li>Statistiques de base</li>
       </ul>
@@ -40,23 +40,12 @@
       <div class="pricing-title">Premium</div>
       <div class="pricing-price">9.99€<span>/mois</span></div>
       <ul class="pricing-features">
-        <li>Tout le gratuit</li>
+        <li>Programmes IA illimités et avancés</li>
         <li>Debrief IA détaillé post-séance</li>
-        <li>Historique illimité des programmes</li>
+        <li>Statistiques complètes (1RM, radar, plateau)</li>
+        <li>Accès aux coaches payants</li>
       </ul>
       <button class="btn btn-primary btn-block" data-plan="premium" onclick="subscribe('premium')">Devenir Premium</button>
-    </div>
-
-    <div class="pricing-card">
-      <div class="pricing-icon">🧑‍🏫</div>
-      <div class="pricing-title">Bénéficier d'un coach</div>
-      <div class="pricing-price">19.99€<span>/mois</span></div>
-      <ul class="pricing-features">
-        <li>Tout le Premium</li>
-        <li>Un vrai coach assigné</li>
-        <li>Messagerie directe avec ton coach</li>
-      </ul>
-      <button class="btn btn-primary btn-block" data-plan="coach" onclick="subscribe('coach')">Bénéficier d'un coach</button>
     </div>
   </div>
 
@@ -64,6 +53,20 @@
   <div id="cancel-zone" class="hidden" style="text-align:center">
     <button class="btn btn-ghost btn-sm" onclick="cancelSubscription()">Annuler mon abonnement</button>
   </div>
+  <div class="spacer"></div>
+
+  <!-- Marketplace coaches -->
+  <div class="card" style="max-width:720px;margin:0 auto;text-align:center;padding:32px">
+    <div style="font-size:1.8rem;margin-bottom:10px">🧑‍🏫</div>
+    <h2 class="card-title" style="justify-content:center;margin-bottom:10px">Travaille avec un coach</h2>
+    <p class="muted" style="font-size:.9rem;max-width:52ch;margin:0 auto 20px">
+      Chaque coach de la plateforme fixe librement son propre tarif mensuel — certains sont même gratuits.
+      Les coaches payants sont réservés aux membres Premium. Parcours les profils, choisis celui qui te correspond,
+      et échange directement avec lui par message.
+    </p>
+    <a class="btn btn-primary btn-sm" href="/coaches.html">Découvrir les coaches →</a>
+  </div>
+
   <div class="spacer"></div>
 
   <!-- Témoignages -->
@@ -80,7 +83,7 @@
       <div class="testimonial-quote">« Avoir un coach humain en plus de l'IA a tout changé. Il ajuste mon programme direct par message. »</div>
       <div class="testimonial-author">
         <div class="testimonial-avatar">S</div>
-        <div><div class="testimonial-name">Sarah, 27 ans</div><div class="testimonial-role">Formule Coach</div></div>
+        <div><div class="testimonial-name">Sarah, 27 ans</div><div class="testimonial-role">Premium + coach indépendant</div></div>
       </div>
     </div>
     <div class="card testimonial-card">
@@ -99,11 +102,11 @@
   <div class="faq-list">
     <details class="faq-item">
       <summary>Puis-je annuler à tout moment ?</summary>
-      <p>Oui, sans engagement. Tu peux annuler ton abonnement Premium ou Coach depuis ton profil ou cette page, et tu repasses en formule gratuite immédiatement après la fin de la période payée.</p>
+      <p>Oui, sans engagement. Tu peux annuler ton abonnement Premium depuis ton profil ou cette page, et tu repasses en formule gratuite immédiatement après la fin de la période payée.</p>
     </details>
     <details class="faq-item">
-      <summary>Quelle est la différence entre Premium et Coach ?</summary>
-      <p>Premium te donne le débrief IA détaillé après chaque séance et l'historique illimité de tes programmes. La formule Coach ajoute un vrai coach humain assigné, avec qui tu peux échanger par message pour ajuster ton programme.</p>
+      <summary>Comment fonctionne le tarif des coaches ?</summary>
+      <p>Chaque coach fixe librement son propre tarif mensuel, indépendamment de ton abonnement Premium — certains coaches sont même gratuits. Les coaches payants sont réservés aux membres Premium ; le paiement direct du tarif coach dans l'app arrive bientôt, la mise en relation est pour l'instant gérée manuellement une fois ta demande acceptée.</p>
     </details>
     <details class="faq-item">
       <summary>Comment fonctionne le débrief IA ?</summary>
