@@ -3,27 +3,30 @@ document.documentElement.setAttribute("data-theme", localStorage.getItem("theme"
 
 (function () {
   const NAV_ITEMS = [
-    { href: "/home.html", icon: "🏠", label: "Accueil" },
-    { href: "/session.html", icon: "▶️", label: "Séance du jour", cta: true },
-    { href: "/dashboard.html", icon: "📋", label: "Programme" },
-    { href: "/stats.html", icon: "📊", label: "Statistiques" },
+    { href: "/home.html", icon: "🏠", labelKey: "nav_home" },
+    { href: "/session.html", icon: "▶️", labelKey: "nav_session", cta: true },
+    { href: "/dashboard.html", icon: "📋", labelKey: "nav_program" },
+    { href: "/stats.html", icon: "📊", labelKey: "nav_stats" },
     { sep: true },
-    { href: "/coaches.html", icon: "🏅", label: "Coaches" },
-    { href: "/messages.html", icon: "💬", label: "Messages", badge: true },
-    { href: "/premium.html", icon: "⭐", label: "Premium", hideForRoles: ["premium", "coach"] },
+    { href: "/exercises.html", icon: "🏋️", labelKey: "nav_exercises" },
+    { href: "/coaches.html", icon: "🏅", labelKey: "nav_coaches" },
+    { href: "/messages.html", icon: "💬", labelKey: "nav_messages", badge: true },
+    { href: "/premium.html", icon: "⭐", labelKey: "nav_premium", hideForRoles: ["premium", "coach"] },
     { sep: true },
-    { href: "/profile.html", icon: "👤", label: "Mon profil" },
-    { href: "/history.html", icon: "📅", label: "Historique" },
-    { href: "/settings.html", icon: "⚙️", label: "Paramètres" },
+    { href: "/profile.html", icon: "👤", labelKey: "nav_profile" },
+    { href: "/history.html", icon: "📅", labelKey: "nav_history" },
+    { href: "/settings.html", icon: "⚙️", labelKey: "nav_settings" },
   ];
 
   const BOTTOM_NAV_ITEMS = [
-    { href: "/home.html", icon: "🏠", label: "Accueil" },
-    { href: "/session.html", icon: "▶️", label: "Séance" },
-    { href: "/dashboard.html", icon: "📋", label: "Programme" },
-    { href: "/stats.html", icon: "📊", label: "Stats" },
-    { href: "/profile.html", icon: "👤", label: "Profil" },
+    { href: "/home.html", icon: "🏠", labelKey: "bottom_home" },
+    { href: "/session.html", icon: "▶️", labelKey: "bottom_session" },
+    { href: "/dashboard.html", icon: "📋", labelKey: "bottom_program" },
+    { href: "/stats.html", icon: "📊", labelKey: "bottom_stats" },
+    { href: "/profile.html", icon: "👤", labelKey: "bottom_profile" },
   ];
+
+  const t = key => (window.i18n ? window.i18n.t(key) : key);
 
   function initials(name) {
     if (!name) return "?";
@@ -50,10 +53,10 @@ document.documentElement.setAttribute("data-theme", localStorage.getItem("theme"
 
     if (role === "coach" || role === "admin") {
       items.push({ sep: true });
-      items.push({ href: "/coach-dashboard.html", icon: "🎛️", label: "Mes clients" });
+      items.push({ href: "/coach-dashboard.html", icon: "🎛️", labelKey: "nav_coach_clients" });
     }
     if (role === "admin") {
-      items.push({ href: "/admin.html", icon: "🔧", label: "Admin" });
+      items.push({ href: "/admin.html", icon: "🔧", labelKey: "nav_admin" });
     }
 
     const navHtml = items.map(it => {
@@ -62,8 +65,8 @@ document.documentElement.setAttribute("data-theme", localStorage.getItem("theme"
       const ctaClass = it.cta ? " sidebar-cta" : "";
       const badgeHtml = it.badge && unread > 0
         ? `<span class="sidebar-msg-badge">${unread > 9 ? "9+" : unread}</span>` : "";
-      return `<a href="${it.href}" class="sidebar-item${active}${ctaClass}">
-        <span class="icon">${it.icon}</span><span>${esc(it.label)}</span>${badgeHtml}
+      return `<a href="${it.href}" class="sidebar-item${active}${ctaClass}" data-key="${it.labelKey}">
+        <span class="icon">${it.icon}</span><span class="lbl">${esc(t(it.labelKey))}</span>${badgeHtml}
       </a>`;
     }).join("");
 
@@ -76,6 +79,7 @@ document.documentElement.setAttribute("data-theme", localStorage.getItem("theme"
       ? `<img src="${esc(user.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`
       : initials(user.name);
 
+    const lang = window.i18n ? window.i18n.getLang() : "fr";
     const sidebarHtml = `
       <aside class="sidebar">
         <a class="sidebar-logo" href="/home.html">
@@ -83,21 +87,25 @@ document.documentElement.setAttribute("data-theme", localStorage.getItem("theme"
           <span>Gym AI Coach</span>
         </a>
         <nav class="sidebar-nav">${navHtml}</nav>
+        <div class="sidebar-lang">
+          <button type="button" class="sidebar-lang-btn${lang === "fr" ? " active" : ""}" data-lang="fr">FR</button>
+          <button type="button" class="sidebar-lang-btn${lang === "en" ? " active" : ""}" data-lang="en">EN</button>
+        </div>
         <div class="sidebar-user">
           <div class="sidebar-avatar">${avatarHtml}</div>
           <div class="user-info" style="flex:1;min-width:0">
             <div style="font-size:.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(user.name)}</div>
             ${roleBadge}
           </div>
-          <a href="#" class="sidebar-logout" id="sidebar-logout" title="Déconnexion">⏻</a>
+          <a href="#" class="sidebar-logout" id="sidebar-logout" title="${esc(t("nav_logout"))}">⏻</a>
         </div>
       </aside>`;
 
     const bottomNavHtml = `
       <nav class="bottom-nav">
         ${BOTTOM_NAV_ITEMS.map(it => `
-          <a href="${it.href}" class="bottom-nav-item${path === it.href ? " active" : ""}">
-            <span class="icon">${it.icon}</span>${esc(it.label)}
+          <a href="${it.href}" class="bottom-nav-item${path === it.href ? " active" : ""}" data-key="${it.labelKey}">
+            <span class="icon">${it.icon}</span><span class="lbl">${esc(t(it.labelKey))}</span>
           </a>`).join("")}
       </nav>`;
 
@@ -109,6 +117,23 @@ document.documentElement.setAttribute("data-theme", localStorage.getItem("theme"
       await fetch("/api/auth/logout", { method: "POST" });
       window.location.href = "/";
     });
+
+    document.querySelectorAll(".sidebar-lang-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        window.i18n?.setLang(btn.dataset.lang);
+        document.querySelectorAll(".sidebar-lang-btn").forEach(b => b.classList.toggle("active", b === btn));
+        relabelNav();
+      });
+    });
+
+    function relabelNav() {
+      document.querySelectorAll(".sidebar-item[data-key], .bottom-nav-item[data-key]").forEach(el => {
+        const lbl = el.querySelector(".lbl");
+        if (lbl) lbl.textContent = t(el.getAttribute("data-key"));
+      });
+      const logout = document.getElementById("sidebar-logout");
+      if (logout) logout.title = t("nav_logout");
+    }
   }
 
   init();
