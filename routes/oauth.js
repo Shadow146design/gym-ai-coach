@@ -86,7 +86,7 @@ router.get("/google/callback", async (req, res) => {
     req.session.userId = userId;
     // Redirige vers questionnaire si nouveau, sinon home
     const prog = await pool.query("SELECT id FROM programs WHERE user_id=$1 LIMIT 1", [userId]);
-    res.redirect(prog.rows.length ? "/home.html" : "/questionnaire.html");
+    res.redirect(prog.rows.length ? "/home.html" : "/onboarding.html");
 
   } catch (err) {
     console.error("Erreur Google OAuth:", err);

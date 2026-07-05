@@ -83,6 +83,6 @@ regForm?.addEventListener("submit", async e => {
     });
     const d = await r.json();
     if (!r.ok) return showErr("register-error", d.error);
-    window.location.href = "/questionnaire.html";
+    window.location.href = "/onboarding.html";
   } catch { showErr("register-error", "Impossible de joindre le serveur."); }
 });
