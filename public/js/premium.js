@@ -19,6 +19,8 @@ function updateButtons() {
 
   const cancelZone = document.getElementById("cancel-zone");
   cancelZone.classList.toggle("hidden", currentRole !== "premium" && currentRole !== "coach");
+
+  document.getElementById("premium-sticky-cta")?.classList.toggle("visible", currentRole === "user");
 }
 
 async function subscribe(plan) {
