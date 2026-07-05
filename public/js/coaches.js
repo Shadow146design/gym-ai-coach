@@ -31,6 +31,9 @@ async function init() {
       ? `✅ Ton coach : <strong>${esc(a.name)}</strong>`
       : `⏳ Demande en attente pour <strong>${esc(a.name)}</strong>`;
     txt.innerHTML = statusTxt;
+    document.getElementById("my-coach-msg-btn").innerHTML = a.status === "active"
+      ? `<a class="btn btn-primary btn-sm" href="/messages.html?with=${a.coach_id}">💬 Envoyer un message</a>`
+      : "";
     banner.classList.remove("hidden");
   }
 

@@ -10,6 +10,26 @@ async function init() {
   currentUser = user;
   document.getElementById("user-greeting").textContent = `Salut ${user.name} 👋`;
   loadProgram();
+  loadCoachMessage();
+}
+
+// ── Dernier message du coach ────────────────────────────────
+async function loadCoachMessage() {
+  try {
+    const mine = await fetch("/api/coaches/mine").then(r => r.json());
+    const assignment = mine.assignment;
+    if (!assignment || assignment.status !== "active") return;
+
+    const conv = await fetch("/api/messages/conversations").then(r => r.json());
+    const withCoach = (conv.conversations || []).find(c => c.other_id === assignment.coach_id);
+    if (!withCoach) return;
+
+    document.getElementById("coach-msg-avatar").innerHTML = withCoach.other_avatar
+      ? `<img src="${esc(withCoach.other_avatar)}" style="width:100%;height:100%;object-fit:cover"/>` : "👤";
+    document.getElementById("coach-msg-preview").textContent = withCoach.last_msg;
+    document.getElementById("coach-msg-reply-btn").href = `/messages.html?with=${assignment.coach_id}`;
+    document.getElementById("coach-msg-card").classList.remove("hidden");
+  } catch {}
 }
 
 // ── Programme actif ───────────────────────────────────────

@@ -1,13 +1,15 @@
 let currentWith = null;
+let currentOther = null;
 let pollInterval = null;
 let myId = null;
+let lastMsgCount = 0;
+let audioCtx = null;
 
 async function init() {
   const me = await fetch("/api/auth/me").then(r=>r.json());
   if (!me.user) return window.location.href="/";
   myId = me.user.id;
 
-  // Ouvre directement la conv avec le coach si ?with=ID dans l'URL
   const withId = new URLSearchParams(window.location.search).get("with");
 
   await loadConversations();
@@ -18,52 +20,50 @@ async function loadConversations() {
   const r = await fetch("/api/messages/conversations").then(r=>r.json());
   const list = document.getElementById("conv-list");
   const empty = document.getElementById("conv-empty");
-  if (!r.conversations?.length) { empty.classList.remove("hidden"); return; }
+
+  if (!r.conversations?.length) {
+    list.innerHTML = "";
+    empty.classList.remove("hidden");
+    return;
+  }
+  empty.classList.add("hidden");
 
   list.innerHTML = r.conversations.map(c => `
     <div class="conv-item ${currentWith===c.other_id?'active':''}" onclick="openConversation(${c.other_id})" id="conv-${c.other_id}">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:32px;height:32px;border-radius:50%;background:var(--rust-bg);display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;overflow:hidden">
-          ${c.other_avatar ? `<img src="${esc(c.other_avatar)}" style="width:100%;height:100%;object-fit:cover"/>` : "👤"}
+      <div class="conv-avatar">${c.other_avatar ? `<img src="${esc(c.other_avatar)}"/>` : "👤"}</div>
+      <div class="conv-meta">
+        <div class="conv-name-row">
+          <span class="conv-name">${esc(c.other_name)}</span>
+          ${c.unread>0 ? `<span class="conv-unread-badge">${c.unread}</span>` : ""}
         </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:.88rem;font-weight:600;display:flex;justify-content:space-between">
-            <span>${esc(c.other_name)}</span>
-            ${c.unread>0 ? `<span style="background:var(--rust);color:#fff;border-radius:10px;padding:1px 6px;font-size:.65rem">${c.unread}</span>` : ""}
-          </div>
-          <div style="font-size:.75rem;color:var(--chalk-dim);overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${esc(c.last_msg)}</div>
-        </div>
+        <div class="conv-last-msg">${esc(c.last_msg)}</div>
       </div>
     </div>`).join("");
 }
 
 async function openConversation(withId) {
   currentWith = withId;
+  lastMsgCount = 0;
   if (pollInterval) clearInterval(pollInterval);
 
+  document.getElementById("chat-placeholder").classList.add("hidden");
+
   const r = await fetch(`/api/messages/${withId}`).then(r=>r.json());
+  currentOther = r.other || null;
   const header = document.getElementById("chat-header");
-  const msgs = document.getElementById("chat-msgs");
   const form = document.getElementById("chat-form");
 
-  header.innerHTML = r.other
-    ? `<div style="display:flex;align-items:center;gap:10px">
-        <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--rust-bg);display:flex;align-items:center;justify-content:center">
-          ${r.other.avatar_url ? `<img src="${esc(r.other.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>` : "👤"}
-        </div>
-        <span>${esc(r.other.name)}</span>
-        <span style="font-size:.72rem;background:var(--bg-hover);padding:2px 8px;border-radius:4px;color:var(--chalk-dim)">${esc(r.other.role)}</span>
-      </div>`
+  header.innerHTML = currentOther
+    ? `<div class="chat-panel-head-avatar">${currentOther.avatar_url ? `<img src="${esc(currentOther.avatar_url)}"/>` : "👤"}</div>
+       <span class="chat-panel-head-name">${esc(currentOther.name)}</span>
+       <span class="chat-panel-head-role">${esc(currentOther.role)}</span>`
     : "Conversation";
 
-  renderMessages(r.messages || []);
+  renderMessages(r.messages || [], true);
   form.classList.remove("hidden");
   document.getElementById("msg-input").focus();
 
-  // Recharge les messages toutes les 5 secondes
-  pollInterval = setInterval(() => refreshMessages(withId), 5000);
-
-  // Met à jour la liste
+  pollInterval = setInterval(() => refreshMessages(withId), 3000);
   loadConversations();
 }
 
@@ -71,23 +71,55 @@ async function refreshMessages(withId) {
   if (currentWith !== withId) return;
   const r = await fetch(`/api/messages/${withId}`).then(r=>r.json());
   renderMessages(r.messages || []);
+  loadConversations();
 }
 
-function renderMessages(msgs) {
+function renderMessages(msgs, isInitialLoad = false) {
   const box = document.getElementById("chat-msgs");
   const wasBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 20;
+
+  // Notification sonore si de nouveaux messages de l'autre personne sont arrivés
+  if (!isInitialLoad && msgs.length > lastMsgCount) {
+    const newOnes = msgs.slice(lastMsgCount);
+    if (newOnes.some(m => m.from_id !== myId)) playPing();
+  }
+  lastMsgCount = msgs.length;
+
   box.innerHTML = msgs.map(m => {
     const isMe = m.from_id === myId;
-    return `<div style="display:flex;${isMe?'justify-content:flex-end':''}">
-      <div style="max-width:75%;padding:9px 13px;border-radius:${isMe?'12px 12px 4px 12px':'12px 12px 12px 4px'};background:${isMe?'var(--rust-bg)':'var(--bg-hover)'};font-size:.88rem;line-height:1.5">
-        ${esc(m.content)}
-        <div style="font-size:.65rem;color:var(--chalk-dim);margin-top:3px;text-align:right">
-          ${new Date(m.created_at).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}
-        </div>
+    const time = new Date(m.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    const avatarHtml = !isMe
+      ? `<div class="msg-row-avatar">${currentOther?.avatar_url ? `<img src="${esc(currentOther.avatar_url)}"/>` : "👤"}</div>`
+      : "";
+    const readHtml = isMe
+      ? `<span class="msg-read-tick${m.read_at ? " read" : ""}">${m.read_at ? "✓✓ Lu" : "✓ Envoyé"}</span>`
+      : "";
+    return `<div class="msg-row ${isMe ? "me" : "them"}">
+      ${avatarHtml}
+      <div class="msg-bubble">
+        <div class="msg-text">${esc(m.content)}</div>
+        <div class="msg-meta"><span>${time}</span>${readHtml}</div>
       </div>
     </div>`;
   }).join("");
-  if (wasBottom) box.scrollTop = box.scrollHeight;
+
+  if (wasBottom || isInitialLoad) box.scrollTop = box.scrollHeight;
+}
+
+function playPing() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.25);
+  } catch {}
 }
 
 async function sendMsg() {
@@ -99,11 +131,11 @@ async function sendMsg() {
     method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({content:text})
   });
   refreshMessages(currentWith);
-  loadConversations();
 }
 
-document.getElementById("msg-input")?.addEventListener("keydown", e => {
-  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+document.getElementById("chat-form").addEventListener("submit", e => {
+  e.preventDefault();
+  sendMsg();
 });
 
 function esc(s) { const d=document.createElement("div"); d.textContent=String(s||""); return d.innerHTML; }

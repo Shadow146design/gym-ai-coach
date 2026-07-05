@@ -193,6 +193,34 @@ document.documentElement.setAttribute("data-theme", localStorage.getItem("theme"
       const logout = document.getElementById("sidebar-logout");
       if (logout) logout.title = t("nav_logout");
     }
+
+    async function refreshBadges() {
+      try {
+        const [u, n] = await Promise.all([
+          fetch("/api/messages/unread/count").then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch("/api/notifications/unread/count").then(r => r.ok ? r.json() : null).catch(() => null),
+        ]);
+
+        const msgItem = document.querySelector('.sidebar-item[data-key="nav_messages"]');
+        if (msgItem) {
+          const count = u?.unread || 0;
+          let badge = msgItem.querySelector(".sidebar-msg-badge");
+          if (count > 0) {
+            if (!badge) { badge = document.createElement("span"); badge.className = "sidebar-msg-badge"; msgItem.appendChild(badge); }
+            badge.textContent = count > 9 ? "9+" : count;
+          } else if (badge) badge.remove();
+        }
+
+        const notifCount = n?.unread || 0;
+        let bellBadge = bellBtn?.querySelector(".sidebar-bell-badge");
+        if (notifCount > 0) {
+          if (!bellBadge && bellBtn) { bellBadge = document.createElement("span"); bellBadge.className = "sidebar-bell-badge"; bellBtn.appendChild(bellBadge); }
+          if (bellBadge) bellBadge.textContent = notifCount > 9 ? "9+" : notifCount;
+        } else if (bellBadge) bellBadge.remove();
+      } catch {}
+    }
+
+    setInterval(refreshBadges, 30000);
   }
 
   init();

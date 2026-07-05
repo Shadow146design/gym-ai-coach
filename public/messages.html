@@ -7,23 +7,34 @@
 </head>
 <body>
 <div class="page-wrapper">
-<div class="shell" style="max-width:800px">
+<div class="shell" style="max-width:900px">
   <div class="page-head"><h1 data-i18n="page_messages_title">Messages</h1></div>
-  <div style="display:grid;grid-template-columns:240px 1fr;gap:0;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;height:550px">
+
+  <div class="messages-shell">
     <!-- Liste conversations -->
-    <div style="border-right:1px solid var(--border);overflow-y:auto">
-      <div style="padding:12px 14px;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--chalk-dim);border-bottom:1px solid var(--border)">Conversations</div>
+    <div class="conv-panel">
+      <div class="conv-panel-head">Conversations</div>
       <div id="conv-list"></div>
-      <div id="conv-empty" class="hidden" style="padding:20px 14px;font-size:.85rem;color:var(--chalk-dim)">Aucune conversation.</div>
-    </div>
-    <!-- Zone de chat -->
-    <div style="display:flex;flex-direction:column">
-      <div id="chat-header" style="padding:14px 16px;border-bottom:1px solid var(--border);font-weight:600;min-height:50px"></div>
-      <div id="chat-msgs" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px"></div>
-      <div id="chat-form" class="hidden" style="padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px">
-        <input id="msg-input" type="text" placeholder="Écris ton message…" style="flex:1" autocomplete="off"/>
-        <button class="btn btn-primary btn-sm" onclick="sendMsg()">Envoyer</button>
+      <div id="conv-empty" class="hidden messages-empty">
+        <div class="messages-empty-icon">💬</div>
+        <p>Tu n'as pas encore de messages.</p>
+        <p class="muted" style="font-size:.82rem">Choisis un coach sur la page Coaches pour commencer à échanger.</p>
+        <a class="btn btn-primary btn-sm" href="/coaches.html">Voir les coaches</a>
       </div>
+    </div>
+
+    <!-- Zone de chat -->
+    <div class="chat-panel">
+      <div id="chat-header" class="chat-panel-head"></div>
+      <div id="chat-msgs" class="chat-panel-msgs"></div>
+      <div id="chat-placeholder" class="messages-empty">
+        <div class="messages-empty-icon">👈</div>
+        <p class="muted">Choisis une conversation à gauche.</p>
+      </div>
+      <form id="chat-form" class="hidden chat-panel-input">
+        <input id="msg-input" type="text" placeholder="Écris ton message…" autocomplete="off"/>
+        <button class="btn btn-primary btn-icon" type="submit" title="Envoyer">➤</button>
+      </form>
     </div>
   </div>
 </div>
