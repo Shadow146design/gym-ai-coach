@@ -15,6 +15,7 @@ async function init() {
   fullData = await res.json();
   renderIdentity();
   renderPhysical();
+  renderGoals();
   renderSubscription();
   renderAccounts();
   renderStats();
@@ -67,6 +68,14 @@ function updateImc() {
   else if (imc >= 30) label = "Obésité";
   box.textContent = `IMC : ${imc.toFixed(1)} — ${label}`;
   box.classList.remove("hidden");
+}
+
+function renderGoals() {
+  const { user } = fullData;
+  const form = document.getElementById("goals-form");
+  form.elements.main_goal.value = user.main_goal || "";
+  form.elements.personal_note.value = user.personal_note || "";
+  form.elements.goal_date.value = user.goal_date || "";
 }
 
 function renderSubscription() {
@@ -158,6 +167,31 @@ document.getElementById("profile-form").addEventListener("submit", async e => {
   } catch {
     errorBox.innerHTML = `<div class="error-msg">Impossible de joindre le serveur.</div>`;
     status.textContent = "";
+  }
+});
+
+document.getElementById("goals-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const status = document.getElementById("goals-save-status");
+  status.textContent = "Enregistrement…";
+
+  const data = Object.fromEntries(new FormData(e.target).entries());
+
+  try {
+    const res = await fetch("/api/profile/goals", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const json = await res.json();
+      status.innerHTML = `<span style="color:var(--red)">${json.error}</span>`;
+      return;
+    }
+    status.innerHTML = `<span style="color:var(--green)">✓ Enregistré</span>`;
+    setTimeout(() => { status.textContent = ""; }, 2500);
+  } catch {
+    status.innerHTML = `<span style="color:var(--red)">Impossible de joindre le serveur.</span>`;
   }
 });
 

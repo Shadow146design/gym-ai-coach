@@ -109,14 +109,30 @@ function buildPhysicalContext(answers) {
   return lines.join("\n");
 }
 
+// Objectif personnel libre, date cible et note de l'utilisateur (depuis son profil)
+function buildGoalContext(answers) {
+  if (!answers.main_goal && !answers.goal_date && !answers.personal_note) return "";
+
+  const lines = ["\n━━ OBJECTIF PERSONNEL DE L'UTILISATEUR ━━"];
+  if (answers.main_goal) lines.push(`• Objectif principal : ${answers.main_goal}`);
+  if (answers.goal_date) {
+    const days = Math.ceil((new Date(answers.goal_date) - new Date()) / 86400000);
+    lines.push(`• Date cible : ${answers.goal_date}${days > 0 ? ` (dans ${days} jours)` : ""}`);
+  }
+  if (answers.personal_note) lines.push(`• Note personnelle de l'utilisateur : ${answers.personal_note}`);
+  lines.push("Prends cet objectif et cette note en compte pour orienter le choix des exercices, l'intensité et le ton du résumé du programme.");
+  return lines.join("\n");
+}
+
 async function generateProgram(answers) {
   if (!process.env.GROQ_API_KEY)
     throw new Error("GROQ_API_KEY manquante.");
 
   const rules = PROGRAM_RULES[answers.objectif]?.[answers.niveau] || {};
   const physicalContext = buildPhysicalContext(answers);
+  const goalContext = buildGoalContext(answers);
 
-  const userPrompt = `${physicalContext}
+  const userPrompt = `${physicalContext}${goalContext}
 
 ━━ QUESTIONNAIRE ━━
 • Objectif : ${answers.objectif}

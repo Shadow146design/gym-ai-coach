@@ -14,11 +14,14 @@ router.post("/generate", async (req, res) => {
     if (missing.length) return res.status(400).json({ error: `Champs manquants : ${missing.join(", ")}` });
     try {
       const profRes = await pool.query(
-        "SELECT weight_kg, height_cm, age, gender, activity_level FROM users WHERE id=$1",
+        "SELECT weight_kg, height_cm, age, gender, activity_level, main_goal, goal_date, personal_note FROM users WHERE id=$1",
         [req.session.userId]
       );
       const prof = profRes.rows[0] || {};
       if (prof.weight_kg) Object.assign(answers, prof);
+      if (prof.main_goal) answers.main_goal = prof.main_goal;
+      if (prof.goal_date) answers.goal_date = prof.goal_date;
+      if (prof.personal_note) answers.personal_note = prof.personal_note;
     } catch(e) { console.warn("Profil ignoré :", e.message); }
     const program = await generateProgram(answers);
     await pool.query("UPDATE programs SET is_active=FALSE WHERE user_id=$1", [req.session.userId]);

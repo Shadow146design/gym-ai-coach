@@ -32,12 +32,16 @@ router.get("/full", async (req, res) => {
     const uid = req.session.userId;
     const userR = await pool.query(
       `SELECT name, email, role, avatar_url, created_at, google_id,
-              weight_kg, height_cm, age, gender, activity_level
+              weight_kg, height_cm, age, gender, activity_level,
+              main_goal, goal_date, personal_note
        FROM users WHERE id=$1`,
       [uid]
     );
     if (!userR.rows.length) return res.status(404).json({ error: "Utilisateur introuvable." });
     const user = userR.rows[0];
+    // Reformate en "YYYY-MM-DD" cote serveur : eviter que JSON.stringify() applique
+    // toISOString() sur la Date (minuit local) et decale le jour hors UTC.
+    if (user.goal_date) user.goal_date = dayStr(user.goal_date);
 
     const daysR = await pool.query(
       "SELECT DISTINCT performed_at::date AS day FROM logs WHERE user_id=$1 ORDER BY day DESC",
@@ -101,6 +105,21 @@ router.put("/", async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error("Erreur PUT /profile :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+// Met a jour l'objectif principal, la date cible et la note personnelle
+router.put("/goals", async (req, res) => {
+  try {
+    const { main_goal, goal_date, personal_note } = req.body;
+    await pool.query(
+      `UPDATE users SET main_goal=$1, goal_date=$2, personal_note=$3 WHERE id=$4`,
+      [main_goal?.trim() || null, goal_date || null, personal_note?.trim() || null, req.session.userId]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Erreur PUT /profile/goals :", err);
     res.status(500).json({ error: "Erreur serveur." });
   }
 });

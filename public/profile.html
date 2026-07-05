@@ -94,6 +94,33 @@
     </div>
   </div>
 
+  <!-- Section 2bis — Objectifs -->
+  <div class="profile-section">
+    <div class="profile-section-title">🎯 Objectifs</div>
+    <form id="goals-form">
+      <div class="field">
+        <label for="main_goal">Objectif principal</label>
+        <input id="main_goal" name="main_goal" type="text" maxlength="200" placeholder="Ex : Perdre 5kg avant l'été"/>
+      </div>
+      <div class="field">
+        <label for="goal_date">Date objectif (optionnel)</label>
+        <input id="goal_date" name="goal_date" type="date"/>
+      </div>
+      <div class="field">
+        <label for="personal_note">Note personnelle (optionnel)</label>
+        <textarea id="personal_note" name="personal_note" maxlength="500" placeholder="Ex : je préfère éviter le développé couché à cause d'une ancienne blessure à l'épaule"></textarea>
+      </div>
+      <div class="spacer-sm"></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-primary" type="submit">Enregistrer</button>
+        <span id="goals-save-status" class="muted" style="font-size:.85rem"></span>
+      </div>
+    </form>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border-soft);font-size:.82rem;color:var(--chalk-dim)">
+      💡 Ton objectif et ta note personnelle sont transmis à l'IA pour personnaliser ton prochain programme généré.
+    </div>
+  </div>
+
   <!-- Section 3 — Abonnement -->
   <div class="profile-section">
     <div class="profile-section-title">💳 Abonnement</div>
