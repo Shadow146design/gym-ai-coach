@@ -1,6 +1,7 @@
 const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
+const { dailyTip } = require("../services/aiCoach");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -236,6 +237,61 @@ router.get("/summary", async (req, res) => {
       streak,
     });
   } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
+});
+
+// ── GET /daily-tip (phrase motivante IA, page d'accueil) ──
+router.get("/daily-tip", async (req, res) => {
+  const FALLBACK = "Chaque séance compte : reste régulier, les résultats suivent.";
+  try {
+    const uid = req.session.userId;
+    const [streakRes, lastRes, imbalanceRes] = await Promise.all([
+      pool.query(
+        `SELECT performed_at::date AS day FROM logs WHERE user_id=$1 GROUP BY day ORDER BY day DESC`,
+        [uid]
+      ),
+      pool.query("SELECT MAX(performed_at) AS last FROM logs WHERE user_id=$1", [uid]),
+      pool.query(
+        `SELECT COALESCE(muscle_group,'Non défini') AS muscle_group, SUM(weight*reps*sets) AS volume
+         FROM logs WHERE user_id=$1 AND muscle_group IS NOT NULL
+         AND performed_at >= NOW() - INTERVAL '30 days'
+         GROUP BY muscle_group ORDER BY volume DESC`,
+        [uid]
+      ),
+    ]);
+
+    const days = streakRes.rows.map(x => x.day.toISOString().slice(0,10));
+    const today = new Date().toISOString().slice(0,10);
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+    let streak = 0;
+    if (days.length && (days[0] === today || days[0] === yesterday)) {
+      streak = 1;
+      for (let i = 1; i < days.length; i++) {
+        const diff = (new Date(days[i-1]) - new Date(days[i])) / 86400000;
+        if (diff === 1) streak++; else break;
+      }
+    }
+
+    let imbalanceWarning = null;
+    const muscleData = imbalanceRes.rows;
+    if (muscleData.length >= 2) {
+      const push = muscleData.filter(m => ["Poitrine","Épaules","Triceps"].includes(m.muscle_group)).reduce((a,m)=>a+Number(m.volume),0);
+      const pull = muscleData.filter(m => ["Dos","Biceps"].includes(m.muscle_group)).reduce((a,m)=>a+Number(m.volume),0);
+      if (push > 0 && pull > 0) {
+        const ratio = push / pull;
+        if (ratio > 1.5 || ratio < 0.67) imbalanceWarning = "déséquilibre push/pull";
+      }
+    }
+
+    const tip = await dailyTip({
+      streak,
+      totalSessions: days.length,
+      lastSessionDate: lastRes.rows[0]?.last || null,
+      imbalanceWarning,
+    });
+    res.json({ tip: tip || FALLBACK });
+  } catch (err) {
+    res.json({ tip: FALLBACK });
+  }
 });
 
 // ── GET /dashboard-stats ──────────────────────────────────

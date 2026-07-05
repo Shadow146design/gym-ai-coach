@@ -1037,6 +1037,37 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
   .hstat-sep { display: none; }
 }
 
+/* CTA géant du hero */
+.btn-huge {
+  padding: 18px 32px;
+  font-size: 1.05rem;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 20px rgba(201,77,40,.32), inset 0 1px 0 rgba(255,255,255,.12);
+}
+.btn-huge:hover:not(:disabled) { transform: translateY(-3px) scale(1.01); }
+
+/* Grille 3 colonnes (prochaine / dernière séance / record du jour) */
+.home-cols-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+  align-items: stretch;
+}
+.home-cols-3 .home-card { margin-bottom: 0; height: 100%; }
+@media (max-width: 900px) {
+  .home-cols-3 { grid-template-columns: 1fr; }
+}
+
+/* Conseil du jour */
+.daily-tip-card {
+  display: flex; align-items: center; gap: 16px;
+  background: linear-gradient(135deg, var(--rust-bg), transparent);
+  border: 1px solid rgba(201,77,40,.25);
+}
+.daily-tip-icon { font-size: 1.8rem; flex-shrink: 0; }
+.daily-tip-text { font-size: 1rem; color: var(--chalk); font-style: italic; line-height: 1.5; }
+
 /* ── Badge role navbar ── */
 .nav-user-badge {
   display: flex; align-items: center; gap: 6px;

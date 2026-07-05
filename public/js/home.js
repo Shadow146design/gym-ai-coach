@@ -7,7 +7,52 @@ async function init() {
   const g = h < 12 ? "Bonjour" : h < 18 ? "Bonsoir" : "Bonsoir";
   document.getElementById("greeting").textContent = `${g} ${user.name} 👋`;
 
-  await Promise.all([loadKPIs(), loadNextSession(), loadCalendar(), loadRecords()]);
+  await Promise.all([
+    loadKPIs(), loadNextSession(), loadCalendar(), loadRecords(),
+    loadLastAndTodayRecord(), loadDailyTip(),
+  ]);
+}
+
+// ── Dernière séance + record du jour (via /api/logs/summary) ──
+async function loadLastAndTodayRecord() {
+  const lastEl = document.getElementById("last-session-card");
+  const recordEl = document.getElementById("today-record-card");
+  try {
+    const r = await fetch("/api/logs/summary").then(r => r.json());
+
+    if (r.lastSession) {
+      const date = new Date(r.lastSession.day).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+      lastEl.innerHTML = `
+        <div style="font-family:var(--font-display);font-weight:600;font-size:1rem">${esc(date)}</div>
+        <div style="font-size:.82rem;color:var(--chalk-dim);margin-top:4px">${r.lastSession.exercises} exercice${r.lastSession.exercises > 1 ? "s" : ""} réalisé${r.lastSession.exercises > 1 ? "s" : ""}</div>`;
+    } else {
+      lastEl.innerHTML = `<p class="muted" style="font-size:.88rem">Pas encore de séance loggée.</p>`;
+    }
+
+    if (r.topRecord) {
+      const date = new Date(r.topRecord.achieved_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+      recordEl.innerHTML = `
+        <div style="font-family:var(--font-display);font-weight:600;font-size:1rem">${esc(r.topRecord.exercise_name)}</div>
+        <div style="font-size:1.1rem;color:var(--gold);font-family:var(--font-mono);margin-top:4px">${r.topRecord.max_weight} kg</div>
+        <div style="font-size:.78rem;color:var(--chalk-dim);margin-top:2px">le ${esc(date)}</div>`;
+    } else {
+      recordEl.innerHTML = `<p class="muted" style="font-size:.88rem">Logge une séance pour débloquer tes records.</p>`;
+    }
+  } catch {
+    lastEl.innerHTML = `<p class="muted" style="font-size:.88rem">Impossible de charger.</p>`;
+    recordEl.innerHTML = `<p class="muted" style="font-size:.88rem">Impossible de charger.</p>`;
+  }
+}
+
+// ── Conseil du jour (IA) ───────────────────────────────────
+async function loadDailyTip() {
+  const el = document.getElementById("daily-tip-text");
+  try {
+    const r = await fetch("/api/logs/daily-tip").then(r => r.json());
+    el.textContent = r.tip || "Chaque séance compte : reste régulier, les résultats suivent.";
+  } catch {
+    el.textContent = "Chaque séance compte : reste régulier, les résultats suivent.";
+  }
 }
 
 async function loadKPIs() {
@@ -126,11 +171,5 @@ async function loadRecords() {
 }
 
 function esc(s) { const d = document.createElement("div"); d.textContent = String(s||""); return d.innerHTML; }
-
-document.getElementById("logout-link")?.addEventListener("click", async e => {
-  e.preventDefault();
-  await fetch("/api/auth/logout", { method: "POST" });
-  window.location.href = "/";
-});
 
 init();

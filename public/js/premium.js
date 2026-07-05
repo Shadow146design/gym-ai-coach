@@ -44,10 +44,4 @@ function showBanner(type, msg) {
     `<div class="${type === "success" ? "success-msg" : "error-msg"}">${msg}</div>`;
 }
 
-document.getElementById("logout-link")?.addEventListener("click", async e => {
-  e.preventDefault();
-  await fetch("/api/auth/logout", { method: "POST" });
-  window.location.href = "/";
-});
-
 init();

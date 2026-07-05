@@ -249,4 +249,41 @@ Fais le debrief de cette séance.`;
   return data.choices?.[0]?.message?.content || "Impossible de générer le debrief.";
 }
 
-module.exports = { generateProgram, chatWithCoach, debriefSession };
+// ── Conseil du jour (page d'accueil) ───────────────────────
+const DAILY_TIP_SYSTEM = `Tu es un coach sportif motivant. Genere UNE SEULE phrase courte
+(20 mots max), en francais, motivante et personnalisee a partir des statistiques fournies.
+Pas de guillemets, pas d'emoji en debut de phrase, pas de markdown. Juste la phrase.`;
+
+async function dailyTip({ streak, totalSessions, lastSessionDate, imbalanceWarning }) {
+  if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY manquante.");
+
+  const daysSinceLast = lastSessionDate
+    ? Math.floor((Date.now() - new Date(lastSessionDate).getTime()) / 86400000)
+    : null;
+
+  const userPrompt = `Statistiques de l'utilisateur :
+- Streak actuel : ${streak} jour(s)
+- Total séances : ${totalSessions}
+- Jours depuis la dernière séance : ${daysSinceLast ?? "aucune séance encore"}
+- Déséquilibre musculaire détecté : ${imbalanceWarning || "aucun"}
+
+Genere la phrase du jour adaptee a cette situation (encourage le streak, relance si inactif, ou félicite la régularité).`;
+
+  const response = await fetch(GROQ_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: MODEL(), temperature: 0.8, max_tokens: 60,
+      messages: [
+        { role: "system", content: DAILY_TIP_SYSTEM },
+        { role: "user", content: userPrompt },
+      ],
+    }),
+  });
+
+  if (!response.ok) throw new Error(`Erreur Groq daily-tip (${response.status})`);
+  const data = await response.json();
+  return (data.choices?.[0]?.message?.content || "").trim().replace(/^["']|["']$/g, "");
+}
+
+module.exports = { generateProgram, chatWithCoach, debriefSession, dailyTip };

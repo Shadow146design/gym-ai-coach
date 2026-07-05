@@ -10,12 +10,12 @@
 <div class="page-wrapper">
 <div class="shell">
 
-  <!-- Hero : greeting + streak + CTA -->
+  <!-- Hero : greeting + streak + CTA géant -->
   <div class="home-hero">
     <div class="home-hero-left">
       <div class="home-greeting" id="greeting">Bonjour !</div>
       <div class="home-last" id="last-session-txt"></div>
-      <a class="btn btn-primary" href="/session.html" style="margin-top:18px;width:fit-content">▶ Commencer la séance</a>
+      <a class="btn btn-primary btn-huge" href="/session.html" style="margin-top:18px;width:fit-content">▶ Commencer la séance</a>
     </div>
     <div class="streak-block">
       <div class="streak-fire">🔥</div>
@@ -33,10 +33,20 @@
     <div class="hstat"><div class="hstat-val" id="stat-assiduite">—</div><div class="hstat-lbl">Assiduité 4 sem.</div></div>
   </div>
 
-  <!-- Prochaine séance -->
-  <div class="home-card" style="border-left:3px solid var(--rust)">
-    <div class="home-card-title">📅 Prochaine séance recommandée</div>
-    <div id="next-session-card"><span class="muted" style="font-size:.88rem">Chargement…</span></div>
+  <!-- 3 colonnes : prochaine séance / dernière séance / record du jour -->
+  <div class="home-cols-3">
+    <div class="home-card" style="border-left:3px solid var(--rust)">
+      <div class="home-card-title">📅 Prochaine séance</div>
+      <div id="next-session-card"><span class="muted" style="font-size:.88rem">Chargement…</span></div>
+    </div>
+    <div class="home-card">
+      <div class="home-card-title">✅ Dernière séance</div>
+      <div id="last-session-card"><span class="muted" style="font-size:.88rem">Chargement…</span></div>
+    </div>
+    <div class="home-card">
+      <div class="home-card-title">🏆 Record du jour</div>
+      <div id="today-record-card"><span class="muted" style="font-size:.88rem">Chargement…</span></div>
+    </div>
   </div>
 
   <!-- Calendrier -->
@@ -50,9 +60,15 @@
     </div>
   </div>
 
+  <!-- Conseil du jour (IA) -->
+  <div class="home-card daily-tip-card">
+    <div class="daily-tip-icon">💡</div>
+    <div class="daily-tip-text" id="daily-tip-text">Chargement du conseil du jour…</div>
+  </div>
+
   <!-- Records -->
   <div class="home-card">
-    <div class="home-card-title">🏆 Records personnels</div>
+    <div class="home-card-title">🏅 Tous mes records</div>
     <div id="records-list"></div>
   </div>
 
