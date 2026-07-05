@@ -1854,3 +1854,39 @@ body.landing { overflow-x: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .reveal-init { opacity: 1; transform: none; transition: none; }
 }
+
+/* =========================================================
+   MODAL GENERIQUE (ex: limite gratuite atteinte)
+   ========================================================= */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  animation: fade-in-up .3s var(--ease);
+}
+.modal-card {
+  position: relative;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  padding: 36px 30px;
+  max-width: 420px; width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-lg), var(--glow-rust);
+}
+.modal-close {
+  position: absolute; top: 14px; right: 14px;
+  background: transparent; border: none; color: var(--chalk-dim);
+  font-size: 1.1rem; cursor: pointer; width: 30px; height: 30px;
+  border-radius: 50%; transition: background .18s var(--ease), color .18s var(--ease);
+}
+.modal-close:hover { background: var(--bg-hover); color: var(--chalk); }
+.modal-icon { font-size: 2.4rem; margin-bottom: 12px; }
+.modal-card h2 {
+  font-family: var(--font-display); font-weight: 700; font-size: 1.3rem;
+  margin-bottom: 10px;
+}
+.modal-card p { font-size: .9rem; }

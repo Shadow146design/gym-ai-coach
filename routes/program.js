@@ -12,6 +12,18 @@ router.post("/generate", async (req, res) => {
     const required = ["objectif","niveau","joursParSemaine","dureeSeance","materiel"];
     const missing = required.filter(k => !answers[k]);
     if (missing.length) return res.status(400).json({ error: `Champs manquants : ${missing.join(", ")}` });
+
+    const userR = await pool.query("SELECT role FROM users WHERE id=$1", [req.session.userId]);
+    if (userR.rows[0]?.role === "user") {
+      const countR = await pool.query("SELECT COUNT(*) AS n FROM programs WHERE user_id=$1", [req.session.userId]);
+      if (parseInt(countR.rows[0].n, 10) >= 3) {
+        return res.status(403).json({
+          error: "Tu as atteint la limite gratuite (3 programmes). Passe en Premium pour générer des programmes illimités.",
+          upgrade_url: "/premium.html",
+        });
+      }
+    }
+
     try {
       const profRes = await pool.query(
         "SELECT weight_kg, height_cm, age, gender, activity_level, main_goal, goal_date, personal_note FROM users WHERE id=$1",
