@@ -1,18 +1,3 @@
-// ── Theme ─────────────────────────────────────────────────
-const html = document.documentElement;
-const themeBtn = document.getElementById("theme-toggle");
-const savedTheme = localStorage.getItem("theme") || "dark";
-html.setAttribute("data-theme", savedTheme);
-if (themeBtn) {
-  themeBtn.textContent = savedTheme === "dark" ? "☀️" : "🌙";
-  themeBtn.addEventListener("click", () => {
-    const t = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    html.setAttribute("data-theme", t);
-    localStorage.setItem("theme", t);
-    themeBtn.textContent = t === "dark" ? "☀️" : "🌙";
-  });
-}
-
 async function init() {
   const meRes = await fetch("/api/auth/me");
   if (!meRes.ok) return (window.location.href = "/");

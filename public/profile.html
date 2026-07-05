@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,84 +7,127 @@
 <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
-<header class="topbar">
-  <a class="brand" href="/dashboard.html">
-    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>
-    Gym AI Coach
-  </a>
-  <nav class="nav-links">
-    <span id="nav-role-link"></span>
-    <a href="/home.html">Accueil</a>
-    <a href="/dashboard.html">Programme</a>
-    <a href="/stats.html">Stats</a>
-    <a href="/profile.html" class="active">Profil</a>
-    <a href="/premium.html">⭐ Premium</a>
-  </nav>
-</header>
-
-<div class="shell">
+<div class="page-wrapper">
+<div class="shell" style="max-width:720px">
   <div class="page-head">
     <div>
       <h1>Mon profil</h1>
-      <p class="sub muted">Ces données sont utilisées automatiquement par l'IA pour personnaliser ton programme.</p>
+      <p class="sub muted">Ton identité, tes données et ton abonnement, au même endroit.</p>
     </div>
   </div>
 
-  <form id="profile-form" class="card" style="max-width:560px">
-
-    <div class="two-col">
-      <div class="field">
-        <label for="weight_kg">Poids (kg)</label>
-        <input id="weight_kg" name="weight_kg" type="number" step="0.1" min="30" max="300" placeholder="75" />
+  <!-- Section 1 — Identité -->
+  <div class="profile-section">
+    <div class="profile-section-title">👤 Identité</div>
+    <div class="identity-row">
+      <div class="avatar-large" id="profile-avatar">?</div>
+      <div class="identity-meta">
+        <div class="identity-name" id="profile-name-display">—</div>
+        <div class="identity-email" id="profile-email-display">—</div>
+        <div id="profile-role-badge" style="margin-top:6px"></div>
+        <div class="identity-since" id="profile-since">—</div>
       </div>
-      <div class="field">
-        <label for="height_cm">Taille (cm)</label>
-        <input id="height_cm" name="height_cm" type="number" min="100" max="250" placeholder="178" />
-      </div>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="toggleIdentityEdit()">Modifier</button>
     </div>
+    <div id="identity-edit" class="hidden" style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border-soft)">
+      <div class="field"><label for="edit-name">Nom complet</label><input id="edit-name" type="text"/></div>
+      <div class="field"><label for="edit-avatar">URL de la photo (optionnel)</label><input id="edit-avatar" type="text" placeholder="https://…"/></div>
+      <button class="btn btn-primary btn-sm" type="button" onclick="saveIdentity()">Enregistrer</button>
+      <div id="identity-msg" style="margin-top:8px;font-size:.85rem"></div>
+    </div>
+  </div>
 
-    <div class="two-col">
-      <div class="field">
-        <label for="age">Âge</label>
-        <input id="age" name="age" type="number" min="13" max="100" placeholder="25" />
+  <!-- Section 2 — Données physiques -->
+  <div class="profile-section">
+    <div class="profile-section-title">📏 Données physiques</div>
+    <form id="profile-form">
+      <div class="two-col">
+        <div class="field">
+          <label for="weight_kg">Poids (kg)</label>
+          <input id="weight_kg" name="weight_kg" type="number" step="0.1" min="30" max="300" placeholder="75" />
+        </div>
+        <div class="field">
+          <label for="height_cm">Taille (cm)</label>
+          <input id="height_cm" name="height_cm" type="number" min="100" max="250" placeholder="178" />
+        </div>
       </div>
+
+      <div class="two-col">
+        <div class="field">
+          <label for="age">Âge</label>
+          <input id="age" name="age" type="number" min="13" max="100" placeholder="25" />
+        </div>
+        <div class="field">
+          <label for="gender">Genre</label>
+          <select id="gender" name="gender">
+            <option value="">Non précisé</option>
+            <option value="homme">Homme</option>
+            <option value="femme">Femme</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+      </div>
+
       <div class="field">
-        <label for="gender">Genre</label>
-        <select id="gender" name="gender">
+        <label for="activity_level">Niveau d'activité quotidienne (hors sport)</label>
+        <select id="activity_level" name="activity_level">
           <option value="">Non précisé</option>
-          <option value="homme">Homme</option>
-          <option value="femme">Femme</option>
-          <option value="autre">Autre</option>
+          <option value="sedentaire">Sédentaire (bureau toute la journée)</option>
+          <option value="legerement actif">Légèrement actif (quelques marches par jour)</option>
+          <option value="actif">Actif (travail physique ou beaucoup de marche)</option>
+          <option value="tres actif">Très actif (travail très physique ou sport quotidien)</option>
         </select>
       </div>
-    </div>
 
-    <div class="field">
-      <label for="activity_level">Niveau d'activité quotidienne (hors sport)</label>
-      <select id="activity_level" name="activity_level">
-        <option value="">Non précisé</option>
-        <option value="sedentaire">Sédentaire (bureau toute la journée)</option>
-        <option value="legerement actif">Légèrement actif (quelques marches par jour)</option>
-        <option value="actif">Actif (travail physique ou beaucoup de marche)</option>
-        <option value="tres actif">Très actif (travail très physique ou sport quotidien)</option>
-      </select>
-    </div>
+      <div id="imc-box" class="imc-indicator hidden"></div>
 
-    <div class="spacer-sm"></div>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <button class="btn btn-primary" type="submit">Enregistrer</button>
-      <span id="save-status" class="muted" style="font-size:.85rem"></span>
-    </div>
-    <div id="profile-error"></div>
+      <div class="spacer-sm"></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-primary" type="submit">Enregistrer</button>
+        <span id="save-status" class="muted" style="font-size:.85rem"></span>
+      </div>
+      <div id="profile-error"></div>
+    </form>
 
-    <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border);font-size:.82rem;color:var(--chalk-dim)">
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border-soft);font-size:.82rem;color:var(--chalk-dim)">
       💡 Après avoir mis à jour ton profil, regénère ton programme pour que l'IA prenne en compte tes nouvelles données.
     </div>
-  </form>
+  </div>
+
+  <!-- Section 3 — Abonnement -->
+  <div class="profile-section">
+    <div class="profile-section-title">💳 Abonnement</div>
+    <div class="stat-row"><span>Formule actuelle</span><span class="stat-val" id="sub-plan">Gratuit</span></div>
+    <div class="stat-row hidden" id="sub-since-row"><span>Abonné depuis</span><span class="stat-val" id="sub-since">—</span></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+      <a class="btn btn-primary btn-sm" href="/premium.html">Gérer mon abonnement</a>
+      <button class="btn btn-ghost btn-sm hidden" id="cancel-sub-btn" type="button" onclick="cancelSub()">Annuler l'abonnement</button>
+    </div>
+  </div>
+
+  <!-- Section 4 — Comptes connectés -->
+  <div class="profile-section">
+    <div class="profile-section-title">🔗 Comptes connectés</div>
+    <div class="account-row">
+      <span>Google</span>
+      <div id="google-status"></div>
+    </div>
+  </div>
+
+  <!-- Section 5 — Statistiques personnelles -->
+  <div class="profile-section">
+    <div class="profile-section-title">📊 Statistiques personnelles</div>
+    <div class="stat-row"><span>Membre depuis</span><span class="stat-val" id="stat-member-since">—</span></div>
+    <div class="stat-row"><span>Total séances</span><span class="stat-val" id="stat-total-sessions">—</span></div>
+    <div class="stat-row"><span>Streak actuel</span><span class="stat-val" id="stat-streak">—</span></div>
+    <div class="stat-row"><span>Meilleur streak</span><span class="stat-val" id="stat-best-streak">—</span></div>
+    <div class="stat-row"><span>Programme actif</span><span class="stat-val" id="stat-program">—</span></div>
+  </div>
 </div>
 
 <footer>Gym AI Coach</footer>
+</div>
 <script src="/js/profile.js"></script>
-<script src="/js/nav.js"></script>
+<script src="/js/sidebar.js"></script>
 </body>
 </html>

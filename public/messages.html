@@ -6,17 +6,7 @@
 <link rel="stylesheet" href="/css/style.css"/>
 </head>
 <body>
-<header class="topbar">
-  <a class="brand" href="/home.html"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>Gym AI Coach</a>
-  <nav class="nav-links">
-    <span id="nav-role-link"></span>
-    <a href="/home.html">Accueil</a>
-    <a href="/dashboard.html">Programme</a>
-    <a href="/coaches.html">Coaches</a>
-    <a href="/messages.html" class="active">💬 Messages</a>
-    <a href="/profile.html">Profil</a>
-  </nav>
-</header>
+<div class="page-wrapper">
 <div class="shell" style="max-width:800px">
   <div class="page-head"><h1>Messages</h1></div>
   <div style="display:grid;grid-template-columns:240px 1fr;gap:0;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;height:550px">
@@ -38,7 +28,8 @@
   </div>
 </div>
 <footer>Gym AI Coach</footer>
+</div>
 <script src="/js/messages.js"></script>
-<script src="/js/nav.js"></script>
+<script src="/js/sidebar.js"></script>
 </body>
 </html>

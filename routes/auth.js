@@ -1,6 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const pool = require("../db/pool");
+const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -83,6 +84,44 @@ router.get("/me", async (req, res) => {
     return res.status(401).json({ error: "Non connecte." });
   }
   res.json({ user: result.rows[0] });
+});
+
+router.post("/change-password", requireAuth, async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ error: "Ancien et nouveau mot de passe requis." });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: "Le nouveau mot de passe doit faire au moins 6 caracteres." });
+    }
+
+    const result = await pool.query("SELECT password_hash FROM users WHERE id = $1", [req.session.userId]);
+    const user = result.rows[0];
+    if (!user || !user.password_hash || !(await bcrypt.compare(oldPassword, user.password_hash))) {
+      return res.status(401).json({ error: "Ancien mot de passe incorrect." });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [passwordHash, req.session.userId]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Erreur /change-password :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+router.delete("/account", requireAuth, async (req, res) => {
+  try {
+    await pool.query("DELETE FROM users WHERE id = $1", [req.session.userId]);
+    req.session.destroy(() => {
+      res.clearCookie("connect.sid");
+      res.json({ ok: true });
+    });
+  } catch (err) {
+    console.error("Erreur DELETE /account :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
 });
 
 module.exports = router;

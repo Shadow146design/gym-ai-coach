@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Paramètres — Gym AI Coach</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<div class="page-wrapper">
+<div class="shell" style="max-width:720px">
+  <div class="page-head">
+    <div>
+      <h1>Paramètres</h1>
+      <p class="sub muted">Sécurité, préférences et données de ton compte.</p>
+    </div>
+  </div>
+
+  <!-- Section 1 — Sécurité -->
+  <div class="profile-section">
+    <div class="profile-section-title">🔒 Sécurité</div>
+    <form id="password-form">
+      <div class="field"><label for="old-password">Mot de passe actuel</label><input id="old-password" type="password" autocomplete="current-password"/></div>
+      <div class="field"><label for="new-password">Nouveau mot de passe</label><input id="new-password" type="password" autocomplete="new-password"/></div>
+      <div class="field"><label for="confirm-password">Confirmer le nouveau mot de passe</label><input id="confirm-password" type="password" autocomplete="new-password"/></div>
+      <button class="btn btn-primary btn-sm" type="submit">Changer le mot de passe</button>
+      <div id="password-msg" style="margin-top:8px;font-size:.85rem"></div>
+    </form>
+  </div>
+
+  <!-- Section 2 — Préférences -->
+  <div class="profile-section">
+    <div class="profile-section-title">🎨 Préférences</div>
+    <div class="stat-row">
+      <span>Thème</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" id="theme-dark-btn" type="button" onclick="setTheme('dark')">Sombre</button>
+        <button class="btn btn-ghost btn-sm" id="theme-light-btn" type="button" onclick="setTheme('light')">Clair</button>
+      </div>
+    </div>
+    <div class="stat-row"><span>Langue</span><span class="stat-val">Français</span></div>
+    <div class="stat-row"><span>Notifications email</span>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="email-notif-toggle"/> Activer
+      </label>
+    </div>
+  </div>
+
+  <!-- Section 3 — Données -->
+  <div class="profile-section">
+    <div class="profile-section-title">📦 Données</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" type="button" onclick="exportData()">Télécharger mes données</button>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="clearHistory()">Effacer mon historique de séances</button>
+    </div>
+    <div id="data-msg" style="margin-top:10px;font-size:.85rem"></div>
+  </div>
+
+  <!-- Section 4 — Zone danger -->
+  <div class="profile-section" style="border-color:var(--red)">
+    <div class="profile-section-title" style="color:var(--red)">⚠️ Zone danger</div>
+    <p class="muted" style="font-size:.85rem;margin-bottom:14px">Cette action est définitive et supprime toutes tes données (programmes, séances, messages).</p>
+    <div class="field">
+      <label for="delete-confirm">Tape <strong>SUPPRIMER</strong> pour confirmer</label>
+      <input id="delete-confirm" type="text" placeholder="SUPPRIMER"/>
+    </div>
+    <button class="btn btn-ghost btn-sm" style="border-color:var(--red);color:var(--red)" type="button" onclick="deleteAccount()">Supprimer mon compte définitivement</button>
+    <div id="delete-msg" style="margin-top:8px;font-size:.85rem"></div>
+  </div>
+</div>
+
+<footer>Gym AI Coach</footer>
+</div>
+<script src="/js/settings.js"></script>
+<script src="/js/sidebar.js"></script>
+</body>
+</html>

@@ -34,6 +34,15 @@ router.put("/:id", async (req, res) => {
   } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
 });
 
+// ── DELETE /all (efface tout l'historique de séances) ─────
+// Doit être déclarée avant /:id, sinon express matcherait "all" comme id.
+router.delete("/all", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM logs WHERE user_id=$1", [req.session.userId]);
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
+});
+
 // ── DELETE : supprimer un log ─────────────────────────────
 router.delete("/:id", async (req, res) => {
   try {
@@ -437,6 +446,18 @@ router.get("/one-rm", async (req, res) => {
       .map(([name, one_rm]) => ({ exercise_name: name, one_rm }))
       .sort((a,b) => b.one_rm - a.one_rm);
     res.json({ one_rm: results });
+  } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
+});
+
+// ── GET /export (export JSON de tous les logs) ───────────
+router.get("/export", async (req, res) => {
+  try {
+    const r = await pool.query(
+      "SELECT exercise_name, muscle_group, weight, reps, sets, note, performed_at FROM logs WHERE user_id=$1 ORDER BY performed_at ASC",
+      [req.session.userId]
+    );
+    res.setHeader("Content-Disposition", "attachment; filename=historique-seances.json");
+    res.json({ exported_at: new Date().toISOString(), logs: r.rows });
   } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
 });
 

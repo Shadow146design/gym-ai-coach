@@ -1,6 +1,25 @@
+function renderSkeletons() {
+  const grid = document.getElementById("coaches-grid");
+  grid.innerHTML = Array.from({ length: 3 }).map(() => `
+    <div class="card skeleton-card">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="skeleton" style="width:48px;height:48px;border-radius:50%;flex-shrink:0"></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+          <div class="skeleton skeleton-line" style="width:60%"></div>
+          <div class="skeleton skeleton-line" style="width:40%"></div>
+        </div>
+      </div>
+      <div class="skeleton skeleton-line" style="width:100%"></div>
+      <div class="skeleton skeleton-line" style="width:80%"></div>
+    </div>
+  `).join("");
+}
+
 async function init() {
   const me = await fetch("/api/auth/me").then(r=>r.json());
   if (!me.user) return window.location.href="/";
+
+  renderSkeletons();
 
   // Mon coach actif
   const mineRes = await fetch("/api/coaches/mine").then(r=>r.json());
@@ -18,6 +37,7 @@ async function init() {
   const r = await fetch("/api/coaches").then(r=>r.json());
   const grid = document.getElementById("coaches-grid");
   const empty = document.getElementById("empty");
+  grid.innerHTML = "";
 
   if (!r.coaches?.length) { empty.classList.remove("hidden"); return; }
 
