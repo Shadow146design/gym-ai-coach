@@ -1,7 +1,7 @@
 const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
-const { chatWithCoach, debriefSession } = require("../services/aiCoach");
+const { chatWithCoach, debriefSession, analyzePlateau } = require("../services/aiCoach");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -39,6 +39,21 @@ router.post("/debrief", async (req, res) => {
   } catch (err) {
     console.error("Erreur /api/chat/debrief :", err);
     res.status(500).json({ error: err.message || "Erreur lors de l'analyse de la seance." });
+  }
+});
+
+// POST /api/chat/plateau-advice — conseils IA specifiques pour sortir d'un plateau
+router.post("/plateau-advice", async (req, res) => {
+  try {
+    const { plateaus } = req.body;
+    if (!Array.isArray(plateaus) || !plateaus.length)
+      return res.status(400).json({ error: "Aucun plateau fourni." });
+
+    const advice = await analyzePlateau(plateaus);
+    res.json({ advice });
+  } catch (err) {
+    console.error("Erreur /api/chat/plateau-advice :", err);
+    res.status(500).json({ error: err.message || "Erreur du coach IA." });
   }
 });
 

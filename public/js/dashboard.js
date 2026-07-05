@@ -11,6 +11,40 @@ async function init() {
   document.getElementById("user-greeting").textContent = `Salut ${user.name} 👋`;
   loadProgram();
   loadCoachMessage();
+
+  // Arrivee depuis l'alerte plateau de la page d'accueil : demande directement
+  // des conseils IA specifiques et les affiche dans le chat.
+  if (new URLSearchParams(window.location.search).get("plateau") === "1") {
+    askPlateauAdvice();
+  }
+}
+
+async function askPlateauAdvice() {
+  const raw = sessionStorage.getItem("plateauData");
+  sessionStorage.removeItem("plateauData");
+  if (!raw) return;
+  let plateaus;
+  try { plateaus = JSON.parse(raw); } catch { return; }
+  if (!plateaus?.length) return;
+
+  const names = plateaus.map(p => p.exercise_name).join(", ");
+  appendMsg("user", `J'ai un plateau sur : ${names}. Peux-tu me donner des conseils pour progresser ?`);
+  const thinking = appendMsg("coach", "…", true);
+
+  try {
+    const res = await fetch("/api/chat/plateau-advice", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plateaus }),
+    });
+    const data = await res.json();
+    thinking.remove();
+    if (!res.ok) throw new Error(data.error);
+    appendMsg("coach", data.advice);
+  } catch {
+    thinking.remove();
+    appendMsg("coach", "Désolé, je n'arrive pas à analyser tes plateaux pour l'instant. Réessaie dans quelques secondes.");
+  }
 }
 
 // ── Dernier message du coach ────────────────────────────────

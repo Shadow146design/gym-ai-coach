@@ -9,8 +9,27 @@ async function init() {
 
   await Promise.all([
     loadKPIs(), loadNextSession(), loadCalendar(), loadRecords(),
-    loadLastAndTodayRecord(), loadDailyTip(),
+    loadLastAndTodayRecord(), loadDailyTip(), loadPlateauAlert(),
   ]);
+}
+
+// ── Alerte plateau ───────────────────────────────────────────
+async function loadPlateauAlert() {
+  try {
+    const r = await fetch("/api/logs/plateau").then(r => r.json());
+    const plateaus = r.plateaus || [];
+    if (!plateaus.length) return;
+
+    document.getElementById("plateau-alert-title").textContent =
+      `⚠️ Plateau détecté sur ${plateaus.length} exercice${plateaus.length > 1 ? "s" : ""}`;
+    document.getElementById("plateau-alert-list").textContent =
+      plateaus.map(p => `${p.exercise_name} (${p.max_weight}kg depuis ${p.sessions_stuck} séances)`).join(", ");
+
+    sessionStorage.setItem("plateauData", JSON.stringify(plateaus));
+    document.getElementById("plateau-alert-btn").href = `/dashboard.html?plateau=1`;
+
+    document.getElementById("plateau-alert").classList.remove("hidden");
+  } catch {}
 }
 
 // ── Dernière séance + record du jour (via /api/logs/summary) ──

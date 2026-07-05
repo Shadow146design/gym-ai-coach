@@ -4,6 +4,9 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Accueil — Gym AI Coach</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#c94d28"/>
 <link rel="stylesheet" href="/css/style.css"/>
 </head>
 <body>
@@ -29,6 +32,15 @@
       </div>
       <div class="streak-lbl">jours consécutifs</div>
     </div>
+  </div>
+
+  <!-- Alerte plateau -->
+  <div id="plateau-alert" class="card hidden" style="border-color:var(--gold);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+    <div>
+      <div style="font-weight:600" id="plateau-alert-title">⚠️ Plateau détecté</div>
+      <div class="muted" style="font-size:.85rem;margin-top:4px" id="plateau-alert-list"></div>
+    </div>
+    <a id="plateau-alert-btn" class="btn btn-primary btn-sm" href="/dashboard.html">Demander conseil à l'IA</a>
   </div>
 
   <!-- Barre stats rapides -->
@@ -87,5 +99,6 @@
 <script src="/js/home.js"></script>
 <script src="/js/i18n.js"></script>
 <script src="/js/sidebar.js"></script>
+<script src="/js/pwa.js"></script>
 </body>
 </html>

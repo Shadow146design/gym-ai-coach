@@ -90,7 +90,7 @@ document.documentElement.setAttribute("data-theme", localStorage.getItem("theme"
       <aside class="sidebar">
         <div class="sidebar-logo-row">
           <a class="sidebar-logo" href="/home.html">
-            <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>
+            <img src="/logo.svg" alt="" width="22" height="22"/>
             <span>Gym AI Coach</span>
           </a>
           <button type="button" class="sidebar-bell" id="sidebar-bell" title="Notifications">

@@ -1,0 +1,25 @@
+{
+  "name": "Gym AI Coach",
+  "short_name": "GymAI",
+  "description": "Ton coach sportif IA personnel, disponible 24h/24.",
+  "start_url": "/home.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#c94d28",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgcng9IjM4IiBmaWxsPSIjMGEwYTBhIi8+PGcgdHJhbnNmb3JtPSJzY2FsZSgzKSI+PHJlY3QgeD0iMyIgeT0iMjEiIHdpZHRoPSIxMSIgaGVpZ2h0PSIyMiIgcng9IjMuNSIgZmlsbD0iI2M5NGQyOCIvPjxyZWN0IHg9IjUwIiB5PSIyMSIgd2lkdGg9IjExIiBoZWlnaHQ9IjIyIiByeD0iMy41IiBmaWxsPSIjYzk0ZDI4Ii8+PHJlY3QgeD0iMTIiIHk9IjI3IiB3aWR0aD0iNyIgaGVpZ2h0PSIxMCIgcng9IjIiIGZpbGw9IiNjOTRkMjgiLz48cmVjdCB4PSI0NSIgeT0iMjciIHdpZHRoPSI3IiBoZWlnaHQ9IjEwIiByeD0iMiIgZmlsbD0iI2M5NGQyOCIvPjxyZWN0IHg9IjE3IiB5PSIyOSIgd2lkdGg9IjMwIiBoZWlnaHQ9IjYiIHJ4PSIzIiBmaWxsPSIjYzk0ZDI4Ii8+PHBhdGggZD0iTTM1IDE4IEwyNSAzNSBMMzEgMzUgTDI3IDQ4IEw0MSAyOSBMMzMgMjkgWiIgZmlsbD0iI2U4YjMzZCIvPjwvZz48L3N2Zz4=",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwMiIgZmlsbD0iIzBhMGEwYSIvPjxnIHRyYW5zZm9ybT0ic2NhbGUoOCkiPjxyZWN0IHg9IjMiIHk9IjIxIiB3aWR0aD0iMTEiIGhlaWdodD0iMjIiIHJ4PSIzLjUiIGZpbGw9IiNjOTRkMjgiLz48cmVjdCB4PSI1MCIgeT0iMjEiIHdpZHRoPSIxMSIgaGVpZ2h0PSIyMiIgcng9IjMuNSIgZmlsbD0iI2M5NGQyOCIvPjxyZWN0IHg9IjEyIiB5PSIyNyIgd2lkdGg9IjciIGhlaWdodD0iMTAiIHJ4PSIyIiBmaWxsPSIjYzk0ZDI4Ii8+PHJlY3QgeD0iNDUiIHk9IjI3IiB3aWR0aD0iNyIgaGVpZ2h0PSIxMCIgcng9IjIiIGZpbGw9IiNjOTRkMjgiLz48cmVjdCB4PSIxNyIgeT0iMjkiIHdpZHRoPSIzMCIgaGVpZ2h0PSI2IiByeD0iMyIgZmlsbD0iI2M5NGQyOCIvPjxwYXRoIGQ9Ik0zNSAxOCBMMjUgMzUgTDMxIDM1IEwyNyA0OCBMNDEgMjkgTDMzIDI5IFoiIGZpbGw9IiNlOGIzM2QiLz48L2c+PC9zdmc+",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

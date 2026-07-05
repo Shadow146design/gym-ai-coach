@@ -326,4 +326,40 @@ Genere la phrase du jour adaptee a cette situation (encourage le streak, relance
   return (data.choices?.[0]?.message?.content || "").trim().replace(/^["']|["']$/g, "");
 }
 
-module.exports = { generateProgram, chatWithCoach, debriefSession, dailyTip };
+// ── Analyse de plateau ──────────────────────────────────────
+const PLATEAU_SYSTEM = `Tu es un coach sportif expert en periodisation et progression de charges.
+L'utilisateur stagne sur un ou plusieurs exercices (poids max non batu depuis 3 seances ou plus).
+Donne des conseils CONCRETS et VARIES pour sortir du plateau, parmi ces leviers :
+- Variation de tempo (ex: 3-1-1, pause en bas, excentrique lent)
+- Exercice alternatif ciblant les memes muscles
+- Technique de surcharge (drop set, rest-pause, cluster set, myo-reps)
+- Decharge (deload) : reduire le volume/l'intensite une semaine pour mieux repartir
+Reponds en francais, de maniere concise et actionnable (4-6 phrases max), sans markdown.`;
+
+async function analyzePlateau(plateaus) {
+  if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY manquante.");
+
+  const list = plateaus.map(p =>
+    `- ${p.exercise_name} : bloqué à ${p.max_weight}kg depuis ${p.sessions_stuck} séances (dernière : ${p.last_weight}kg)`
+  ).join("\n");
+
+  const userPrompt = `Exercices en plateau :\n${list}\n\nDonne des conseils pour sortir de ces plateaux.`;
+
+  const response = await fetch(GROQ_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: MODEL(), temperature: 0.6, max_tokens: 350,
+      messages: [
+        { role: "system", content: PLATEAU_SYSTEM },
+        { role: "user", content: userPrompt },
+      ],
+    }),
+  });
+
+  if (!response.ok) throw new Error(`Erreur Groq plateau (${response.status})`);
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "Impossible de générer des conseils pour le moment.";
+}
+
+module.exports = { generateProgram, chatWithCoach, debriefSession, dailyTip, analyzePlateau };

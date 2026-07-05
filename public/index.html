@@ -3,37 +3,205 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Gym AI Coach — Ton programme, généré pour toi</title>
+<title>Gym AI Coach — Ton coach IA personnel, disponible 24h/24</title>
+<meta name="description" content="Un programme de musculation généré par IA et adapté à ton profil, un débrief après chaque séance, ou un vrai coach humain à tes côtés."/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#c94d28"/>
 <link rel="stylesheet" href="/css/style.css"/>
 </head>
-<body>
-<header class="topbar">
+<body class="landing">
+
+<header class="landing-nav">
   <a class="brand" href="/">
-    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="10" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="9.5" y="11" width="5" height="2" fill="currentColor"/><rect x="15.5" y="8" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="19" y="10" width="3" height="4" rx="1" fill="currentColor"/></svg>
+    <img src="/logo.svg" alt="" width="24" height="24"/>
     Gym AI Coach
   </a>
-  <button class="btn-theme" id="theme-toggle" title="Changer le thème">☀️</button>
+  <nav class="landing-nav-links">
+    <a href="#how">Comment ça marche</a>
+    <a href="#features">Fonctionnalités</a>
+    <a href="#pricing">Tarifs</a>
+  </nav>
+  <div class="landing-nav-actions">
+    <button class="btn-theme" id="theme-toggle" title="Changer le thème">☀️</button>
+    <a href="#auth" class="btn btn-ghost btn-sm" id="nav-login-btn">Se connecter</a>
+  </div>
 </header>
 
-<div class="hero">
-  <div>
-    <h1>Ton programme de muscu,<br><span>généré par IA</span>,<br>charge après charge.</h1>
-    <p class="lede">Réponds à quelques questions, reçois un programme adapté à ton profil, logge chaque série en 1 tap et suis ta progression en temps réel.</p>
-    <svg class="barbell" viewBox="0 0 340 70" fill="none" aria-hidden="true">
-      <rect x="4" y="32" width="8" height="6" fill="#4f7a8a"/>
-      <rect class="plate" x="16" y="18" width="9" height="34" rx="2" fill="#4f7a8a"/>
-      <rect class="plate" x="29" y="12" width="11" height="46" rx="2" fill="#4f7a8a"/>
-      <rect class="plate" x="44" y="5" width="13" height="60" rx="2" fill="#c94d28"/>
-      <rect x="57" y="33" width="226" height="4" fill="#7aa8b8"/>
-      <rect class="plate" x="283" y="5" width="13" height="60" rx="2" fill="#c94d28"/>
-      <rect class="plate" x="300" y="12" width="11" height="46" rx="2" fill="#4f7a8a"/>
-      <rect class="plate" x="315" y="18" width="9" height="34" rx="2" fill="#4f7a8a"/>
-      <rect x="328" y="32" width="8" height="6" fill="#4f7a8a"/>
-    </svg>
+<!-- ═══ HERO ═══ -->
+<section class="landing-hero">
+  <div class="landing-hero-text reveal">
+    <h1>Ton coach IA personnel,<br>disponible <span>24h/24</span>.</h1>
+    <p class="lede">Un programme qui s'adapte vraiment à toi, un débrief après chaque séance, ou un vrai coach humain à tes côtés. Sans engagement, résiliable à tout moment.</p>
+    <div class="landing-hero-cta">
+      <a href="#auth" class="btn btn-primary btn-huge" id="hero-cta-register">Essayer gratuitement</a>
+      <a href="#pricing" class="btn btn-ghost btn-huge">Voir les tarifs</a>
+    </div>
   </div>
 
-  <div class="auth-card">
-    <!-- Bouton Google -->
+  <div class="landing-mockup reveal" aria-hidden="true">
+    <div class="mockup-frame">
+      <div class="mockup-sidebar">
+        <div class="mockup-dot"></div>
+        <div class="mockup-line mockup-line-cta"></div>
+        <div class="mockup-line"></div>
+        <div class="mockup-line"></div>
+        <div class="mockup-line"></div>
+      </div>
+      <div class="mockup-main">
+        <div class="mockup-row">
+          <div class="mockup-card mockup-card-streak">
+            <div class="mockup-ring"></div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-bar" style="width:70%"></div>
+            <div class="mockup-bar" style="width:40%"></div>
+          </div>
+        </div>
+        <div class="mockup-card mockup-chart">
+          <svg viewBox="0 0 200 60" preserveAspectRatio="none">
+            <polyline points="0,50 30,42 60,44 90,28 120,32 150,14 180,18 200,8" fill="none" stroke="#e56a44" stroke-width="3"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ COMMENT ÇA MARCHE ═══ -->
+<section class="landing-section" id="how">
+  <h2 class="landing-section-title reveal">Comment ça marche</h2>
+  <div class="landing-steps">
+    <div class="landing-step reveal">
+      <div class="landing-step-icon">📝</div>
+      <div class="landing-step-num">1</div>
+      <h3>Réponds au questionnaire</h3>
+      <p>Objectif, niveau, matériel disponible, contraintes : 5 questions, 30 secondes.</p>
+    </div>
+    <div class="landing-step reveal">
+      <div class="landing-step-icon">⚡</div>
+      <div class="landing-step-num">2</div>
+      <h3>Reçois ton programme</h3>
+      <p>L'IA génère un programme complet adapté à ton profil physique et tes objectifs.</p>
+    </div>
+    <div class="landing-step reveal">
+      <div class="landing-step-icon">📈</div>
+      <div class="landing-step-num">3</div>
+      <h3>Suis ta progression</h3>
+      <p>Logge tes séries en un tap, débriefe chaque séance, regénère quand tu veux.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<section class="landing-section" id="features">
+  <h2 class="landing-section-title reveal">Tout ce qu'il te faut pour progresser</h2>
+  <div class="landing-features">
+    <div class="card landing-feature reveal">
+      <div class="landing-feature-icon">🧠</div>
+      <h3>IA personnalisée</h3>
+      <p class="muted">Chaque programme est généré selon ton profil, ton objectif et ton matériel — jamais générique.</p>
+    </div>
+    <div class="card landing-feature reveal">
+      <div class="landing-feature-icon">🧑‍🏫</div>
+      <h3>Coaches humains</h3>
+      <p class="muted">Besoin d'un vrai accompagnement ? Choisis un coach et échange avec lui directement.</p>
+    </div>
+    <div class="card landing-feature reveal">
+      <div class="landing-feature-icon">📊</div>
+      <h3>Suivi de progression</h3>
+      <p class="muted">Records personnels, 1RM estimé, répartition musculaire, poids corporel : tout au même endroit.</p>
+    </div>
+    <div class="card landing-feature reveal">
+      <div class="landing-feature-icon">👆</div>
+      <h3>Séance en 1 tap</h3>
+      <p class="muted">Logge chaque série en quelques secondes, sans friction, pendant que tu t'entraînes.</p>
+    </div>
+    <div class="card landing-feature reveal">
+      <div class="landing-feature-icon">📉</div>
+      <h3>Stats avancées</h3>
+      <p class="muted">Volume par groupe musculaire, fréquence hebdomadaire, détection de plateau automatique.</p>
+    </div>
+    <div class="card landing-feature reveal">
+      <div class="landing-feature-icon">📱</div>
+      <h3>Multi-plateforme</h3>
+      <p class="muted">Web, mobile, installable comme une app. Tes données te suivent partout.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRICING ═══ -->
+<section class="landing-section" id="pricing">
+  <h2 class="landing-section-title reveal">Une formule pour chaque objectif</h2>
+  <div class="pricing-grid reveal">
+    <div class="pricing-card">
+      <div class="pricing-icon">🔓</div>
+      <div class="pricing-title">Gratuit</div>
+      <div class="pricing-price">0€<span>/mois</span></div>
+      <ul class="pricing-features">
+        <li>Programme généré par IA</li>
+        <li>Suivi des séances</li>
+        <li>Statistiques de base</li>
+      </ul>
+      <a href="#auth" class="btn btn-ghost btn-block landing-plan-btn">Commencer gratuitement</a>
+    </div>
+    <div class="pricing-card featured">
+      <div class="pricing-badge">Populaire</div>
+      <div class="pricing-icon">⭐</div>
+      <div class="pricing-title">Premium</div>
+      <div class="pricing-price">9.99€<span>/mois</span></div>
+      <ul class="pricing-features">
+        <li>Tout le gratuit</li>
+        <li>Debrief IA détaillé post-séance</li>
+        <li>Historique illimité des programmes</li>
+      </ul>
+      <a href="#auth" class="btn btn-primary btn-block landing-plan-btn">Devenir Premium</a>
+    </div>
+    <div class="pricing-card">
+      <div class="pricing-icon">🧑‍🏫</div>
+      <div class="pricing-title">Bénéficier d'un coach</div>
+      <div class="pricing-price">19.99€<span>/mois</span></div>
+      <ul class="pricing-features">
+        <li>Tout le Premium</li>
+        <li>Un vrai coach assigné</li>
+        <li>Messagerie directe avec ton coach</li>
+      </ul>
+      <a href="#auth" class="btn btn-primary btn-block landing-plan-btn">Bénéficier d'un coach</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TÉMOIGNAGES ═══ -->
+<section class="landing-section">
+  <h2 class="landing-section-title reveal">Ils ont franchi le cap</h2>
+  <div class="testimonial-grid reveal">
+    <div class="card testimonial-card">
+      <div class="testimonial-quote">« En 4 mois j'ai perdu 6kg sans jamais avoir l'impression de suivre un programme générique. L'IA ajuste vraiment. »</div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar" style="background:rgba(201,77,40,.18);color:#e56a44">C</div>
+        <div><div class="testimonial-name">Camille, 29 ans</div><div class="testimonial-role">Objectif perte de poids atteint</div></div>
+      </div>
+    </div>
+    <div class="card testimonial-card">
+      <div class="testimonial-quote">« Le suivi du plateau m'a sorti d'un blocage au développé couché que je trainais depuis 2 mois. »</div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar" style="background:rgba(79,122,138,.18);color:#7aa8b8">T</div>
+        <div><div class="testimonial-name">Thomas, 31 ans</div><div class="testimonial-role">+15kg au développé couché</div></div>
+      </div>
+    </div>
+    <div class="card testimonial-card">
+      <div class="testimonial-quote">« Mon coach répond en quelques heures et ajuste mon programme direct depuis la messagerie. Zéro friction. »</div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar" style="background:rgba(232,179,61,.18);color:#e8b33d">L</div>
+        <div><div class="testimonial-name">Léa, 24 ans</div><div class="testimonial-role">Formule Coach</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ AUTH ═══ -->
+<section class="landing-auth" id="auth">
+  <div class="auth-card reveal">
     <a href="/auth/google" class="btn btn-ghost btn-block" style="margin-bottom:16px;gap:10px;font-family:var(--font-body);text-transform:none;letter-spacing:0;font-size:.95rem">
       <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/><path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z"/><path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/></svg>
       Continuer avec Google
@@ -70,9 +238,42 @@
     <!-- Message d'erreur OAuth -->
     <div id="oauth-error" class="error-msg hidden" style="margin-top:12px"></div>
   </div>
-</div>
+</section>
 
-<footer>Gym AI Coach — programme généré par IA. Consulte un professionnel en cas de douleur.</footer>
+<footer class="landing-footer">
+  <div class="landing-footer-top">
+    <div class="landing-footer-brand">
+      <a class="brand" href="/"><img src="/logo.svg" alt="" width="22" height="22"/>Gym AI Coach</a>
+      <p class="muted" style="font-size:.85rem;margin-top:10px;max-width:32ch">Ton coach sportif IA personnel, disponible 24h/24. Programme généré par IA — consulte un professionnel en cas de douleur.</p>
+    </div>
+    <div class="landing-footer-links">
+      <div>
+        <div class="landing-footer-heading">Produit</div>
+        <a href="#features">Fonctionnalités</a>
+        <a href="#pricing">Tarifs</a>
+        <a href="#how">Comment ça marche</a>
+      </div>
+      <div>
+        <div class="landing-footer-heading">Légal</div>
+        <a href="#">CGU</a>
+        <a href="#">Politique de confidentialité</a>
+        <a href="#">Contact</a>
+      </div>
+    </div>
+    <div class="landing-footer-social">
+      <div class="landing-footer-heading">Suis-nous</div>
+      <div class="landing-social-icons">
+        <a href="#" aria-label="Instagram">📷</a>
+        <a href="#" aria-label="Twitter / X">✕</a>
+        <a href="#" aria-label="TikTok">🎵</a>
+      </div>
+    </div>
+  </div>
+  <div class="landing-footer-bottom">© 2026 Gym AI Coach. Tous droits réservés.</div>
+</footer>
+
 <script src="/js/auth.js"></script>
+<script src="/js/landing.js"></script>
+<script src="/js/pwa.js"></script>
 </body>
 </html>

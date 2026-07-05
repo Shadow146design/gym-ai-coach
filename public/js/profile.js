@@ -1,4 +1,5 @@
 let fullData = null;
+let weightChartInstance = null;
 
 function esc(s) { const d = document.createElement("div"); d.textContent = String(s || ""); return d.innerHTML; }
 function initials(name) {
@@ -19,6 +20,7 @@ async function init() {
   renderSubscription();
   renderAccounts();
   renderStats();
+  loadWeightChart();
 }
 
 function renderIdentity() {
@@ -190,6 +192,116 @@ document.getElementById("goals-form").addEventListener("submit", async e => {
     }
     status.innerHTML = `<span style="color:var(--green)">✓ Enregistré</span>`;
     setTimeout(() => { status.textContent = ""; }, 2500);
+  } catch {
+    status.innerHTML = `<span style="color:var(--red)">Impossible de joindre le serveur.</span>`;
+  }
+});
+
+async function loadWeightChart() {
+  const canvas = document.getElementById("weight-chart");
+  const empty = document.getElementById("weight-empty");
+  const goalStatus = document.getElementById("weight-goal-status");
+  const targetWeight = fullData?.user?.target_weight_kg ? Number(fullData.user.target_weight_kg) : null;
+
+  try {
+    const r = await fetch("/api/weight").then(r => r.json());
+    const logs = r.logs || [];
+
+    if (!logs.length) {
+      canvas.classList.add("hidden");
+      empty.classList.remove("hidden");
+    } else {
+      canvas.classList.remove("hidden");
+      empty.classList.add("hidden");
+      renderWeightChart(logs, targetWeight);
+    }
+
+    if (targetWeight && logs.length) {
+      const current = Number(logs[logs.length - 1].weight_kg);
+      const diff = current - targetWeight;
+      if (Math.abs(diff) < 0.1) {
+        goalStatus.textContent = "🎉 Objectif de poids atteint !";
+      } else if (diff > 0) {
+        goalStatus.textContent = `Il te reste ${diff.toFixed(1)} kg à perdre pour atteindre ton objectif (${targetWeight} kg).`;
+      } else {
+        goalStatus.textContent = `Il te reste ${Math.abs(diff).toFixed(1)} kg à prendre pour atteindre ton objectif (${targetWeight} kg).`;
+      }
+      goalStatus.classList.remove("hidden");
+    } else {
+      goalStatus.classList.add("hidden");
+    }
+  } catch {
+    canvas.classList.add("hidden");
+    empty.classList.remove("hidden");
+    empty.textContent = "Impossible de charger le suivi du poids.";
+  }
+}
+
+function renderWeightChart(logs, targetWeight) {
+  const canvas = document.getElementById("weight-chart");
+  if (typeof Chart === "undefined") return;
+  if (weightChartInstance) weightChartInstance.destroy();
+
+  const labels = logs.map(l => new Date(l.measured_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }));
+  const weights = logs.map(l => Number(l.weight_kg));
+
+  const datasets = [{
+    label: "Poids (kg)",
+    data: weights,
+    borderColor: "#7aa8b8",
+    backgroundColor: "rgba(122,168,184,.15)",
+    pointBackgroundColor: "#e8b33d",
+    pointBorderColor: "#e8b33d",
+    pointRadius: 4,
+    tension: .3,
+    fill: true,
+  }];
+
+  if (targetWeight) {
+    datasets.push({
+      label: "Objectif (kg)",
+      data: labels.map(() => targetWeight),
+      borderColor: "#e56a44",
+      borderDash: [6, 6],
+      pointRadius: 0,
+      fill: false,
+    });
+  }
+
+  weightChartInstance = new Chart(canvas, {
+    type: "line",
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: "#8f8b84", font: { family: "Inter", size: 11 } } } },
+      scales: {
+        x: { ticks: { color: "#8f8b84", font: { size: 11 } }, grid: { color: "rgba(255,255,255,.07)" } },
+        y: { ticks: { color: "#8f8b84", font: { size: 11 } }, grid: { color: "rgba(255,255,255,.07)" } },
+      },
+    },
+  });
+}
+
+document.getElementById("weight-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const status = document.getElementById("weight-save-status");
+  const input = document.getElementById("weight-input");
+  const weight_kg = parseFloat(input.value);
+  if (!weight_kg) return;
+
+  status.textContent = "Enregistrement…";
+  try {
+    const res = await fetch("/api/weight", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ weight_kg }),
+    });
+    const json = await res.json();
+    if (!res.ok) { status.innerHTML = `<span style="color:var(--red)">${json.error}</span>`; return; }
+    input.value = "";
+    status.innerHTML = `<span style="color:var(--green)">✓ Ajouté</span>`;
+    setTimeout(() => { status.textContent = ""; }, 2000);
+    loadWeightChart();
   } catch {
     status.innerHTML = `<span style="color:var(--red)">Impossible de joindre le serveur.</span>`;
   }

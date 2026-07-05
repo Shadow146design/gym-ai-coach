@@ -431,6 +431,57 @@ router.get("/projection", async (req, res) => {
   } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
 });
 
+// ── GET /plateau (detection de stagnation par exercice) ────
+router.get("/plateau", async (req, res) => {
+  try {
+    const uid = req.session.userId;
+    const r = await pool.query(
+      `SELECT exercise_name, weight, performed_at::date AS day
+       FROM logs WHERE user_id=$1 ORDER BY exercise_name, performed_at ASC`,
+      [uid]
+    );
+
+    const byExercise = {};
+    r.rows.forEach(row => {
+      const key = row.exercise_name;
+      const day = dayStr(row.day);
+      if (!byExercise[key]) byExercise[key] = {};
+      byExercise[key][day] = Math.max(byExercise[key][day] || 0, Number(row.weight));
+    });
+
+    const plateaus = [];
+    for (const [exercise, dayMap] of Object.entries(byExercise)) {
+      const sessions = Object.entries(dayMap)
+        .sort((a, b) => new Date(a[0]) - new Date(b[0]))
+        .slice(-6)
+        .map(([day, weight]) => ({ day, weight }));
+
+      if (sessions.length < 3) continue; // pas assez de seances pour conclure
+
+      const weights = sessions.map(s => s.weight);
+      const maxWeight = Math.max(...weights);
+      // Premiere fois que ce max a ete atteint (pas la derniere : sinon un poids
+      // repete plusieurs fois au max donnerait "0 seance depuis le record").
+      const prIndex = weights.indexOf(maxWeight);
+      const sessionsSincePR = sessions.length - 1 - prIndex;
+
+      if (sessionsSincePR >= 3) {
+        plateaus.push({
+          exercise_name: exercise,
+          max_weight: maxWeight,
+          last_weight: weights[weights.length - 1],
+          sessions_stuck: sessionsSincePR,
+        });
+      }
+    }
+
+    res.json({ plateaus });
+  } catch (err) {
+    console.error("Erreur GET /logs/plateau :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
 module.exports = router;
 
 // ── Calendrier : jours d'entraînement sur 12 semaines ─────
