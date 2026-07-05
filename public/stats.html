@@ -19,6 +19,9 @@
   <!-- KPI globaux -->
   <div id="kpi-grid" class="kpi-grid"></div>
 
+  <!-- Comparaison semaine précédente -->
+  <div id="week-compare" class="week-compare hidden"></div>
+
   <!-- Fréquence 4 semaines + volume muscles -->
   <div class="two-col" style="margin-bottom:24px">
     <div class="card">
@@ -28,6 +31,18 @@
     <div class="card">
       <div class="card-title" style="margin-bottom:14px">Volume par groupe musculaire (30j)</div>
       <div id="muscle-bars"></div>
+    </div>
+  </div>
+
+  <!-- Radar groupes musculaires + 1RM -->
+  <div class="two-col" style="margin-bottom:24px">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px">Répartition musculaire</div>
+      <canvas id="muscle-radar" height="220"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px">Estimation 1RM par exercice</div>
+      <div id="one-rm-list"></div>
     </div>
   </div>
 

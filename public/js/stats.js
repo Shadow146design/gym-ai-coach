@@ -1,4 +1,5 @@
 let chartInstance = null;
+let radarInstance = null;
 
 async function init() {
   const meRes = await fetch("/api/auth/me");
@@ -9,6 +10,8 @@ async function init() {
     fetch("/api/logs/records"),
     fetch("/api/logs/exercises"),
   ]);
+  loadWeekCompare();
+  loadOneRm();
   const { totalSessions, avgSessionMinutes, weeklyFrequency, targetPerWeek, completionRate, muscleGroupVolume, lastSessionDate }
     = await dashRes.json();
   const { records } = await recordsRes.json();
@@ -48,6 +51,8 @@ async function init() {
       <div class="muscle-bar-track"><div class="muscle-bar-fill" style="width:${Math.round((m.volume/maxVol)*100)}%"></div></div>
       <span class="muscle-bar-val">${Math.round(m.volume/1000)}k kg</span>
     </div>`).join("") || `<p class="muted" style="font-size:.85rem">Pas encore de données par groupe musculaire.</p>`;
+
+  renderMuscleRadar(muscleGroupVolume || []);
 
   // ── Records persos ───────────────────────────────────────
   document.getElementById("records-grid").innerHTML = records.map(r => `
@@ -105,6 +110,86 @@ async function loadProgressChart(exerciseName) {
       },
     },
   });
+}
+
+function renderMuscleRadar(muscleGroupVolume) {
+  const canvas = document.getElementById("muscle-radar");
+  if (typeof Chart === "undefined" || !canvas) return;
+  if (radarInstance) radarInstance.destroy();
+
+  const groups = ["Poitrine", "Dos", "Épaules", "Biceps", "Triceps", "Jambes", "Fessiers", "Abdos"];
+  const volByGroup = {};
+  muscleGroupVolume.forEach(m => { volByGroup[m.muscle_group] = Number(m.volume); });
+  const data = groups.map(g => volByGroup[g] || 0);
+
+  if (!data.some(v => v > 0)) {
+    canvas.replaceWith(Object.assign(document.createElement("p"), {
+      className: "muted",
+      textContent: "Pas encore assez de données pour le radar musculaire.",
+    }));
+    return;
+  }
+
+  radarInstance = new Chart(canvas, {
+    type: "radar",
+    data: {
+      labels: groups,
+      datasets: [{
+        label: "Volume 30j (kg)",
+        data,
+        borderColor: "#e56a44",
+        backgroundColor: "rgba(201,77,40,.18)",
+        pointBackgroundColor: "#e8b33d",
+        pointBorderColor: "#e8b33d",
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: "#8f8b84", font: { family: "Inter", size: 11 } } } },
+      scales: {
+        r: {
+          angleLines: { color: "rgba(255,255,255,.08)" },
+          grid: { color: "rgba(255,255,255,.08)" },
+          pointLabels: { color: "#c9c6c1", font: { size: 11 } },
+          ticks: { display: false },
+        },
+      },
+    },
+  });
+}
+
+async function loadOneRm() {
+  const el = document.getElementById("one-rm-list");
+  try {
+    const r = await fetch("/api/logs/one-rm").then(r => r.json());
+    const list = r.one_rm || [];
+    if (!list.length) { el.innerHTML = `<p class="muted" style="font-size:.85rem">Pas encore de données.</p>`; return; }
+    el.innerHTML = list.slice(0, 8).map(x => `
+      <div class="home-record-row">
+        <span>${esc(x.exercise_name)}</span>
+        <span class="home-record-val">${x.one_rm} kg</span>
+      </div>`).join("");
+  } catch { el.innerHTML = `<p class="muted" style="font-size:.85rem">Impossible de charger.</p>`; }
+}
+
+async function loadWeekCompare() {
+  const el = document.getElementById("week-compare");
+  try {
+    const r = await fetch("/api/logs/weekly").then(r => r.json());
+    const weeks = r.weeks || [];
+    if (weeks.length < 2) return;
+    const [thisWeek, lastWeek] = weeks;
+    const sessDiff = thisWeek.sessions - lastWeek.sessions;
+    const volDiff = Math.round(thisWeek.volume - lastWeek.volume);
+    const arrow = n => n > 0 ? `<span style="color:var(--green)">▲ +${n}</span>` : n < 0 ? `<span style="color:var(--red)">▼ ${n}</span>` : `<span class="muted">= stable</span>`;
+
+    el.innerHTML = `
+      <span class="week-compare-label">Vs semaine précédente :</span>
+      <span>${thisWeek.sessions} séance${thisWeek.sessions > 1 ? "s" : ""} (${arrow(sessDiff)})</span>
+      <span class="week-compare-sep">•</span>
+      <span>${Math.round(thisWeek.volume)} kg de volume (${arrow(volDiff)})</span>`;
+    el.classList.remove("hidden");
+  } catch {}
 }
 
 function esc(str) {
