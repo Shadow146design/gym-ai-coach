@@ -98,7 +98,7 @@ function renderAccounts() {
   const el = document.getElementById("google-status");
   el.innerHTML = user.google_id
     ? `<span class="account-status connected"><span class="dot"></span>Connecté</span>`
-    : `<a class="btn btn-ghost btn-sm" href="/auth/google">Se connecter avec Google</a>`;
+    : `<a class="btn btn-ghost btn-sm" href="/auth/google" rel="noopener noreferrer">Se connecter avec Google</a>`;
 }
 
 function renderStats() {

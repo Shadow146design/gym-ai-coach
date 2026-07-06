@@ -78,7 +78,7 @@ function renderGoogleStatus(user) {
     el.innerHTML = `<span class="account-status connected"><span class="dot"></span>Connecté</span>
       <button class="btn btn-ghost btn-sm" type="button" onclick="unlinkGoogle()" style="margin-left:10px">Délier</button>`;
   } else {
-    el.innerHTML = `<a class="btn btn-ghost btn-sm" href="/auth/google">Se connecter avec Google</a>`;
+    el.innerHTML = `<a class="btn btn-ghost btn-sm" href="/auth/google" rel="noopener noreferrer">Se connecter avec Google</a>`;
   }
 }
 

@@ -186,15 +186,20 @@ function updateStreakRing(streak) {
   const ring = document.getElementById("streak-ring-fg");
   if (!ring) return;
   const tiers = [7, 30, 100];
-  let prevTier = 0, progress = 1;
+  let prevTier = 0, progress = 1, nextTier = null;
   for (const tier of tiers) {
-    if (streak < tier) { progress = (streak - prevTier) / (tier - prevTier); break; }
+    if (streak < tier) { progress = (streak - prevTier) / (tier - prevTier); nextTier = tier; break; }
     prevTier = tier;
   }
   const r = 42;
   const circumference = 2 * Math.PI * r;
   ring.style.strokeDasharray = `${circumference}`;
   ring.style.strokeDashoffset = `${circumference * (1 - progress)}`;
+
+  const nextTierEl = document.getElementById("streak-next-tier");
+  if (nextTierEl) {
+    nextTierEl.textContent = nextTier ? `Objectif : ${nextTier} jours` : "Palier maximum atteint 🏆";
+  }
 }
 
 // Jours de semaine en francais, index 0 = lundi (aligne sur un vrai calendrier,

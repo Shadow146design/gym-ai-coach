@@ -914,6 +914,11 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
   filter: drop-shadow(0 0 6px rgba(229,106,68,.5));
   transition: stroke-dashoffset .6s var(--ease);
 }
+.streak-ring { animation: streak-ring-spin-in .7s var(--ease); }
+@keyframes streak-ring-spin-in {
+  from { transform: rotate(-150deg); opacity: 0; }
+  to   { transform: rotate(-90deg); opacity: 1; }
+}
 .streak-ring-center {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
 }
@@ -925,6 +930,7 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
   line-height: 1;
 }
 .streak-lbl { font-size: .72rem; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: .05em; }
+.streak-next-tier { font-size: .7rem; color: var(--rust-soft); margin-top: 4px; font-weight: 600; }
 
 /* Stats bar */
 .home-stats-bar {
