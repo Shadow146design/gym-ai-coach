@@ -19,6 +19,7 @@
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <a class="btn btn-green" href="/session.html" id="start-session-btn">▶ Commencer la séance</a>
+      <button class="btn btn-ghost btn-sm" id="modify-ai-btn" type="button">✏️ Modifier avec l'IA</button>
       <a class="btn btn-ghost btn-sm" href="/questionnaire.html">Regénérer le programme</a>
     </div>
   </div>
@@ -57,10 +58,6 @@
   <div class="chat-wrap" id="chat-wrap">
     <div class="chat-messages" id="chat-messages">
       <div class="chat-msg coach">Salut ! Je connais ton programme. Pose-moi une question sur tes exercices, dis-moi ce qui va ou pas, et je t'aiderai à ajuster. 💪</div>
-    </div>
-    <div id="regen-banner" class="chat-regen-banner hidden">
-      <span>Tu veux que j'applique ces changements ?</span>
-      <button class="btn btn-primary btn-sm" id="regen-btn">Regénérer avec mes retours</button>
     </div>
     <div class="chat-input-row">
       <input id="chat-input" type="text" placeholder="Écris ton message…" autocomplete="off" />

@@ -1,7 +1,7 @@
 // ── Auth ──────────────────────────────────────────────────
 let currentUser = null;
 let chatHistory = [];
-let feedbackAccumulated = "";
+let lastProgramExercises = new Set();
 
 async function init() {
   const meRes = await fetch("/api/auth/me");
@@ -85,21 +85,41 @@ async function loadProgram() {
   subtitle.textContent = program.title;
   summary.textContent  = program.content.summary || "";
 
+  lastProgramExercises = new Set((program.content.days || []).flatMap(d => (d.exercises || []).map(e => e.name)));
+
   container.innerHTML = "";
   (program.content.days || []).forEach((day, i) => {
     const details = document.createElement("details");
     details.className = "day-card";
     if (i === 0) details.open = true;
 
-    const exHtml = (day.exercises || []).map(ex => `
-      <div class="exercise-row">
-        <div>
-          <div class="ex-name">${esc(ex.name)}</div>
-          ${ex.muscle_group ? `<span class="ex-badge">${esc(ex.muscle_group)}</span>` : ""}
-          ${ex.notes ? `<div class="ex-notes">${esc(ex.notes)}</div>` : ""}
-        </div>
-        <div class="ex-meta">${esc(String(ex.sets))}×${esc(String(ex.reps))}<br><span style="font-size:.72rem;color:var(--chalk-dim)">${esc(String(ex.rest_seconds||"—"))}s repos</span></div>
-      </div>`).join("");
+    // Regroupe visuellement les exercices qui partagent le meme superset_group (module H.1)
+    const exercises = day.exercises || [];
+    const rendered = new Set();
+    const exHtml = exercises.map((ex, idx) => {
+      if (rendered.has(idx)) return "";
+      const exRow = e => `
+        <div class="exercise-row${e.superset_group ? " in-superset" : ""}" data-ex-name="${esc(e.name)}">
+          <div>
+            <div class="ex-name">${esc(e.name)}</div>
+            ${e.muscle_group ? `<span class="ex-badge">${esc(e.muscle_group)}</span>` : ""}
+            ${e.notes ? `<div class="ex-notes">${esc(e.notes)}</div>` : ""}
+          </div>
+          <div class="ex-meta">${esc(String(e.sets))}×${esc(String(e.reps))}<br><span style="font-size:.72rem;color:var(--chalk-dim)">${esc(String(e.rest_seconds||"—"))}s repos</span></div>
+        </div>`;
+
+      if (!ex.superset_group) { rendered.add(idx); return exRow(ex); }
+
+      const partners = exercises
+        .map((e2, i2) => ({ e2, i2 }))
+        .filter(({ e2, i2 }) => i2 >= idx && e2.superset_group === ex.superset_group && !rendered.has(i2));
+      partners.forEach(({ i2 }) => rendered.add(i2));
+      if (partners.length < 2) return exRow(ex);
+      return `<div class="superset-block">
+        <div class="superset-label">SUPERSET</div>
+        ${partners.map(({ e2 }) => exRow(e2)).join(`<div class="superset-plus">+</div>`)}
+      </div>`;
+    }).join("");
 
     details.innerHTML = `
       <summary>
@@ -152,19 +172,45 @@ async function sendMessage() {
     appendMsg("coach", reply);
     chatHistory.push({ role: "assistant", content: reply });
 
-    // Detecte si l'IA oriente vers une regeneration
-    if (reply.toLowerCase().includes("régénér") || reply.toLowerCase().includes("regen")) {
-      feedbackAccumulated = chatHistory
-        .filter(m => m.role === "user")
-        .map(m => m.content)
-        .join(" | ");
-      document.getElementById("regen-banner").classList.remove("hidden");
+    if (data.programUpdated) {
+      const newExercises = new Set((data.newProgram?.days || []).flatMap(d => (d.exercises || []).map(e => e.name)));
+      const changedNames = [...newExercises].filter(n => !lastProgramExercises.has(n));
+      await loadProgram();
+      showToast("Programme mis à jour ✓");
+      highlightExercises(changedNames);
     }
   } catch (e) {
     thinking.remove();
     appendMsg("coach", "Désolé, je n'arrive pas à répondre pour l'instant. Réessaie dans quelques secondes.");
   }
 }
+
+function showToast(text) {
+  const toast = document.createElement("div");
+  toast.className = "app-toast";
+  toast.textContent = text;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("visible"));
+  setTimeout(() => { toast.classList.remove("visible"); setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+function highlightExercises(names) {
+  if (!names.length) return;
+  names.forEach(name => {
+    document.querySelectorAll(`.exercise-row[data-ex-name="${CSS.escape(name)}"]`).forEach(el => {
+      el.classList.add("just-updated");
+      setTimeout(() => el.classList.remove("just-updated"), 3000);
+    });
+  });
+}
+
+document.getElementById("modify-ai-btn")?.addEventListener("click", () => {
+  const input = document.getElementById("chat-input");
+  input.value = "Je voudrais modifier mon programme, voici ce que je veux changer : ";
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
+  document.getElementById("chat-wrap")?.scrollIntoView({ behavior: "smooth", block: "center" });
+});
 
 function appendMsg(role, text, isThinking = false) {
   const box = document.getElementById("chat-messages");
@@ -175,11 +221,6 @@ function appendMsg(role, text, isThinking = false) {
   box.scrollTop = box.scrollHeight;
   return el;
 }
-
-document.getElementById("regen-btn").addEventListener("click", () => {
-  const params = new URLSearchParams({ feedback: feedbackAccumulated });
-  window.location.href = `/questionnaire.html?${params.toString()}`;
-});
 
 function esc(str) {
   const d = document.createElement("div");

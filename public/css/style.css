@@ -330,6 +330,13 @@ select option { background: var(--bg-card-solid); }
 .exercise-row .ex-badge { display: inline-block; font-size: .72rem; background: var(--rust-bg); color: var(--rust-soft); border-radius: 4px; padding: 2px 8px; margin-top: 3px; }
 .exercise-row .ex-meta { font-family: var(--font-mono); color: var(--steel-soft); font-size: .82rem; text-align: right; white-space: nowrap; }
 .exercise-row .ex-notes { grid-column: 1 / -1; color: var(--chalk-dim); font-size: .8rem; margin-top: -2px; }
+.exercise-row.just-updated { background: rgba(61,168,116,.14); transition: background 3s ease; }
+
+/* Supersets (module H.1) */
+.superset-block { border-top: 1px solid var(--border-soft); padding: 10px 22px 14px; background: rgba(201,77,40,.04); }
+.superset-label { font-size: .68rem; font-weight: 700; letter-spacing: .06em; color: var(--rust-soft); text-transform: uppercase; margin-bottom: 4px; }
+.superset-block .exercise-row { border-top: none; padding: 6px 0; }
+.superset-plus { text-align: center; color: var(--chalk-dim); font-size: .8rem; padding: 2px 0; }
 
 /* ——— Séance rapide ——— */
 .session-exercise-card {
@@ -500,16 +507,16 @@ select option { background: var(--bg-card-solid); }
   background: rgba(0,0,0,.14);
 }
 .chat-input-row input { font-size: .9rem; }
-.chat-regen-banner {
-  margin: 8px 14px;
-  padding: 11px 15px;
-  background: var(--rust-bg);
-  border: 1px solid rgba(201,77,40,.25);
-  border-radius: var(--radius);
-  font-size: .83rem;
-  color: var(--chalk-dim);
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+/* Toast de notification (ex: programme mis a jour par le chat) */
+.app-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--bg-card-solid); border: 1px solid var(--green); color: var(--chalk);
+  padding: 12px 20px; border-radius: var(--radius); box-shadow: var(--shadow-modal);
+  font-size: .88rem; font-weight: 500; z-index: 500; opacity: 0;
+  transition: opacity .3s var(--ease), transform .3s var(--ease);
 }
+.app-toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+@media (max-width: 768px) { .app-toast { bottom: 80px; } }
 
 /* ——— Empty state ——— */
 .empty-state {
