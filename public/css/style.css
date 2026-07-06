@@ -519,6 +519,15 @@ select option { background: var(--bg-card-solid); }
 }
 .app-toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
 @media (max-width: 768px) { .app-toast { bottom: 80px; } }
+.app-toast.action-toast {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  border-color: var(--rust); max-width: min(90vw, 520px);
+}
+.app-toast.action-toast .toast-actions { display: flex; gap: 8px; flex-shrink: 0; }
+@media (max-width: 480px) {
+  .app-toast.action-toast { flex-direction: column; align-items: stretch; text-align: center; }
+  .app-toast.action-toast .toast-actions { justify-content: center; }
+}
 
 /* ——— Empty state ——— */
 .empty-state {

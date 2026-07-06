@@ -99,12 +99,19 @@ router.get("/full", async (req, res) => {
 router.put("/", async (req, res) => {
   try {
     const { weight_kg, height_cm, age, gender, activity_level } = req.body;
+    const uid = req.session.userId;
+
+    const before = await pool.query("SELECT weight_kg, height_cm FROM users WHERE id=$1", [uid]);
+    const prev = before.rows[0] || {};
+    const norm = v => (v === null || v === undefined || v === "" ? null : Number(v));
+    const morphologyChanged = norm(prev.weight_kg) !== norm(weight_kg) || norm(prev.height_cm) !== norm(height_cm);
+
     await pool.query(
       `UPDATE users SET weight_kg=$1, height_cm=$2, age=$3, gender=$4, activity_level=$5
        WHERE id=$6`,
-      [weight_kg||null, height_cm||null, age||null, gender||null, activity_level||null, req.session.userId]
+      [weight_kg||null, height_cm||null, age||null, gender||null, activity_level||null, uid]
     );
-    res.json({ ok: true });
+    res.json({ ok: true, profileUpdated: morphologyChanged, suggestRegenerate: morphologyChanged });
   } catch (err) {
     console.error("Erreur PUT /profile :", err);
     res.status(500).json({ error: "Erreur serveur." });

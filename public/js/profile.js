@@ -194,14 +194,15 @@ document.getElementById("profile-form").addEventListener("submit", async e => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
+    const json = await res.json();
     if (!res.ok) {
-      const json = await res.json();
       errorBox.innerHTML = `<div class="error-msg">${json.error}</div>`;
       status.textContent = "";
       return;
     }
     status.textContent = "✓ Enregistré";
     setTimeout(() => { status.textContent = ""; }, 2500);
+    if (json.suggestRegenerate) showRegenerateToast();
   } catch {
     errorBox.innerHTML = `<div class="error-msg">Impossible de joindre le serveur.</div>`;
     status.textContent = "";
@@ -357,6 +358,26 @@ async function loadBadges() {
   } catch {
     grid.innerHTML = `<p class="muted" style="font-size:.85rem">Impossible de charger les badges.</p>`;
   }
+}
+
+// Toast d'action : propose de regenerer le programme apres un changement
+// de poids/taille, pour que l'IA prenne en compte la nouvelle morphologie.
+function showRegenerateToast() {
+  document.querySelector(".app-toast.action-toast")?.remove();
+  const toast = document.createElement("div");
+  toast.className = "app-toast action-toast";
+  toast.innerHTML = `
+    <span>Ton profil physique a changé ! Régénère ton programme pour l'adapter à ta nouvelle morphologie.</span>
+    <div class="toast-actions">
+      <a class="btn btn-primary btn-sm" href="/questionnaire.html">Régénérer maintenant</a>
+      <button type="button" class="btn btn-ghost btn-sm" id="toast-dismiss">Plus tard</button>
+    </div>`;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("visible"));
+
+  const close = () => { toast.classList.remove("visible"); setTimeout(() => toast.remove(), 300); };
+  toast.querySelector("#toast-dismiss").addEventListener("click", close);
+  setTimeout(close, 10000);
 }
 
 init();
