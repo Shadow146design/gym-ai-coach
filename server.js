@@ -3,6 +3,8 @@ const express   = require("express");
 const path      = require("path");
 const session   = require("express-session");
 const pgSession = require("connect-pg-simple")(session);
+const helmet    = require("helmet");
+const morgan    = require("morgan");
 
 const pool           = require("./db/pool");
 const authRoutes     = require("./routes/auth");
@@ -24,11 +26,17 @@ const PORT = process.env.PORT || 3000;
 
 app.set("trust proxy", 1);
 
+// CSP desactivee : les pages s'appuient sur des attributs onclick inline et
+// sur le CDN Chart.js, incompatibles avec la CSP stricte par defaut de Helmet.
+// Les autres en-tetes (HSTS, X-Frame-Options, X-Content-Type-Options...) restent actifs.
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+
 // Webhook Stripe : body brut (Buffer) requis pour verifier la signature,
 // donc monte AVANT express.json() qui parserait/consommerait le stream.
 app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), stripeRoutes.webhookHandler);
 
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 
 app.use(session({
   store: new pgSession({ pool, tableName: "session" }),
@@ -58,5 +66,14 @@ app.use("/auth",         oauthRoutes);
 
 app.use(express.static(path.join(__dirname, "public")));
 app.get("/healthz", (req, res) => res.json({ ok: true }));
+
+// Filet de securite : capture toute erreur non geree par une route (les routes
+// gerent deja leurs propres try/catch, ceci couvre le reste : middleware, JSON
+// invalide, etc.) pour ne jamais renvoyer une stack trace au client.
+app.use((err, req, res, next) => {
+  console.error(`[${new Date().toISOString()}] Erreur non geree sur ${req.method} ${req.originalUrl} :`, err);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ error: "Erreur serveur." });
+});
 
 app.listen(PORT, () => console.log(`Gym AI Coach v4 — port ${PORT}`));

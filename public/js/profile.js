@@ -116,10 +116,45 @@ function toggleIdentityEdit() {
   document.getElementById("identity-edit").classList.toggle("hidden");
 }
 
+// Redimensionne l'image cote client (max 300px, JPEG) avant de l'envoyer en
+// base64 : evite de stocker/transferer des photos brutes de plusieurs Mo.
+function resizeImageToDataUrl(file, maxSize = 300, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Lecture du fichier impossible."));
+    reader.onload = () => {
+      img.onerror = () => reject(new Error("Image invalide."));
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 async function saveIdentity() {
   const msg = document.getElementById("identity-msg");
   const name = document.getElementById("edit-name").value;
-  const avatar_url = document.getElementById("edit-avatar").value;
+  const file = document.getElementById("edit-avatar-file").files[0];
+  let avatar_url = document.getElementById("edit-avatar").value;
+
+  if (file) {
+    msg.textContent = "Traitement de l'image…";
+    try {
+      avatar_url = await resizeImageToDataUrl(file);
+    } catch {
+      msg.innerHTML = `<span style="color:var(--red)">Impossible de traiter cette image.</span>`;
+      return;
+    }
+  }
+
   msg.textContent = "Enregistrement…";
   try {
     const res = await fetch("/api/profile/identity", {
