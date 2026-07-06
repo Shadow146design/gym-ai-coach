@@ -34,9 +34,9 @@ function renderIdentity() {
   document.getElementById("profile-name-display").textContent = user.name;
   document.getElementById("profile-email-display").textContent = user.email;
 
-  const badge = { premium: ["badge-premium", "Premium"], coach: ["badge-coach", "Coach"], admin: ["badge-admin", "Admin"] }[user.role];
-  document.getElementById("profile-role-badge").innerHTML = badge
-    ? `<span class="sidebar-badge ${badge[0]}">${badge[1]}</span>` : "";
+  const badge = { premium: ["badge-premium", "Premium"], coach: ["badge-coach", "Coach"], admin: ["badge-admin", "Admin"] }[user.role]
+    || ["badge-free", "Gratuit"];
+  document.getElementById("profile-role-badge").innerHTML = `<span class="sidebar-badge ${badge[0]}">${badge[1]}</span>`;
 
   const since = new Date(user.created_at).toLocaleDateString("fr-FR", { year: "numeric", month: "long", day: "numeric" });
   document.getElementById("profile-since").textContent = `Membre depuis le ${since}`;
@@ -98,7 +98,7 @@ function renderAccounts() {
   const el = document.getElementById("google-status");
   el.innerHTML = user.google_id
     ? `<span class="account-status connected"><span class="dot"></span>Connecté</span>`
-    : `<a class="btn btn-ghost btn-sm" href="/auth/google" rel="noopener noreferrer">Se connecter avec Google</a>`;
+    : `<a class="btn btn-ghost btn-sm btn-mobile-block" href="/auth/google" rel="noopener noreferrer">Se connecter avec Google</a>`;
 }
 
 function renderStats() {

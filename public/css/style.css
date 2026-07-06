@@ -701,6 +701,32 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
 
   /* Footer */
   footer { padding: 24px 14px; font-size: .72rem; }
+
+  /* Zones cliquables : taille doigt minimum, pas de zoom iOS sur focus */
+  html, body { overflow-x: hidden; }
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea {
+    min-height: 48px; font-size: 16px;
+  }
+  textarea { min-height: 80px; }
+  .btn, a.btn, button.btn { min-height: 44px; }
+  a, button, .exercise-filter-btn { -webkit-tap-highlight-color: transparent; }
+
+  /* Profil / Paramètres : espacement, tailles de texte, boutons pleine largeur */
+  .profile-section { padding: 22px 18px; margin-bottom: 20px; }
+  .profile-section-title { gap: 10px; }
+  .stat-row, .account-row, .identity-email, .imc-indicator { font-size: .95rem; }
+  .identity-row { gap: 16px; }
+  .identity-name, .identity-email, .stat-val { overflow-wrap: anywhere; }
+
+  .profile-section [style*="display:flex"] .btn {
+    flex: 1 1 auto; min-width: 0;
+  }
+  .profile-section form:not([style*="flex"]) > button[type="submit"],
+  .profile-section > button.btn,
+  .btn-mobile-block { width: 100%; }
+
+  /* Ligne "compte connecte" : action (bouton) passe sur sa propre ligne pleine largeur */
+  .account-row > div:last-child { flex: 1 1 100%; }
 }
 
 @media (max-width: 480px) {
@@ -1508,6 +1534,7 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
 .badge-premium { background: var(--gold-bg); color: var(--gold); }
 .badge-coach   { background: rgba(79,122,138,.18); color: var(--steel-soft); }
 .badge-admin   { background: var(--rust-bg); color: var(--rust-soft); }
+.badge-free    { background: var(--bg-hover); color: var(--chalk-dim); }
 .sidebar-logout {
   color: var(--chalk-dim); font-size: 1.15rem; flex-shrink: 0;
   width: 30px; height: 30px; border-radius: var(--radius);
@@ -1553,13 +1580,95 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
   .bottom-nav { display: flex; }
 }
 .bottom-nav-item {
+  position: relative;
   flex: 1; display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: 3px; font-size: .62rem; font-weight: 500;
   color: var(--chalk-dim); text-decoration: none; transition: color .18s var(--ease);
+  min-height: 44px;
+}
+button.bottom-nav-item {
+  background: none; border: none; appearance: none; font-family: inherit;
+  cursor: pointer; padding: 0; -webkit-tap-highlight-color: transparent;
 }
 .bottom-nav-item.active { color: var(--rust-soft); }
-.bottom-nav-item .icon { font-size: 1.25rem; }
+.bottom-nav-item .icon { display: flex; }
+.bottom-nav-item .icon svg { width: 22px; height: 22px; }
+.bottom-nav-item .nav-dot {
+  position: absolute; top: 2px; right: calc(50% - 17px);
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--rust); box-shadow: 0 0 0 2px var(--bg-card-solid);
+}
 [data-theme="light"] .bottom-nav { background: rgba(255,255,255,.88); }
+
+/* Drawer "Plus" — liens additionnels sur mobile */
+.mobile-more-backdrop {
+  position: fixed; inset: 0; z-index: 149;
+  background: rgba(0,0,0,.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .3s var(--ease);
+}
+.mobile-more-backdrop.open { opacity: 1; pointer-events: auto; }
+.mobile-more-drawer {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 150;
+  background: var(--bg-card-solid);
+  border-top: 1px solid var(--border-strong);
+  border-radius: 20px 20px 0 0;
+  box-shadow: var(--shadow-lg);
+  padding: 10px 14px calc(18px + env(safe-area-inset-bottom));
+  max-height: 78vh; overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform .3s var(--ease);
+}
+.mobile-more-drawer.open { transform: translateY(0); }
+.mobile-more-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 4px 16px;
+}
+.mobile-more-title {
+  font-family: var(--font-display); font-weight: 600;
+  font-size: .95rem; color: var(--chalk);
+}
+.mobile-more-close {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-hover); color: var(--chalk-dim);
+  border: none; cursor: pointer;
+}
+.mobile-more-close svg { width: 16px; height: 16px; }
+.mobile-more-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+}
+.mobile-more-item {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 16px 6px; min-height: 44px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-hover);
+  color: var(--chalk); text-decoration: none;
+  font-size: .74rem; font-weight: 500; text-align: center;
+  border: none; cursor: pointer; font-family: inherit;
+  transition: background .15s var(--ease), transform .15s var(--ease);
+}
+.mobile-more-item:active { background: var(--rust-bg); transform: scale(.97); }
+.mobile-more-icon {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--bg-card-solid); color: var(--rust-soft);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+.mobile-more-icon svg { width: 19px; height: 19px; }
+.mobile-more-item.logout .mobile-more-icon { color: var(--red); }
+.mobile-more-badge {
+  position: absolute; top: 8px; right: 18px;
+  background: var(--grad-rust); color: #fff;
+  font-family: var(--font-mono); font-size: .62rem; font-weight: 600;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--glow-rust);
+}
 
 /* =========================================================
    PROFIL — sections
@@ -1653,10 +1762,13 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
 @media (min-width: 769px) { .pwa-install-banner { display: none; } }
 
 @media (max-width: 480px) {
-  .profile-section { padding: 18px; }
+  .profile-section { padding: 20px 16px; }
   .identity-row { gap: 14px; }
   .avatar-large { width: 64px; height: 64px; font-size: 1.5rem; }
   .identity-name { font-size: 1.1rem; }
+  .mobile-more-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .mobile-more-item { padding: 12px 4px; font-size: .68rem; }
+  .mobile-more-icon { width: 36px; height: 36px; }
 }
 
 .pricing-features li.disabled { opacity: .5; }

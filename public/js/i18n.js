@@ -20,6 +20,8 @@ const I18N_DICT = {
   bottom_program:   { fr: "Programme",           en: "Program" },
   bottom_stats:     { fr: "Stats",               en: "Stats" },
   bottom_profile:   { fr: "Profil",              en: "Profile" },
+  bottom_more:      { fr: "Plus",                 en: "More" },
+  more_drawer_title:{ fr: "Menu",                 en: "Menu" },
 
   // Boutons communs
   btn_save:     { fr: "Enregistrer",           en: "Save" },

@@ -31,12 +31,45 @@ if (_themePref === "system") {
     { href: "/settings.html", icon: "⚙️", labelKey: "nav_settings" },
   ];
 
+  // Icones SVG inline (style Feather) — remplacent les emojis sur la bottom nav mobile et le drawer "Plus".
+  function svgIcon(inner) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+  }
+  const ICONS = {
+    home: svgIcon(`<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>`),
+    play: svgIcon(`<polygon points="5 3 19 12 5 21 5 3"/>`),
+    list: svgIcon(`<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>`),
+    barChart: svgIcon(`<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>`),
+    user: svgIcon(`<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>`),
+    more: `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>`,
+    award: svgIcon(`<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>`),
+    message: svgIcon(`<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>`),
+    star: svgIcon(`<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>`),
+    calendar: svgIcon(`<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>`),
+    activity: svgIcon(`<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>`),
+    settings: svgIcon(`<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>`),
+    tool: svgIcon(`<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/>`),
+    users: svgIcon(`<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>`),
+    logout: svgIcon(`<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>`),
+    close: svgIcon(`<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>`),
+  };
+
   const BOTTOM_NAV_ITEMS = [
-    { href: "/home.html", icon: "🏠", labelKey: "bottom_home" },
-    { href: "/session.html", icon: "▶️", labelKey: "bottom_session" },
-    { href: "/dashboard.html", icon: "📋", labelKey: "bottom_program" },
-    { href: "/stats.html", icon: "📊", labelKey: "bottom_stats" },
-    { href: "/profile.html", icon: "👤", labelKey: "bottom_profile" },
+    { href: "/home.html", icon: ICONS.home, labelKey: "bottom_home" },
+    { href: "/session.html", icon: ICONS.play, labelKey: "bottom_session" },
+    { href: "/dashboard.html", icon: ICONS.list, labelKey: "bottom_program" },
+    { href: "/stats.html", icon: ICONS.barChart, labelKey: "bottom_stats" },
+    { href: "/profile.html", icon: ICONS.user, labelKey: "bottom_profile" },
+  ];
+
+  // Liens complementaires accessibles depuis le drawer "Plus" de la bottom nav mobile.
+  const MORE_ITEMS = [
+    { href: "/coaches.html", icon: ICONS.award, labelKey: "nav_coaches" },
+    { href: "/messages.html", icon: ICONS.message, labelKey: "nav_messages", badge: true },
+    { href: "/premium.html", icon: ICONS.star, labelKey: "nav_premium", hideForRoles: ["premium", "coach"] },
+    { href: "/history.html", icon: ICONS.calendar, labelKey: "nav_history" },
+    { href: "/exercises.html", icon: ICONS.activity, labelKey: "nav_exercises" },
+    { href: "/settings.html", icon: ICONS.settings, labelKey: "nav_settings" },
   ];
 
   const t = key => (window.i18n ? window.i18n.t(key) : key);
@@ -78,6 +111,16 @@ if (_themePref === "system") {
       items.push({ href: "/admin.html", icon: "🔧", labelKey: "nav_admin" });
     }
 
+    // Liens du drawer "Plus" (bottom nav mobile) : memes regles de role que la sidebar desktop.
+    const moreItems = MORE_ITEMS.filter(it => !(it.hideForRoles && it.hideForRoles.includes(role)));
+    if (role === "coach" || role === "admin") {
+      moreItems.push({ href: "/coach-dashboard.html", icon: ICONS.users, labelKey: "nav_coach_clients" });
+    }
+    if (role === "admin") {
+      moreItems.push({ href: "/admin.html", icon: ICONS.tool, labelKey: "nav_admin" });
+    }
+    moreItems.push({ action: "logout", icon: ICONS.logout, labelKey: "nav_logout", logout: true });
+
     const navHtml = items.map(it => {
       if (it.sep) return `<div class="sidebar-sep"></div>`;
       const active = path === it.href ? " active" : "";
@@ -92,7 +135,7 @@ if (_themePref === "system") {
     const roleBadge = role === "premium" ? `<span class="sidebar-badge badge-premium">Premium</span>`
       : role === "coach" ? `<span class="sidebar-badge badge-coach">Coach</span>`
       : role === "admin" ? `<span class="sidebar-badge badge-admin">Admin</span>`
-      : "";
+      : `<span class="sidebar-badge badge-free">Gratuit</span>`;
 
     const avatarHtml = user.avatar_url
       ? `<img src="${esc(user.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`
@@ -132,19 +175,63 @@ if (_themePref === "system") {
         </div>
       </aside>`;
 
+    const moreActivePath = moreItems.some(it => it.href === path);
+    const moreUnread = moreItems.some(it => it.badge) && unread > 0;
+
     const bottomNavHtml = `
       <nav class="bottom-nav">
         ${BOTTOM_NAV_ITEMS.map(it => `
           <a href="${it.href}" class="bottom-nav-item${path === it.href ? " active" : ""}" data-key="${it.labelKey}">
             <span class="icon">${it.icon}</span><span class="lbl">${esc(t(it.labelKey))}</span>
           </a>`).join("")}
-      </nav>`;
+        <button type="button" class="bottom-nav-item${moreActivePath ? " active" : ""}" id="bottom-nav-more" data-key="bottom_more">
+          <span class="icon">${ICONS.more}</span><span class="lbl">${esc(t("bottom_more"))}</span>
+          ${moreUnread ? `<span class="nav-dot" id="more-nav-dot"></span>` : ""}
+        </button>
+      </nav>
+      <div class="mobile-more-backdrop" id="mobile-more-backdrop"></div>
+      <div class="mobile-more-drawer" id="mobile-more-drawer">
+        <div class="mobile-more-head">
+          <span class="mobile-more-title" data-key="more_drawer_title">${esc(t("more_drawer_title"))}</span>
+          <button type="button" class="mobile-more-close" id="mobile-more-close" aria-label="Fermer">${ICONS.close}</button>
+        </div>
+        <div class="mobile-more-grid">
+          ${moreItems.map(it => {
+            const badgeHtml = it.badge && unread > 0 ? `<span class="mobile-more-badge">${unread > 9 ? "9+" : unread}</span>` : "";
+            const tag = it.logout ? "button" : "a";
+            const attrs = it.logout ? `type="button" id="mobile-more-logout"` : `href="${it.href}"`;
+            return `<${tag} class="mobile-more-item${it.logout ? " logout" : ""}" ${attrs} data-key="${it.labelKey}">
+              <span class="mobile-more-icon">${it.icon}</span><span class="lbl">${esc(t(it.labelKey))}</span>${badgeHtml}
+            </${tag}>`;
+          }).join("")}
+        </div>
+      </div>`;
 
     document.body.insertAdjacentHTML("afterbegin", sidebarHtml);
     document.body.insertAdjacentHTML("beforeend", bottomNavHtml);
 
     document.getElementById("sidebar-logout")?.addEventListener("click", async e => {
       e.preventDefault();
+      await fetch("/api/auth/logout", { method: "POST" });
+      window.location.href = "/";
+    });
+
+    const moreBtn = document.getElementById("bottom-nav-more");
+    const moreBackdrop = document.getElementById("mobile-more-backdrop");
+    const moreDrawer = document.getElementById("mobile-more-drawer");
+    function openMoreDrawer() {
+      moreBackdrop.classList.add("open");
+      moreDrawer.classList.add("open");
+    }
+    function closeMoreDrawer() {
+      moreBackdrop.classList.remove("open");
+      moreDrawer.classList.remove("open");
+    }
+    moreBtn?.addEventListener("click", openMoreDrawer);
+    moreBackdrop?.addEventListener("click", closeMoreDrawer);
+    document.getElementById("mobile-more-close")?.addEventListener("click", closeMoreDrawer);
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeMoreDrawer(); });
+    document.getElementById("mobile-more-logout")?.addEventListener("click", async () => {
       await fetch("/api/auth/logout", { method: "POST" });
       window.location.href = "/";
     });
@@ -195,7 +282,7 @@ if (_themePref === "system") {
     });
 
     function relabelNav() {
-      document.querySelectorAll(".sidebar-item[data-key], .bottom-nav-item[data-key]").forEach(el => {
+      document.querySelectorAll(".sidebar-item[data-key], .bottom-nav-item[data-key], .mobile-more-item[data-key]").forEach(el => {
         const lbl = el.querySelector(".lbl");
         const label = t(el.getAttribute("data-key"));
         if (lbl) lbl.textContent = label;
@@ -203,6 +290,8 @@ if (_themePref === "system") {
       });
       const logout = document.getElementById("sidebar-logout");
       if (logout) logout.title = t("nav_logout");
+      const drawerTitle = document.querySelector(".mobile-more-title[data-key]");
+      if (drawerTitle) drawerTitle.textContent = t("more_drawer_title");
     }
 
     // Reagit a un changement de langue declenche depuis n'importe ou sur la page
@@ -235,6 +324,20 @@ if (_themePref === "system") {
           if (!bellBadge && bellBtn) { bellBadge = document.createElement("span"); bellBadge.className = "sidebar-bell-badge"; bellBtn.appendChild(bellBadge); }
           if (bellBadge) bellBadge.textContent = notifCount > 9 ? "9+" : notifCount;
         } else if (bellBadge) bellBadge.remove();
+
+        const msgCount = u?.unread || 0;
+        const moreMsgItem = document.querySelector('.mobile-more-item[data-key="nav_messages"]');
+        if (moreMsgItem) {
+          let moreBadge = moreMsgItem.querySelector(".mobile-more-badge");
+          if (msgCount > 0) {
+            if (!moreBadge) { moreBadge = document.createElement("span"); moreBadge.className = "mobile-more-badge"; moreMsgItem.appendChild(moreBadge); }
+            moreBadge.textContent = msgCount > 9 ? "9+" : msgCount;
+          } else if (moreBadge) moreBadge.remove();
+        }
+        let navDot = moreBtn?.querySelector(".nav-dot");
+        if (msgCount > 0) {
+          if (!navDot && moreBtn) { navDot = document.createElement("span"); navDot.className = "nav-dot"; moreBtn.appendChild(navDot); }
+        } else if (navDot) navDot.remove();
       } catch {}
     }
 
