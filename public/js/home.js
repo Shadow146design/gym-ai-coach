@@ -269,63 +269,125 @@ function localDayStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-async function loadCalendar() {
+let calYear, calMonth; // mois affiche (1-12)
+
+async function loadCalendar(year, month) {
+  const today = new Date();
+  if (year === undefined) {
+    calYear = today.getFullYear();
+    calMonth = today.getMonth() + 1;
+  } else {
+    calYear = year;
+    calMonth = month;
+  }
+
+  const grid = document.getElementById("calendar-grid");
+  if (!grid) return;
+
+  const monthStr = `${calYear}-${String(calMonth).padStart(2, "0")}`;
   try {
-    const r = await fetch("/api/logs/calendar").then(r => r.json());
-    console.log("Calendrier — données reçues :", r);
+    const [calData, streakData] = await Promise.all([
+      fetch(`/api/logs/calendar?month=${monthStr}`).then(r => r.json()),
+      fetch("/api/logs/streak").then(r => r.json()),
+    ]);
+
     const dayMap = {};
-    (r.days || []).forEach(d => {
-      dayMap[String(d.day).slice(0, 10)] = { exercises: parseInt(d.exercises), volume: Math.round(d.volume) };
+    (calData.days || []).forEach(d => {
+      dayMap[d.day] = { exercises: Number(d.exercises), volume: Math.round(Number(d.volume) || 0) };
     });
 
-    const grid = document.getElementById("calendar-grid");
-    const monthsRow = document.getElementById("calendar-months");
-    if (!grid) return;
-    grid.innerHTML = "";
-    if (monthsRow) monthsRow.innerHTML = "";
-    const today = new Date();
-    let lastMonth = null;
+    document.getElementById("cal-stat-sessions").textContent = calData.sessionsThisMonth ?? 0;
+    document.getElementById("cal-stat-streak").textContent = streakData.current ?? 0;
+    document.getElementById("cal-stat-volume").textContent = (calData.volumeThisMonth ?? 0).toLocaleString("fr-FR");
 
-    for (let w = 11; w >= 0; w--) {
-      const week = document.createElement("div");
-      week.className = "cal-week";
-
-      // Le premier jour de cette colonne determine le mois affiche au-dessus.
-      const weekStart = new Date(today);
-      weekStart.setDate(today.getDate() - (w * 7 + 6));
-      const monthLabel = weekStart.toLocaleDateString("fr-FR", { month: "short" });
-      if (monthsRow) {
-        const label = document.createElement("div");
-        label.className = "cal-month-label";
-        if (monthLabel !== lastMonth) { label.textContent = monthLabel; lastMonth = monthLabel; }
-        monthsRow.appendChild(label);
-      }
-
-      for (let d = 6; d >= 0; d--) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - (w * 7 + d));
-        const key = localDayStr(date);
-        const data = dayMap[key];
-        const cell = document.createElement("div");
-        const dateLabel = date.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
-
-        if (date > today) {
-          cell.className = "cal-day future";
-          cell.title = dateLabel;
-        } else if (data && data.exercises > 0) {
-          const tier = data.exercises >= 4 ? "good" : "light";
-          cell.className = `cal-day ${tier}`;
-          cell.title = `${dateLabel} — ${data.exercises} exercice${data.exercises > 1 ? "s" : ""}, ${data.volume} kg`;
-        } else {
-          cell.className = "cal-day rest";
-          cell.title = `${dateLabel} — Repos`;
-        }
-        week.appendChild(cell);
-      }
-      grid.appendChild(week);
-    }
-  } catch(e) { console.error("Calendar:", e); }
+    renderCalendarHeader(today);
+    renderCalendarGrid(dayMap, today);
+  } catch (e) {
+    console.error("Calendar:", e);
+    grid.innerHTML = `<p class="muted" style="font-size:.85rem">Impossible de charger le calendrier.</p>`;
+  }
 }
+
+function renderCalendarHeader(today) {
+  const label = new Date(calYear, calMonth - 1, 1).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+  document.getElementById("cal-title").textContent = label;
+
+  const isCurrentMonth = calYear === today.getFullYear() && calMonth === today.getMonth() + 1;
+  document.getElementById("cal-next").disabled = isCurrentMonth;
+  document.getElementById("cal-today-btn").classList.toggle("hidden", isCurrentMonth);
+}
+
+function renderCalendarGrid(dayMap, today) {
+  const grid = document.getElementById("calendar-grid");
+  const tooltip = document.getElementById("cal-tooltip");
+  const todayStr = localDayStr(today);
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const firstOfMonth = new Date(calYear, calMonth - 1, 1);
+  const firstWeekday = (firstOfMonth.getDay() + 6) % 7; // lundi = 0
+  const daysInMonth = new Date(calYear, calMonth, 0).getDate();
+
+  const cells = [];
+  for (let i = 0; i < firstWeekday; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  grid.innerHTML = cells.map(d => {
+    if (d === null) return `<div class="cal-cell empty"></div>`;
+    const dateObj = new Date(calYear, calMonth - 1, d);
+    const key = localDayStr(dateObj);
+    const data = dayMap[key];
+    const isToday = key === todayStr;
+    const isFuture = dateObj > todayMidnight;
+    const trained = !!(data && data.exercises > 0);
+
+    let cls = "cal-cell";
+    if (isFuture) cls += " cal-future";
+    else if (trained) cls += isToday ? " cal-today-done" : " cal-done";
+    else if (isToday) cls += " cal-today-pending";
+    else cls += " cal-rest";
+
+    const attrs = trained ? ` data-exercises="${data.exercises}" data-volume="${data.volume}"` : "";
+    return `<button type="button" class="${cls}" data-date="${key}"${attrs}><span class="cal-num">${d}</span></button>`;
+  }).join("");
+
+  grid.querySelectorAll(".cal-done, .cal-today-done").forEach(cell => {
+    cell.addEventListener("click", e => {
+      e.stopPropagation();
+      const ex = Number(cell.dataset.exercises);
+      const vol = Number(cell.dataset.volume);
+      tooltip.textContent = `${ex} exercice${ex > 1 ? "s" : ""} — Volume ${vol.toLocaleString("fr-FR")} kg`;
+      const cellRect = cell.getBoundingClientRect();
+      const cardRect = grid.closest(".home-card").getBoundingClientRect();
+      tooltip.style.left = `${cellRect.left - cardRect.left + cellRect.width / 2}px`;
+      tooltip.style.top = `${cellRect.top - cardRect.top}px`;
+      tooltip.classList.remove("hidden");
+    });
+  });
+}
+
+document.addEventListener("click", e => {
+  const tooltip = document.getElementById("cal-tooltip");
+  if (tooltip && !tooltip.classList.contains("hidden") && !e.target.closest(".cal-done, .cal-today-done")) {
+    tooltip.classList.add("hidden");
+  }
+});
+
+document.getElementById("cal-prev")?.addEventListener("click", () => {
+  let m = calMonth - 1, y = calYear;
+  if (m < 1) { m = 12; y--; }
+  loadCalendar(y, m);
+});
+document.getElementById("cal-next")?.addEventListener("click", () => {
+  if (document.getElementById("cal-next").disabled) return;
+  let m = calMonth + 1, y = calYear;
+  if (m > 12) { m = 1; y++; }
+  loadCalendar(y, m);
+});
+document.getElementById("cal-today-btn")?.addEventListener("click", () => {
+  const today = new Date();
+  loadCalendar(today.getFullYear(), today.getMonth() + 1);
+});
 
 async function loadRecords() {
   const el = document.getElementById("records-list");

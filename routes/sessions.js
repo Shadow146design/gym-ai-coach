@@ -467,14 +467,26 @@ router.get("/plateau", async (req, res) => {
 // ── Calendrier : jours d'entraînement sur 12 semaines ─────
 router.get("/calendar", async (req, res) => {
   try {
+    const monthParam = /^\d{4}-\d{2}$/.test(req.query.month) ? req.query.month : dayStr(new Date()).slice(0, 7);
+    const [y, m] = monthParam.split("-").map(Number);
+    const monthStart = new Date(y, m - 1, 1);
+    const monthEnd = new Date(y, m, 1); // premier jour du mois suivant (borne exclusive)
+
     const r = await pool.query(
       `SELECT performed_at::date AS day, COUNT(DISTINCT exercise_name) AS exercises, SUM(weight*reps*sets) AS volume
-       FROM logs WHERE user_id=$1 AND performed_at >= NOW() - INTERVAL '12 weeks'
+       FROM logs WHERE user_id=$1 AND performed_at >= $2 AND performed_at < $3
        GROUP BY day ORDER BY day`,
-      [req.session.userId]
+      [req.session.userId, monthStart, monthEnd]
     );
-    const days = r.rows.map(row => ({ ...row, day: dayStr(row.day) }));
-    res.json({ days });
+    const days = r.rows.map(row => ({
+      day: dayStr(row.day),
+      exercises: Number(row.exercises),
+      volume: Number(row.volume) || 0,
+    }));
+    const sessionsThisMonth = days.length;
+    const volumeThisMonth = Math.round(days.reduce((sum, d) => sum + d.volume, 0));
+
+    res.json({ month: monthParam, days, sessionsThisMonth, volumeThisMonth });
   } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
 });
 

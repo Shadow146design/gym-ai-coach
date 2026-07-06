@@ -96,15 +96,24 @@
   </div>
 
   <!-- Calendrier -->
-  <div class="home-card">
-    <div class="home-card-title">📆 Calendrier — 12 semaines</div>
-    <div id="calendar-months" class="cal-months"></div>
-    <div id="calendar-grid" class="cal-grid"><div class="skeleton" style="width:100%;height:104px"></div></div>
-    <div class="cal-legend">
-      <span><span class="cal-dot cal-dot-rest"></span>Repos</span>
-      <span><span class="cal-dot cal-dot-light"></span>Séance légère</span>
-      <span><span class="cal-dot cal-dot-good"></span>Bonne séance</span>
+  <div class="home-card" style="position:relative">
+    <div class="home-card-title">📆 Calendrier</div>
+    <div class="cal-stats-row">
+      <div class="cal-stat"><div class="cal-stat-val" id="cal-stat-sessions">—</div><div class="cal-stat-label">Séances ce mois</div></div>
+      <div class="cal-stat"><div class="cal-stat-val" id="cal-stat-streak">—</div><div class="cal-stat-label">Jours de streak</div></div>
+      <div class="cal-stat"><div class="cal-stat-val" id="cal-stat-volume">—</div><div class="cal-stat-label">kg ce mois</div></div>
     </div>
+    <div class="cal-header">
+      <button type="button" class="cal-nav-btn" id="cal-prev" aria-label="Mois précédent">‹</button>
+      <div class="cal-title-wrap">
+        <div class="cal-title" id="cal-title">—</div>
+        <button type="button" class="cal-today-btn hidden" id="cal-today-btn">Aujourd'hui</button>
+      </div>
+      <button type="button" class="cal-nav-btn" id="cal-next" aria-label="Mois suivant">›</button>
+    </div>
+    <div class="cal-weekdays"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+    <div id="calendar-grid" class="cal-grid-month"><div class="skeleton" style="width:100%;height:220px"></div></div>
+    <div class="cal-tooltip hidden" id="cal-tooltip"></div>
   </div>
 
   <!-- Conseil du jour (IA) -->
