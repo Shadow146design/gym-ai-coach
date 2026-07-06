@@ -27,6 +27,7 @@
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost btn-sm" id="theme-dark-btn" type="button" onclick="setTheme('dark')" data-i18n="settings_theme_dark">Sombre</button>
         <button class="btn btn-ghost btn-sm" id="theme-light-btn" type="button" onclick="setTheme('light')" data-i18n="settings_theme_light">Clair</button>
+        <button class="btn btn-ghost btn-sm" id="theme-system-btn" type="button" onclick="setTheme('system')" data-i18n="settings_theme_system">Système</button>
       </div>
     </div>
     <div class="stat-row">
@@ -123,7 +124,8 @@
   <div class="profile-section">
     <div class="profile-section-title" data-i18n="settings_data">📦 Données</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn btn-ghost btn-sm" type="button" onclick="exportData()" data-i18n="settings_data_export">Télécharger mes données</button>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="exportData()" data-i18n="settings_data_export">Télécharger mes données (JSON)</button>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="exportDataCsv()" data-i18n="settings_data_export_csv">Télécharger mes données (CSV)</button>
       <button class="btn btn-ghost btn-sm" type="button" onclick="clearHistory()" data-i18n="settings_data_clear">Effacer mon historique de séances</button>
     </div>
     <div id="data-msg" style="margin-top:10px;font-size:.85rem"></div>

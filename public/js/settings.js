@@ -1,6 +1,6 @@
 function setTheme(theme) {
   localStorage.setItem("theme", theme);
-  document.documentElement.setAttribute("data-theme", theme);
+  document.documentElement.setAttribute("data-theme", window.resolveTheme ? window.resolveTheme(theme) : theme);
   updateThemeButtons(theme);
 }
 
@@ -9,6 +9,8 @@ function updateThemeButtons(theme) {
   document.getElementById("theme-dark-btn").classList.toggle("btn-ghost", theme !== "dark");
   document.getElementById("theme-light-btn").classList.toggle("btn-primary", theme === "light");
   document.getElementById("theme-light-btn").classList.toggle("btn-ghost", theme !== "light");
+  document.getElementById("theme-system-btn").classList.toggle("btn-primary", theme === "system");
+  document.getElementById("theme-system-btn").classList.toggle("btn-ghost", theme !== "system");
 }
 
 function setLanguage(lang) {
@@ -169,6 +171,23 @@ async function exportData() {
     const a = document.createElement("a");
     a.href = url;
     a.download = "historique-seances.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch {
+    msg.innerHTML = `<span style="color:var(--red)">Impossible de joindre le serveur.</span>`;
+  }
+}
+
+async function exportDataCsv() {
+  const msg = document.getElementById("data-msg");
+  try {
+    const res = await fetch("/api/logs/export.csv");
+    if (!res.ok) { msg.innerHTML = `<span style="color:var(--red)">Erreur lors de l'export.</span>`; return; }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "historique-seances.csv";
     a.click();
     URL.revokeObjectURL(url);
   } catch {

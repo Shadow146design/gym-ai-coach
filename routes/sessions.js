@@ -512,6 +512,29 @@ router.get("/export", async (req, res) => {
   } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
 });
 
+// ── GET /export.csv (export CSV de tous les logs) ─────────
+router.get("/export.csv", async (req, res) => {
+  try {
+    const r = await pool.query(
+      "SELECT exercise_name, muscle_group, weight, reps, sets, note, performed_at FROM logs WHERE user_id=$1 ORDER BY performed_at ASC",
+      [req.session.userId]
+    );
+    const csvEscape = v => {
+      const s = v === null || v === undefined ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const header = ["exercice", "groupe_musculaire", "poids_kg", "repetitions", "series", "note", "date"];
+    const rows = r.rows.map(row => [
+      row.exercise_name, row.muscle_group, row.weight, row.reps, row.sets, row.note,
+      new Date(row.performed_at).toISOString(),
+    ].map(csvEscape).join(","));
+    const csv = [header.join(","), ...rows].join("\n");
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", "attachment; filename=historique-seances.csv");
+    res.send(csv);
+  } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
+});
+
 // ── Déséquilibres musculaires ──────────────────────────────
 router.get("/imbalances", async (req, res) => {
   try {
