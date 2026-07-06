@@ -11,18 +11,76 @@ async function init() {
     loadKPIs(), loadNextSession(), loadCalendar(), loadRecords(),
     loadLastAndTodayRecord(), loadDailyTip(), loadPlateauAlert(), loadFormScore(),
   ]);
+
+  maybeStartTour();
+}
+
+// ── Tour guidé (premiere visite apres l'onboarding) ───────────
+const TOUR_STEPS = [
+  { selector: ".streak-block", text: "Voici ton streak 🔥 — il augmente chaque jour où tu fais une séance." },
+  { selector: ".btn-huge", text: "Clique ici pour commencer ta séance du jour." },
+  { selector: "#records-list", text: "Tes records personnels s'affichent automatiquement ici, dès ta première séance loggée." },
+];
+
+function maybeStartTour() {
+  if (localStorage.getItem("justOnboarded") !== "1") return;
+  localStorage.removeItem("justOnboarded");
+  startTour();
+}
+
+function startTour(step = 0) {
+  document.querySelectorAll(".tour-overlay, .tour-spotlight, .tour-tooltip").forEach(el => el.remove());
+  if (step >= TOUR_STEPS.length) return;
+
+  const target = document.querySelector(TOUR_STEPS[step].selector);
+  if (!target) return startTour(step + 1);
+
+  const rect = target.getBoundingClientRect();
+  const pad = 8;
+
+  const overlay = document.createElement("div");
+  overlay.className = "tour-overlay";
+
+  const spot = document.createElement("div");
+  spot.className = "tour-spotlight";
+  spot.style.left = `${rect.left - pad}px`;
+  spot.style.top = `${rect.top - pad}px`;
+  spot.style.width = `${rect.width + pad * 2}px`;
+  spot.style.height = `${rect.height + pad * 2}px`;
+
+  const tooltip = document.createElement("div");
+  tooltip.className = "tour-tooltip";
+  const top = Math.min(rect.bottom + 14, window.innerHeight - 160);
+  const left = Math.min(Math.max(rect.left, 16), window.innerWidth - 296);
+  tooltip.style.top = `${top}px`;
+  tooltip.style.left = `${left}px`;
+  tooltip.innerHTML = `
+    <div class="tour-tooltip-text">${esc(TOUR_STEPS[step].text)}</div>
+    <div class="tour-tooltip-actions">
+      <button type="button" class="tour-tooltip-skip" id="tour-skip">Passer</button>
+      <span class="tour-tooltip-step">${step + 1}/${TOUR_STEPS.length}</span>
+      <button type="button" class="btn btn-primary btn-sm" id="tour-next">${step === TOUR_STEPS.length - 1 ? "Terminer" : "Suivant"}</button>
+    </div>`;
+
+  document.body.append(overlay, spot, tooltip);
+  document.getElementById("tour-skip").addEventListener("click", () => startTour(TOUR_STEPS.length));
+  document.getElementById("tour-next").addEventListener("click", () => startTour(step + 1));
+  overlay.addEventListener("click", () => startTour(step + 1));
 }
 
 // ── Score de forme du jour ───────────────────────────────────
 async function loadFormScore() {
+  const badge = document.getElementById("form-score-badge");
   try {
     const r = await fetch("/api/logs/form-score").then(r => r.json());
-    document.getElementById("form-score-badge").textContent = r.score;
+    badge.classList.remove("skeleton");
+    badge.textContent = r.score;
     document.getElementById("form-score-label").textContent = r.label;
     document.getElementById("fs-regularite").style.width = `${r.factors.regularite}%`;
     document.getElementById("fs-progression").style.width = `${r.factors.progression}%`;
     document.getElementById("fs-recuperation").style.width = `${r.factors.recuperation}%`;
   } catch {
+    badge.classList.remove("skeleton");
     document.getElementById("form-score-label").textContent = "Impossible de charger.";
   }
 }
@@ -101,6 +159,8 @@ async function loadKPIs() {
 
     document.getElementById("streak-num").textContent = streak;
     updateStreakRing(streak);
+    ["stat-sessions", "stat-best", "stat-assiduite"].forEach(id =>
+      document.getElementById(id).classList.remove("skeleton", "skeleton-line"));
     document.getElementById("stat-sessions").textContent = dashData.totalSessions || 0;
     document.getElementById("stat-best").textContent = `${best}j`;
     document.getElementById("stat-assiduite").textContent =
@@ -113,6 +173,11 @@ async function loadKPIs() {
       lastDate ? `Dernière séance : ${lastDate}` : "Pas encore de séance — commence maintenant !";
   } catch(e) {
     document.getElementById("streak-num").textContent = "0";
+    ["stat-sessions", "stat-best", "stat-assiduite"].forEach(id => {
+      const el = document.getElementById(id);
+      el.classList.remove("skeleton", "skeleton-line");
+      el.textContent = "—";
+    });
   }
 }
 

@@ -38,9 +38,9 @@
   <div class="home-card form-score-card">
     <div class="home-card-title">🩺 Score de forme du jour</div>
     <div class="form-score-row">
-      <div class="form-score-badge" id="form-score-badge">—</div>
+      <div class="form-score-badge skeleton" id="form-score-badge"></div>
       <div style="flex:1;min-width:0">
-        <div class="form-score-label" id="form-score-label">Chargement…</div>
+        <div class="form-score-label" id="form-score-label"><span class="skeleton skeleton-line" style="display:inline-block;width:140px;height:14px;vertical-align:middle"></span></div>
         <div class="form-score-bars">
           <div class="form-score-bar"><span>Régularité</span><div class="form-score-track"><div class="form-score-fill" id="fs-regularite"></div></div></div>
           <div class="form-score-bar"><span>Progression</span><div class="form-score-track"><div class="form-score-fill" id="fs-progression"></div></div></div>
@@ -61,26 +61,36 @@
 
   <!-- Barre stats rapides -->
   <div class="home-stats-bar">
-    <div class="hstat"><div class="hstat-val" id="stat-sessions">—</div><div class="hstat-lbl">Séances</div></div>
+    <div class="hstat"><div class="hstat-val skeleton skeleton-line" id="stat-sessions" style="width:2.2em;height:1.4em;margin:0 auto"></div><div class="hstat-lbl">Séances</div></div>
     <div class="hstat-sep"></div>
-    <div class="hstat"><div class="hstat-val" id="stat-best">—</div><div class="hstat-lbl">Record streak</div></div>
+    <div class="hstat"><div class="hstat-val skeleton skeleton-line" id="stat-best" style="width:2.2em;height:1.4em;margin:0 auto"></div><div class="hstat-lbl">Record streak</div></div>
     <div class="hstat-sep"></div>
-    <div class="hstat"><div class="hstat-val" id="stat-assiduite">—</div><div class="hstat-lbl">Assiduité 4 sem.</div></div>
+    <div class="hstat"><div class="hstat-val skeleton skeleton-line" id="stat-assiduite" style="width:2.2em;height:1.4em;margin:0 auto"></div><div class="hstat-lbl">Assiduité 4 sem.</div></div>
   </div>
 
   <!-- 3 colonnes : prochaine séance / dernière séance / record du jour -->
   <div class="home-cols-3">
     <div class="home-card" style="border-left:3px solid var(--rust)">
       <div class="home-card-title">📅 Prochaine séance</div>
-      <div id="next-session-card"><span class="muted" style="font-size:.88rem">Chargement…</span></div>
+      <div id="next-session-card" class="skeleton-card">
+        <div class="skeleton skeleton-line" style="width:60%"></div>
+        <div class="skeleton skeleton-line" style="width:90%"></div>
+        <div class="skeleton skeleton-line" style="width:40%"></div>
+      </div>
     </div>
     <div class="home-card">
       <div class="home-card-title">✅ Dernière séance</div>
-      <div id="last-session-card"><span class="muted" style="font-size:.88rem">Chargement…</span></div>
+      <div id="last-session-card" class="skeleton-card">
+        <div class="skeleton skeleton-line" style="width:70%"></div>
+        <div class="skeleton skeleton-line" style="width:45%"></div>
+      </div>
     </div>
     <div class="home-card">
       <div class="home-card-title">🏆 Record du jour</div>
-      <div id="today-record-card"><span class="muted" style="font-size:.88rem">Chargement…</span></div>
+      <div id="today-record-card" class="skeleton-card">
+        <div class="skeleton skeleton-line" style="width:65%"></div>
+        <div class="skeleton skeleton-line" style="width:35%"></div>
+      </div>
     </div>
   </div>
 
@@ -88,7 +98,7 @@
   <div class="home-card">
     <div class="home-card-title">📆 Calendrier — 12 semaines</div>
     <div id="calendar-months" class="cal-months"></div>
-    <div id="calendar-grid" class="cal-grid"></div>
+    <div id="calendar-grid" class="cal-grid"><div class="skeleton" style="width:100%;height:104px"></div></div>
     <div class="cal-legend">
       <span><span class="cal-dot cal-dot-rest"></span>Repos</span>
       <span><span class="cal-dot cal-dot-light"></span>Séance légère</span>
@@ -99,7 +109,7 @@
   <!-- Conseil du jour (IA) -->
   <div class="home-card daily-tip-card">
     <div class="daily-tip-icon">💡</div>
-    <div class="daily-tip-text" id="daily-tip-text">Chargement du conseil du jour…</div>
+    <div class="daily-tip-text" id="daily-tip-text"><span class="skeleton skeleton-line" style="display:inline-block;width:80%;height:14px"></span></div>
   </div>
 
   <!-- Records -->
@@ -108,7 +118,12 @@
       <span>🏅 Tous mes records</span>
       <a href="/stats.html" style="font-size:.78rem;color:var(--chalk-dim);text-transform:none;letter-spacing:0;font-weight:500">Voir tous →</a>
     </div>
-    <div id="records-list"></div>
+    <div id="records-list" class="skeleton-card">
+      <div class="skeleton skeleton-line" style="width:100%"></div>
+      <div class="skeleton skeleton-line" style="width:100%"></div>
+      <div class="skeleton skeleton-line" style="width:100%"></div>
+      <div class="skeleton skeleton-line" style="width:100%"></div>
+    </div>
   </div>
 
   <div class="spacer"></div>

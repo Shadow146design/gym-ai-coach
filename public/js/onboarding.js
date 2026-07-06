@@ -60,6 +60,7 @@ quizForm.addEventListener("submit", async e => {
     }
     document.getElementById("program-summary-preview").textContent =
       `« ${json.program.title} » — ${(json.program.content.days || []).length} jours par semaine, prêt à démarrer.`;
+    localStorage.setItem("justOnboarded", "1");
     goToStep(3);
   } catch {
     quizError.innerHTML = `<div class="error-msg">Impossible de joindre le serveur.</div>`;
