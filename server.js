@@ -17,6 +17,7 @@ const adminRoutes    = require("./routes/admin");
 const stripeRoutes   = require("./routes/stripe");
 const notificationsRoutes = require("./routes/notifications");
 const weightRoutes   = require("./routes/weight");
+const badgesRoutes   = require("./routes/badges");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -52,6 +53,7 @@ app.use("/api/admin",    adminRoutes);
 app.use("/api/stripe",   stripeRoutes.router);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/weight",  weightRoutes);
+app.use("/api/badges",  badgesRoutes);
 app.use("/auth",         oauthRoutes);
 
 app.use(express.static(path.join(__dirname, "public")));

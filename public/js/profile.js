@@ -21,6 +21,7 @@ async function init() {
   renderAccounts();
   renderStats();
   loadWeightChart();
+  loadBadges();
 }
 
 function renderIdentity() {
@@ -306,5 +307,21 @@ document.getElementById("weight-form").addEventListener("submit", async e => {
     status.innerHTML = `<span style="color:var(--red)">Impossible de joindre le serveur.</span>`;
   }
 });
+
+async function loadBadges() {
+  const grid = document.getElementById("badges-grid");
+  try {
+    const r = await fetch("/api/badges").then(r => r.json());
+    document.getElementById("badges-count").textContent = `${r.unlockedCount}/${r.total} débloqués`;
+    grid.innerHTML = r.badges.map(b => `
+      <div class="badge-tile${b.unlocked ? " unlocked" : ""}" title="${esc(b.desc)}">
+        <div class="badge-tile-icon">${b.icon}</div>
+        <div class="badge-tile-title">${esc(b.title)}</div>
+        <div class="badge-tile-track"><div class="badge-tile-fill" style="width:${Math.round((b.current / b.target) * 100)}%"></div></div>
+      </div>`).join("");
+  } catch {
+    grid.innerHTML = `<p class="muted" style="font-size:.85rem">Impossible de charger les badges.</p>`;
+  }
+}
 
 init();

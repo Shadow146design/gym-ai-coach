@@ -525,4 +525,67 @@ router.get("/imbalances", async (req, res) => {
   } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
 });
 
+// ── GET /form-score (score de forme du jour, 0-100) ───────
+// Compose 3 facteurs : regularite (30j), progression (semaine vs semaine
+// precedente), recuperation (pas de surentrainement sans repos).
+router.get("/form-score", async (req, res) => {
+  try {
+    const uid = req.session.userId;
+
+    const daysR = await pool.query(
+      `SELECT DISTINCT performed_at::date AS day FROM logs
+       WHERE user_id=$1 AND performed_at >= NOW() - INTERVAL '30 days'
+       ORDER BY day DESC`,
+      [uid]
+    );
+    const days = daysR.rows.map(r => dayStr(r.day));
+
+    if (!days.length) {
+      return res.json({ score: 0, label: "Pas encore de données", factors: { regularite: 0, progression: 0, recuperation: 0 } });
+    }
+
+    // Régularité : ~3 séances/semaine sur 30j = score plein
+    const regularite = Math.min(100, Math.round((days.length / 12) * 100));
+
+    // Progression : volume de cette semaine vs la semaine précédente
+    const weeklyR = await pool.query(
+      `SELECT DATE_TRUNC('week', performed_at) AS week, SUM(weight*reps*sets) AS volume
+       FROM logs WHERE user_id=$1 AND performed_at >= NOW() - INTERVAL '14 days'
+       GROUP BY week ORDER BY week DESC`,
+      [uid]
+    );
+    let progression = 60; // neutre si pas assez de recul
+    if (weeklyR.rows.length >= 2) {
+      const [thisWeek, lastWeek] = weeklyR.rows;
+      const v1 = Number(thisWeek.volume), v0 = Number(lastWeek.volume);
+      if (v0 > 0) progression = v1 >= v0 ? 100 : Math.max(20, Math.round((v1 / v0) * 100));
+    }
+
+    // Récupération : pénalise 6+ jours d'affilée sans repos (risque de surentrainement)
+    const today = dayStr(new Date());
+    const yesterday = dayStr(new Date(Date.now() - 86400000));
+    let recuperation = 100;
+    if (days[0] === today || days[0] === yesterday) {
+      let consecutive = 1;
+      for (let i = 1; i < days.length; i++) {
+        const diff = (new Date(days[i - 1]) - new Date(days[i])) / 86400000;
+        if (diff === 1) consecutive++; else break;
+      }
+      if (consecutive >= 6) recuperation = 40;
+      else if (consecutive >= 4) recuperation = 70;
+    }
+
+    const score = Math.round(regularite * 0.4 + progression * 0.3 + recuperation * 0.3);
+    const label = score >= 80 ? "Excellente forme 🔥"
+      : score >= 60 ? "Bonne forme 💪"
+      : score >= 40 ? "Forme correcte 👍"
+      : "Repos recommandé 😴";
+
+    res.json({ score, label, factors: { regularite, progression, recuperation } });
+  } catch (err) {
+    console.error("Erreur GET /form-score :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
 module.exports = router;

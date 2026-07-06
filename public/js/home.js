@@ -9,8 +9,22 @@ async function init() {
 
   await Promise.all([
     loadKPIs(), loadNextSession(), loadCalendar(), loadRecords(),
-    loadLastAndTodayRecord(), loadDailyTip(), loadPlateauAlert(),
+    loadLastAndTodayRecord(), loadDailyTip(), loadPlateauAlert(), loadFormScore(),
   ]);
+}
+
+// ── Score de forme du jour ───────────────────────────────────
+async function loadFormScore() {
+  try {
+    const r = await fetch("/api/logs/form-score").then(r => r.json());
+    document.getElementById("form-score-badge").textContent = r.score;
+    document.getElementById("form-score-label").textContent = r.label;
+    document.getElementById("fs-regularite").style.width = `${r.factors.regularite}%`;
+    document.getElementById("fs-progression").style.width = `${r.factors.progression}%`;
+    document.getElementById("fs-recuperation").style.width = `${r.factors.recuperation}%`;
+  } catch {
+    document.getElementById("form-score-label").textContent = "Impossible de charger.";
+  }
 }
 
 // ── Alerte plateau ───────────────────────────────────────────

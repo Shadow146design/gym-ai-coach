@@ -17,6 +17,7 @@
       <h1 data-i18n="page_stats_title">Statistiques</h1>
       <p class="sub muted" data-i18n="page_stats_sub">Toute ta progression au même endroit.</p>
     </div>
+    <button class="btn btn-ghost btn-sm" type="button" onclick="openShareModal()">📸 Partager mes stats</button>
   </div>
 
   <!-- KPI globaux -->
@@ -69,6 +70,17 @@
   </div>
 
   <div class="spacer"></div>
+</div>
+
+<!-- Modal partage stats -->
+<div class="modal-overlay hidden" id="share-modal-overlay">
+  <div class="modal-card" style="max-width:320px;padding:24px">
+    <button class="modal-close" type="button" id="share-modal-close">✕</button>
+    <h2 style="font-size:1.05rem;margin-bottom:14px">Partage tes stats</h2>
+    <canvas id="share-canvas" width="1080" height="1920" style="width:100%;border-radius:12px;box-shadow:var(--shadow)"></canvas>
+    <button class="btn btn-primary btn-block" type="button" style="margin-top:16px" onclick="downloadShareCard()">Télécharger l'image</button>
+    <p class="muted" style="font-size:.75rem;margin-top:10px">Télécharge l'image puis partage-la sur Instagram, Snapchat ou où tu veux.</p>
+  </div>
 </div>
 
 <footer>Gym AI Coach</footer>

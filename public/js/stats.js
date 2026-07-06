@@ -1,14 +1,18 @@
 let chartInstance = null;
 let radarInstance = null;
+const shareData = {};
 
 async function init() {
   const meRes = await fetch("/api/auth/me");
   if (!meRes.ok) return (window.location.href = "/");
+  const { user } = await meRes.json();
+  shareData.name = user.name;
 
-  const [dashRes, recordsRes, exercisesRes] = await Promise.all([
+  const [dashRes, recordsRes, exercisesRes, streakRes] = await Promise.all([
     fetch("/api/logs/dashboard-stats"),
     fetch("/api/logs/records"),
     fetch("/api/logs/exercises"),
+    fetch("/api/logs/streak"),
   ]);
   loadWeekCompare();
   loadOneRm();
@@ -16,6 +20,11 @@ async function init() {
     = await dashRes.json();
   const { records } = await recordsRes.json();
   const { exercises } = await exercisesRes.json();
+  const { current: streak } = await streakRes.json();
+
+  shareData.totalSessions = totalSessions;
+  shareData.streak = streak || 0;
+  shareData.topRecord = records[0] || null;
 
   if (!exercises.length) {
     document.getElementById("empty-state").classList.remove("hidden");
@@ -196,6 +205,114 @@ function esc(str) {
   const d = document.createElement("div");
   d.textContent = str;
   return d.innerHTML;
+}
+
+// ── Partage stats (carte type "story" Instagram) ────────────
+function openShareModal() {
+  document.getElementById("share-modal-overlay").classList.remove("hidden");
+  drawShareCard();
+}
+document.getElementById("share-modal-close")?.addEventListener("click", () => {
+  document.getElementById("share-modal-overlay").classList.add("hidden");
+});
+document.getElementById("share-modal-overlay")?.addEventListener("click", e => {
+  if (e.target.id === "share-modal-overlay") e.target.classList.add("hidden");
+});
+
+function drawShareCard() {
+  const canvas = document.getElementById("share-canvas");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+
+  // Fond degrade sombre + halo rouille
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+  bgGrad.addColorStop(0, "#141210");
+  bgGrad.addColorStop(1, "#0a0a0a");
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  const halo = ctx.createRadialGradient(W / 2, 260, 40, W / 2, 260, 620);
+  halo.addColorStop(0, "rgba(201,77,40,.35)");
+  halo.addColorStop(1, "rgba(201,77,40,0)");
+  ctx.fillStyle = halo;
+  ctx.fillRect(0, 0, W, H);
+
+  // Wordmark
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#f2f1ee";
+  ctx.font = "700 44px Arial";
+  ctx.fillText("GYM AI COACH", W / 2, 160);
+
+  ctx.fillStyle = "#8f8d89";
+  ctx.font = "400 32px Arial";
+  ctx.fillText(shareData.name || "", W / 2, 220);
+
+  // Streak — chiffre geant
+  ctx.fillStyle = "#e56a44";
+  ctx.font = "800 340px Arial";
+  ctx.fillText(String(shareData.streak ?? 0), W / 2, 780);
+
+  ctx.fillStyle = "#f2f1ee";
+  ctx.font = "600 52px Arial";
+  ctx.fillText("JOURS CONSÉCUTIFS", W / 2, 870);
+
+  // Cartes stats
+  const cardY = 1020, cardH = 640, cardW = W - 160, cardX = 80;
+  ctx.fillStyle = "rgba(255,255,255,.05)";
+  roundRect(ctx, cardX, cardY, cardW, cardH, 32);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,.12)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, cardX, cardY, cardW, cardH, 32);
+  ctx.stroke();
+
+  const rowH = cardH / 2;
+  drawStatRow(ctx, cardX, cardY, cardW, rowH, "SÉANCES TOTALES", String(shareData.totalSessions ?? 0));
+  ctx.strokeStyle = "rgba(255,255,255,.08)";
+  ctx.beginPath(); ctx.moveTo(cardX + 40, cardY + rowH); ctx.lineTo(cardX + cardW - 40, cardY + rowH); ctx.stroke();
+
+  const recordLabel = shareData.topRecord
+    ? `${shareData.topRecord.exercise_name} — ${Number(shareData.topRecord.max_weight)} kg`
+    : "Pas encore de record";
+  drawStatRow(ctx, cardX, cardY + rowH, cardW, rowH, "MEILLEUR RECORD", recordLabel, true);
+
+  // Footer
+  ctx.fillStyle = "#8f8d89";
+  ctx.font = "400 30px Arial";
+  ctx.fillText("Généré sur gym-ai-coach", W / 2, H - 80);
+}
+
+function drawStatRow(ctx, x, y, w, h, label, value, small) {
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#8f8d89";
+  ctx.font = "600 30px Arial";
+  ctx.fillText(label, x + 50, y + h / 2 - 20);
+
+  ctx.fillStyle = "#f2f1ee";
+  ctx.font = `700 ${small ? 46 : 76}px Arial`;
+  // Tronque les valeurs trop longues (nom d'exercice) pour ne pas deborder
+  let text = value;
+  while (ctx.measureText(text).width > w - 100 && text.length > 3) text = text.slice(0, -2);
+  if (text !== value) text += "…";
+  ctx.fillText(text, x + 50, y + h / 2 + (small ? 40 : 55));
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function downloadShareCard() {
+  const canvas = document.getElementById("share-canvas");
+  const a = document.createElement("a");
+  a.href = canvas.toDataURL("image/png");
+  a.download = "gym-ai-coach-stats.png";
+  a.click();
 }
 
 init();
