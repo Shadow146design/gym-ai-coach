@@ -76,4 +76,10 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Erreur serveur." });
 });
 
-app.listen(PORT, () => console.log(`Gym AI Coach v4 — port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Gym AI Coach v4 — port ${PORT}`);
+  console.log(
+    `Google OAuth — GOOGLE_CLIENT_ID: ${process.env.GOOGLE_CLIENT_ID ? "présent" : "MANQUANT"}, `
+    + `GOOGLE_CLIENT_SECRET: ${process.env.GOOGLE_CLIENT_SECRET ? "présent" : "MANQUANT"}`
+  );
+});
