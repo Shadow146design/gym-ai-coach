@@ -143,6 +143,17 @@ CREATE TABLE IF NOT EXISTS weight_logs (
 );
 CREATE INDEX IF NOT EXISTS idx_weight_logs_user ON weight_logs(user_id, measured_at DESC);
 
+CREATE TABLE IF NOT EXISTS daily_wellness (
+  id             SERIAL PRIMARY KEY,
+  user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  sleep_quality  INTEGER NOT NULL,
+  energy_level   INTEGER NOT NULL,
+  soreness       INTEGER NOT NULL,
+  score          NUMERIC NOT NULL,
+  created_at     DATE NOT NULL DEFAULT CURRENT_DATE,
+  UNIQUE(user_id, created_at)
+);
+
 CREATE TABLE IF NOT EXISTS rate_limits (
   id         SERIAL PRIMARY KEY,
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

@@ -53,6 +53,12 @@
     </div>
   </div>
 
+  <!-- Bien-etre du jour (Fonctionnalite 3, PREMIUM) -->
+  <div class="home-card" id="wellness-card">
+    <div class="home-card-title">🌡️ Bien-être du jour</div>
+    <div id="wellness-content"><div class="skeleton" style="width:100%;height:50px"></div></div>
+  </div>
+
   <!-- Alerte plateau -->
   <div id="plateau-alert" class="card hidden" style="border-color:var(--gold);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
     <div>
@@ -143,6 +149,30 @@
 
 <footer>Gym AI Coach</footer>
 </div>
+
+<!-- Modal check-in bien-etre du jour -->
+<div class="modal-overlay hidden" id="wellness-modal-overlay">
+  <div class="modal-card">
+    <button class="modal-close" type="button" id="wellness-modal-close">✕</button>
+    <div class="modal-icon">🌡️</div>
+    <h2>Comment tu te sens aujourd'hui ?</h2>
+    <p class="muted" style="margin-bottom:22px;font-size:.85rem">3 secondes pour adapter ta séance à ta forme du jour.</p>
+    <div class="wellness-slider-group">
+      <label>Qualité du sommeil <span id="sleep-val">5</span>/10</label>
+      <input type="range" min="1" max="10" value="5" id="wellness-sleep"/>
+    </div>
+    <div class="wellness-slider-group">
+      <label>Niveau d'énergie <span id="energy-val">5</span>/10</label>
+      <input type="range" min="1" max="10" value="5" id="wellness-energy"/>
+    </div>
+    <div class="wellness-slider-group">
+      <label>Courbatures <span id="soreness-val">5</span>/10</label>
+      <input type="range" min="1" max="10" value="5" id="wellness-soreness"/>
+    </div>
+    <button class="btn btn-primary btn-block" type="button" id="wellness-submit-btn" style="margin-top:16px">Valider</button>
+  </div>
+</div>
+
 <script src="/js/premium-gate.js"></script>
 <script src="/js/home.js"></script>
 <script src="/js/i18n.js"></script>

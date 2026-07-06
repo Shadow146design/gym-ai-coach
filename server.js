@@ -20,6 +20,7 @@ const stripeRoutes   = require("./routes/stripe");
 const notificationsRoutes = require("./routes/notifications");
 const weightRoutes   = require("./routes/weight");
 const badgesRoutes   = require("./routes/badges");
+const wellnessRoutes = require("./routes/wellness");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -62,6 +63,7 @@ app.use("/api/stripe",   stripeRoutes.router);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/weight",  weightRoutes);
 app.use("/api/badges",  badgesRoutes);
+app.use("/api/wellness", wellnessRoutes);
 app.use("/auth",         oauthRoutes);
 
 app.use(express.static(path.join(__dirname, "public")));

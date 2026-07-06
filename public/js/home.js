@@ -8,6 +8,7 @@ async function init() {
   document.getElementById("greeting").textContent = `${g} ${user.name} 👋`;
 
   if (user.role === "user") showPremiumBanner();
+  loadWellness(user.role);
 
   await Promise.all([
     loadKPIs(), loadNextSession(), loadCalendar(), loadRecords(),
@@ -432,5 +433,83 @@ function showPremiumBanner() {
     el.innerHTML = "";
   });
 }
+
+// ── Bien-etre du jour (Fonctionnalite 3, PREMIUM) ────────────
+function wellnessGaugeColor(score) {
+  if (score > 75) return "var(--green)";
+  if (score >= 50) return "var(--gold)";
+  return "var(--rust-soft)";
+}
+
+function renderWellnessResult(score, message) {
+  const el = document.getElementById("wellness-content");
+  el.innerHTML = `
+    <div class="wellness-result">
+      <div class="wellness-gauge-wrap">
+        <div class="wellness-gauge-track"><div class="wellness-gauge-fill" style="width:${score}%;background:${wellnessGaugeColor(score)}"></div></div>
+        <div class="wellness-message">${esc(message)}</div>
+      </div>
+      <div class="wellness-score-val" style="color:${wellnessGaugeColor(score)}">${score}</div>
+    </div>`;
+}
+
+async function loadWellness(role) {
+  const el = document.getElementById("wellness-content");
+  if (role === "user") {
+    lockSection(el, { title: "Bien-être du jour — Premium", desc: "Un check-in de 3 secondes chaque jour pour adapter tes charges à ta forme réelle." });
+    return;
+  }
+
+  try {
+    const r = await fetch("/api/wellness/today").then(r => r.json());
+    if (r.entry) {
+      renderWellnessResult(r.entry.score, r.entry.message);
+    } else {
+      el.innerHTML = `
+        <div class="wellness-cta">
+          <span class="muted" style="font-size:.85rem">Pas encore répondu aujourd'hui.</span>
+          <button class="btn btn-primary btn-sm" type="button" id="wellness-open-btn">Répondre en 3 secondes</button>
+        </div>`;
+      document.getElementById("wellness-open-btn").addEventListener("click", openWellnessModal);
+      openWellnessModal();
+    }
+  } catch {
+    el.innerHTML = `<p class="muted" style="font-size:.85rem">Impossible de charger.</p>`;
+  }
+}
+
+function openWellnessModal() {
+  document.getElementById("wellness-modal-overlay").classList.remove("hidden");
+}
+function closeWellnessModal() {
+  document.getElementById("wellness-modal-overlay").classList.add("hidden");
+}
+
+["sleep", "energy", "soreness"].forEach(key => {
+  const input = document.getElementById(`wellness-${key}`);
+  const out = document.getElementById(`${key}-val`);
+  input?.addEventListener("input", () => { out.textContent = input.value; });
+});
+
+document.getElementById("wellness-modal-close")?.addEventListener("click", closeWellnessModal);
+document.getElementById("wellness-modal-overlay")?.addEventListener("click", e => {
+  if (e.target.id === "wellness-modal-overlay") closeWellnessModal();
+});
+
+document.getElementById("wellness-submit-btn")?.addEventListener("click", async () => {
+  const sleep_quality = document.getElementById("wellness-sleep").value;
+  const energy_level = document.getElementById("wellness-energy").value;
+  const soreness = document.getElementById("wellness-soreness").value;
+  try {
+    const res = await fetch("/api/wellness", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sleep_quality, energy_level, soreness }),
+    });
+    const data = await res.json();
+    closeWellnessModal();
+    if (res.ok) renderWellnessResult(data.score, data.message);
+  } catch { closeWellnessModal(); }
+});
 
 init();
