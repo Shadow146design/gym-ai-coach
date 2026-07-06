@@ -321,10 +321,64 @@ async function triggerDebrief(totalVolume, prs, durationMins) {
     postChatHistory = [
       { role: "assistant", content: data.debrief }
     ];
+
+    analyzeSessionForAdaptSuggestion();
   } catch (e) {
     debriefEl.innerHTML = `<div class="card-title">🤖 Analyse du coach</div>
       <p class="muted">Impossible de générer l'analyse : ${e.message}</p>`;
   }
+}
+
+// ── Module F : suggestion proactive d'adaptation du programme ─
+async function analyzeSessionForAdaptSuggestion() {
+  const bestByEx = {};
+  sessionLogs.forEach(l => {
+    if (!bestByEx[l.exercise_name] || l.weight > bestByEx[l.exercise_name].weight) {
+      bestByEx[l.exercise_name] = { name: l.exercise_name, weight: l.weight, reps: l.reps };
+    }
+  });
+  const exercises = Object.values(bestByEx);
+  if (!exercises.length) return;
+
+  try {
+    const res = await fetch("/api/program/analyze-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ exercises }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.suggestion === "adapté" || !data.message) return;
+
+    const direction = data.suggestion === "trop_facile" ? "harder" : "easier";
+    const confirmLabel = data.suggestion === "trop_facile" ? "Oui, mettre à jour" : "Oui, adapter";
+
+    const box = document.createElement("div");
+    box.className = "card adapt-suggestion";
+    box.style.marginTop = "14px";
+    box.innerHTML = `
+      <p style="font-size:.9rem;margin-bottom:12px">${esc(data.message)}</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" id="adapt-yes-btn">${confirmLabel}</button>
+        <button class="btn btn-ghost btn-sm" id="adapt-no-btn">Non, garder comme ça</button>
+      </div>`;
+    document.getElementById("debrief-card").appendChild(box);
+
+    document.getElementById("adapt-no-btn").addEventListener("click", () => box.remove());
+    document.getElementById("adapt-yes-btn").addEventListener("click", async () => {
+      box.innerHTML = `<p class="muted" style="font-size:.88rem">Adaptation en cours…</p>`;
+      try {
+        const r = await fetch("/api/program/adapt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ direction }),
+        });
+        if (!r.ok) throw new Error();
+        box.innerHTML = `<p style="font-size:.88rem;color:var(--green)">Programme adapté automatiquement ✓</p>`;
+      } catch {
+        box.innerHTML = `<p class="muted" style="font-size:.88rem">Impossible d'adapter le programme pour le moment.</p>`;
+      }
+    });
+  } catch {}
 }
 
 async function sendPostChat() {
