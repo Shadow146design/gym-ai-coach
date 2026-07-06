@@ -143,6 +143,15 @@ CREATE TABLE IF NOT EXISTS weight_logs (
 );
 CREATE INDEX IF NOT EXISTS idx_weight_logs_user ON weight_logs(user_id, measured_at DESC);
 
+CREATE TABLE IF NOT EXISTS user_badges (
+  id          SERIAL PRIMARY KEY,
+  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  badge_id    TEXT NOT NULL,
+  unlocked_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, badge_id)
+);
+CREATE INDEX IF NOT EXISTS idx_user_badges_user ON user_badges(user_id);
+
 CREATE TABLE IF NOT EXISTS "session" (
   "sid"    varchar NOT NULL COLLATE "default" PRIMARY KEY,
   "sess"   json NOT NULL,

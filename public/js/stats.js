@@ -313,6 +313,7 @@ function downloadShareCard() {
   a.href = canvas.toDataURL("image/png");
   a.download = "gym-ai-coach-stats.png";
   a.click();
+  fetch("/api/badges/share", { method: "POST" }).catch(() => {});
 }
 
 init();

@@ -1,6 +1,7 @@
 const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
+const { checkAndUnlockBadges } = require("./badges");
 
 const router = express.Router();
 
@@ -90,6 +91,7 @@ async function webhookHandler(req, res) {
           `INSERT INTO notifications (user_id, type, message, link) VALUES ($1,'payment_confirmed',$2,'/profile.html')`,
           [userId, "✅ Paiement confirmé, bienvenue dans ta nouvelle formule !"]
         ).catch(e => console.error("Erreur notif paiement :", e));
+        checkAndUnlockBadges(userId).catch(e => console.error("Erreur verification badges :", e));
       }
     } else if (event.type === "invoice.payment_succeeded") {
       const invoice = event.data.object;

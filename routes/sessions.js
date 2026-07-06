@@ -2,6 +2,7 @@ const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
 const { dailyTip } = require("../services/aiCoach");
+const { checkAndUnlockBadges } = require("./badges");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -40,6 +41,8 @@ router.post("/", async (req, res) => {
         [uid, `🏆 Nouveau record : ${exercise_name.trim()} à ${weight}kg !`]
       ).catch(e => console.error("Erreur notif nouveau record :", e));
     }
+
+    checkAndUnlockBadges(uid).catch(e => console.error("Erreur verification badges :", e));
 
     res.status(201).json({ log: r.rows[0] });
   } catch (err) { console.error(err); res.status(500).json({ error: "Erreur serveur." }); }
