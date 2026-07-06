@@ -7,6 +7,18 @@ const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI
   || "https://gym-ai-coach-1wls.onrender.com/auth/google/callback";
 
+console.log("Google OAuth config:", {
+  hasClientId: !!GOOGLE_CLIENT_ID,
+  hasClientSecret: !!GOOGLE_CLIENT_SECRET,
+  redirectUri: REDIRECT_URI,
+});
+if (!GOOGLE_CLIENT_ID) {
+  console.warn("⚠️  GOOGLE_CLIENT_ID manquant — la connexion Google sera désactivée tant que la variable d'environnement n'est pas définie.");
+}
+if (!GOOGLE_CLIENT_SECRET) {
+  console.warn("⚠️  GOOGLE_CLIENT_SECRET manquant — l'échange de token Google échouera tant que la variable d'environnement n'est pas définie.");
+}
+
 router.get("/google", (req, res) => {
   if (!GOOGLE_CLIENT_ID) {
     return res.redirect("/?error=google_not_configured");
