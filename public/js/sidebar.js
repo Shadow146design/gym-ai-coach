@@ -1,5 +1,18 @@
 // Applique le theme sauvegarde immediatement (avant meme le fetch /me) pour eviter un flash.
-document.documentElement.setAttribute("data-theme", localStorage.getItem("theme") || "dark");
+// "system" suit le theme OS via prefers-color-scheme ; sinon valeur explicite (dark/light).
+function resolveTheme(pref) {
+  if (pref === "system") return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return pref;
+}
+const _themePref = localStorage.getItem("theme") || "dark";
+document.documentElement.setAttribute("data-theme", resolveTheme(_themePref));
+if (_themePref === "system") {
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {
+    if ((localStorage.getItem("theme") || "dark") === "system") {
+      document.documentElement.setAttribute("data-theme", e.matches ? "dark" : "light");
+    }
+  });
+}
 
 (function () {
   const NAV_ITEMS = [
@@ -71,7 +84,7 @@ document.documentElement.setAttribute("data-theme", localStorage.getItem("theme"
       const ctaClass = it.cta ? " sidebar-cta" : "";
       const badgeHtml = it.badge && unread > 0
         ? `<span class="sidebar-msg-badge">${unread > 9 ? "9+" : unread}</span>` : "";
-      return `<a href="${it.href}" class="sidebar-item${active}${ctaClass}" data-key="${it.labelKey}">
+      return `<a href="${it.href}" class="sidebar-item${active}${ctaClass}" data-key="${it.labelKey}" title="${esc(t(it.labelKey))}">
         <span class="icon">${it.icon}</span><span class="lbl">${esc(t(it.labelKey))}</span>${badgeHtml}
       </a>`;
     }).join("");
@@ -184,7 +197,9 @@ document.documentElement.setAttribute("data-theme", localStorage.getItem("theme"
     function relabelNav() {
       document.querySelectorAll(".sidebar-item[data-key], .bottom-nav-item[data-key]").forEach(el => {
         const lbl = el.querySelector(".lbl");
-        if (lbl) lbl.textContent = t(el.getAttribute("data-key"));
+        const label = t(el.getAttribute("data-key"));
+        if (lbl) lbl.textContent = label;
+        if (el.classList.contains("sidebar-item")) el.title = label;
       });
       const logout = document.getElementById("sidebar-logout");
       if (logout) logout.title = t("nav_logout");

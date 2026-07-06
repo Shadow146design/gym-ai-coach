@@ -1421,7 +1421,7 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
 .sidebar-item {
   position: relative;
   display: flex; align-items: center; gap: 10px;
-  padding: 7px 10px; border-radius: var(--radius);
+  padding: 8px 10px; border-radius: var(--radius);
   color: var(--chalk-dim); font-size: .82rem; font-weight: 500;
   cursor: pointer; transition: background .18s var(--ease), color .18s var(--ease);
   white-space: nowrap; text-decoration: none;
@@ -1949,3 +1949,32 @@ body.landing { overflow-x: hidden; }
 .badge-tile-track { width: 100%; height: 4px; border-radius: 2px; background: var(--bg-card-solid); overflow: hidden; margin-top: 2px; }
 .badge-tile-fill { height: 100%; background: var(--grad-rust); border-radius: 2px; }
 .badge-tile.unlocked .badge-tile-fill { background: var(--gold); }
+
+/* =========================================================
+   TOUR GUIDE (premiere visite apres onboarding)
+   ========================================================= */
+.tour-overlay {
+  position: fixed; inset: 0; z-index: 400;
+  background: rgba(0,0,0,.6);
+}
+.tour-spotlight {
+  position: fixed; z-index: 401;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 0 4px var(--rust), 0 0 0 9999px rgba(0,0,0,.6);
+  transition: all .3s var(--ease);
+  pointer-events: none;
+}
+.tour-tooltip {
+  position: fixed; z-index: 402;
+  max-width: 280px;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow-modal);
+  transition: all .3s var(--ease);
+}
+.tour-tooltip-text { font-size: .87rem; color: var(--chalk); margin-bottom: 12px; }
+.tour-tooltip-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.tour-tooltip-skip { font-size: .78rem; color: var(--chalk-dim); cursor: pointer; background: none; border: none; }
+.tour-tooltip-step { font-size: .72rem; color: var(--chalk-dim); }
