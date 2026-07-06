@@ -35,7 +35,22 @@ router.post("/generate", async (req, res) => {
       if (prof.goal_date) answers.goal_date = prof.goal_date;
       if (prof.personal_note) answers.personal_note = prof.personal_note;
     } catch(e) { console.warn("Profil ignoré :", e.message); }
-    const program = await generateProgram(answers);
+
+    // Anti-duplication (module C) : les 3 derniers programmes servent a
+    // eviter que l'IA ne reproduise les memes exercices/ordre.
+    let previousPrograms = [];
+    try {
+      const prevR = await pool.query(
+        "SELECT title, content FROM programs WHERE user_id=$1 ORDER BY created_at DESC LIMIT 3",
+        [req.session.userId]
+      );
+      previousPrograms = prevR.rows.map(p => ({
+        title: p.title,
+        exercises: (p.content?.days || []).flatMap(d => (d.exercises || []).map(e => e.name)),
+      }));
+    } catch (e) { console.warn("Historique programmes ignoré :", e.message); }
+
+    const program = await generateProgram(answers, previousPrograms);
     await pool.query("UPDATE programs SET is_active=FALSE WHERE user_id=$1", [req.session.userId]);
     const r = await pool.query(
       `INSERT INTO programs (user_id, title, questionnaire, content, is_active)
@@ -84,28 +99,3 @@ router.post("/:id/activate", async (req, res) => {
 });
 
 module.exports = router;
-
-// ── Historique des programmes ──────────────────────────────
-router.get("/history", async (req, res) => {
-  try {
-    const r = await pool.query(
-      `SELECT id, title, questionnaire, is_active, created_at FROM programs
-       WHERE user_id=$1 ORDER BY created_at DESC LIMIT 20`,
-      [req.session.userId]
-    );
-    res.json({ programs: r.rows });
-  } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
-});
-
-// ── Réactiver un programme ─────────────────────────────────
-router.post("/:id/activate", async (req, res) => {
-  try {
-    await pool.query("UPDATE programs SET is_active=FALSE WHERE user_id=$1", [req.session.userId]);
-    const r = await pool.query(
-      "UPDATE programs SET is_active=TRUE WHERE id=$1 AND user_id=$2 RETURNING id, title",
-      [req.params.id, req.session.userId]
-    );
-    if (!r.rows.length) return res.status(404).json({ error: "Programme introuvable." });
-    res.json({ ok: true, program: r.rows[0] });
-  } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
-});

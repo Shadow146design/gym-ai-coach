@@ -1,6 +1,46 @@
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const MODEL = () => process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 
+// ── Base d'exercices réels (remplace les exercices génériques) ──
+const EXERCISE_DATABASE = {
+  DOS: [
+    "Tractions (lestées si avancé)", "Rowing barre", "Rowing haltère unilatéral",
+    "Tirage vertical prise large", "Tirage vertical prise neutre",
+    "Tirage horizontal assis poulie basse", "Pull-over haltère", "Shrugs barre", "Face pull poulie",
+  ],
+  PECS: [
+    "Développé couché barre", "Développé couché haltères plat", "Développé couché incliné haltères",
+    "Développé décliné haltères", "Écarté couché haltères", "Écarté poulie basse",
+    "Dips lestés", "Pec deck machine", "Pompes lestées",
+  ],
+  EPAULES: [
+    "Développé militaire barre", "Développé militaire haltères", "Élévations latérales haltères",
+    "Élévations latérales poulie basse", "Oiseau haltères", "Oiseau machine à écarté",
+    "Face pull poulie", "Élévations frontales haltères",
+  ],
+  BICEPS: [
+    "Curl barre droite", "Curl barre EZ", "Curl haltères alterné", "Curl pupitre barre EZ",
+    "Curl marteaux haltères", "Curl poulie basse", "Curl poulie haute pour le pic", "Curl concentré haltère",
+  ],
+  TRICEPS: [
+    "Développé couché prise serrée", "Dips triceps banc", "Skull crusher barre EZ",
+    "Pushdown poulie haute barre droite", "Pushdown poulie haute corde",
+    "Extension triceps unilatéral poulie", "Extension overhead corde poulie haute", "Kickback haltère",
+  ],
+  JAMBES: [
+    "Squat barre", "Hack squat machine", "Presse à cuisses", "Leg extension machine",
+    "Leg curl allongé machine", "Leg curl assis machine", "Fentes haltères",
+    "Soulevé de terre jambes tendues", "Hip thrust barre", "Adducteurs machine",
+    "Abducteurs machine", "Mollets debout machine", "Mollets assis machine",
+  ],
+  ABDOS: [
+    "Crunch", "Crunch poulie haute", "Relevé de jambes suspendu", "Planche",
+    "Rouleau abdominal", "Russian twist", "Obliques poulie",
+  ],
+};
+const EXERCISE_DATABASE_TEXT = Object.entries(EXERCISE_DATABASE)
+  .map(([group, list]) => `${group} : ${list.join(", ")}`).join("\n");
+
 // ── Règles précises par objectif et niveau ─────────────────
 const PROGRAM_RULES = {
   "prise de masse / hypertrophie": {
@@ -25,6 +65,34 @@ const PROGRAM_RULES = {
   },
 };
 
+// ── Specificites par objectif, communes a tous les niveaux ──
+const OBJECTIVE_SPECIFICS = {
+  "prise de masse / hypertrophie": [
+    "Tempo : 3-1-2 (3s descente, 1s contraction, 2s montée)",
+    "Drop set obligatoire sur le dernier exercice de chaque muscle",
+    "Split idéal : 4-5 jours, exercices composés lourds EN PREMIER, isolation pump en dernier",
+    "Pas de cardio dans la séance sauf demande explicite",
+  ],
+  "perte de poids / seche": [
+    "Supersets sur TOUS les exercices d'isolation",
+    "1 exercice composé lourd (5x5-8) puis le reste en circuit",
+    "Cardio HIIT en fin de séance : 10-15 min (sprints 30s / marche 30s)",
+    "Split idéal : Full body sur 4 jours",
+  ],
+  "force pure": [
+    "Exercices principaux obligatoires selon le matériel disponible : Squat barre, Développé couché barre, Soulevé de terre, Développé militaire barre",
+    "Accessoires ciblés sur les points faibles (triceps pour le développé, ischios pour le squat)",
+    "Périodisation sur 4 semaines : S1 80% RM 5x5 / S2 85% RM 5x3 / S3 90% RM 5x2 / S4 décharge 70% RM 3x5",
+    "Aucun exercice d'isolation superflu",
+  ],
+  "remise en forme generale / endurance": [
+    "Full body 2-3x par semaine",
+    "Prioriser les machines guidées (plus sécurisées pour débuter)",
+    "Ajouter 1 exercice de mobilité par groupe musculaire travaillé",
+    "Éviter les mouvements techniques complexes (olympique, pliométrie)",
+  ],
+};
+
 // Repartit les jours d'entrainement sur des vrais jours de semaine, en
 // espaçant au maximum le repos (utilise par le prompt ET par l'UI pour
 // recommander la "prochaine séance" en fonction du jour reel).
@@ -47,12 +115,38 @@ const PROGRAM_SYSTEM = `Tu es un préparateur physique certifié avec 15 ans d'e
 Tu crées des programmes RÉELLEMENT DIFFÉRENCIÉS selon l'objectif ET le niveau.
 Tu prends en compte le profil physique de la personne pour adapter les charges et les exercices.
 
+━━ BASE D'EXERCICES DE RÉFÉRENCE (choisis en priorité dans cette liste, adapte selon le matériel disponible) ━━
+${EXERCISE_DATABASE_TEXT}
+
 RÈGLES ABSOLUES :
 1. Les charges suggérées doivent être réalistes par rapport au poids de corps (ex: un débutant de 70kg ne soulevera pas 100kg au squat)
 2. L'âge impact les temps de repos (45+ ans = +30% de repos) et le volume (55+ ans = -20% volume)
 3. Le genre guide la priorité musculaire SAUF si l'objectif dit autre chose
 4. L'activité quotidienne module le volume total (sédentaire = -15%, très actif = +10%)
 5. La taille guide les exercices (grand >185cm = deadlift sumo préférable, machines pour les jambes)
+
+RÈGLE TRACTIONS (critique) : si des tractions sont choisies pour une séance dos → les placer
+EN PREMIER. Réduire alors le reste de la séance à 1 seul rowing, 1 seul tirage, 1 isolation max
+(4 exercices MAX au total). Sans tractions : 5-6 exercices pour la séance dos.
+
+RÈGLE ORDRE : toujours composés lourds → composés moyens → isolation. Jamais un curl avant un
+rowing, jamais des élévations latérales avant le développé militaire.
+
+RÈGLE SPLITS selon les jours/semaine : 2j → Full body. 3j → Push/Pull/Legs.
+4j → Pecs+Triceps / Dos+Biceps / Épaules+Abdos / Jambes. 5j → les 4 précédents + Bras.
+6j → Push/Pull/Legs répété deux fois.
+
+RÈGLE SUPERSETS : uniquement entre exercices d'isolation ou antagonistes (ex: curl marteaux +
+pushdown corde, leg extension + leg curl). JAMAIS de superset sur un composé lourd (développé
+couché barre, squat, rowing barre, soulevé de terre). Quand deux exercices forment un superset,
+donne-leur le même texte dans le champ "superset_group" (ex: "A") ; sinon laisse-le vide.
+
+RÈGLE REPOS : composés lourds 2-3min, composés moyens 90s, isolation 60s, entre deux supersets
+complets 90s.
+
+RÈGLE NOTES TECHNIQUES : chaque exercice doit avoir 1 conseil technique précis et concret
+(ex: "Tirer vers le nombril, coudes serrés, dos plat toute la série" pour un rowing barre),
+jamais une note générique comme "bien faire l'exercice".
 
 RÈGLE PROGRAMME :
 - Ne jamais générer deux programmes similaires pour des objectifs différents
@@ -77,6 +171,7 @@ Réponds UNIQUEMENT avec un JSON valide, sans texte ni balises markdown :
           "sets": 4,
           "reps": "8-12",
           "rest_seconds": 90,
+          "superset_group": "",
           "notes": "Conseil technique + charge de départ conseillée si profil connu"
         }
       ]
@@ -86,6 +181,45 @@ Réponds UNIQUEMENT avec un JSON valide, sans texte ni balises markdown :
 }`;
 
 // Calcule l'IMC et déduit les recommandations de charge
+// Calcule automatiquement le morphotype (IMC) et en deduit exercices
+// interdits/obligatoires, repos et cardio recommandes (module B).
+function computeMorphology(answers) {
+  const { weight_kg: w, height_cm: h, age, gender, objectif } = answers;
+  if (!w || !h) return null;
+
+  const imc = w / Math.pow(h / 100, 2);
+  let morphotype, forbidden = [], mandatory = [], restNote, cardioNote, coachAdvice;
+
+  if (imc < 18.5) {
+    morphotype = "Ectomorphe";
+    restNote = "repos longs (2-3 min), volume élevé (5 séries), progresser vite sur les charges";
+    cardioNote = "aucun cardio en dehors du strict nécessaire";
+    coachAdvice = "Programme conçu pour maximiser la prise de masse. Évite le cardio en dehors des séances.";
+  } else if (imc < 25) {
+    morphotype = "Mésomorphe";
+    restNote = "repos standards selon l'objectif, bonne réponse générale à l'entraînement";
+    cardioNote = "selon l'objectif choisi";
+    coachAdvice = "Programme standard, ton profil répond bien à l'entraînement classique.";
+  } else if (imc < 30) {
+    morphotype = "Endomorphe léger";
+    restNote = "repos réduits (45-60s), supersets fréquents";
+    cardioNote = "cardio en fin de séance recommandé";
+    coachAdvice = "Programme orienté dépense calorique en plus du renforcement musculaire.";
+  } else {
+    morphotype = "Endomorphe marqué";
+    forbidden = ["Squat barre", "Dips lestés", "Dips triceps banc", "Tractions (lestées si avancé)"];
+    mandatory = ["Presse à cuisses", "Pushdown poulie haute corde", "Tirage vertical prise large"];
+    restNote = "repos courts (30-45s), supersets sur tous les exercices";
+    cardioNote = "cardio HIIT obligatoire en fin de séance";
+    coachAdvice = "Programme adapté à ton profil morphologique. Exercices sélectionnés pour préserver tes articulations.";
+  }
+
+  if (age >= 45) forbidden.push("Squat barre lourd (>85% RM)", "Soulevé de terre lourd sans échauffement prolongé");
+  if (gender === "femme" && !objectif?.includes("force")) mandatory.push("Hip thrust barre");
+
+  return { imc: Math.round(imc * 10) / 10, morphotype, forbidden: [...new Set(forbidden)], mandatory: [...new Set(mandatory)], restNote, cardioNote, coachAdvice };
+}
+
 function buildPhysicalContext(answers) {
   if (!answers.weight_kg && !answers.height_cm && !answers.age) return "";
 
@@ -93,19 +227,26 @@ function buildPhysicalContext(answers) {
 
   if (answers.weight_kg) lines.push(`• Poids : ${answers.weight_kg} kg`);
   if (answers.height_cm) lines.push(`• Taille : ${answers.height_cm} cm`);
-  if (answers.weight_kg && answers.height_cm) {
-    const imc = (answers.weight_kg / Math.pow(answers.height_cm / 100, 2)).toFixed(1);
-    lines.push(`• IMC : ${imc}`);
-  }
+  const morphology = computeMorphology(answers);
+  if (morphology) lines.push(`• IMC : ${morphology.imc} — Morphotype : ${morphology.morphotype}`);
   if (answers.age) lines.push(`• Âge : ${answers.age} ans`);
   if (answers.gender) lines.push(`• Genre : ${answers.gender}`);
   if (answers.activity_level) lines.push(`• Activité quotidienne : ${answers.activity_level}`);
 
-  lines.push("\n━━ ADAPTATATIONS REQUISES POUR CE PROFIL ━━");
+  lines.push("\n━━ ADAPTATIONS NON-NÉGOCIABLES POUR CE PROFIL ━━");
+
+  if (morphology) {
+    lines.push(`💪 Repos : ${morphology.restNote}`);
+    lines.push(`🔥 Cardio : ${morphology.cardioNote}`);
+    if (morphology.forbidden.length) lines.push(`🚫 Exercices INTERDITS pour ce profil : ${morphology.forbidden.join(", ")}`);
+    if (morphology.mandatory.length) lines.push(`✅ Exercices OBLIGATOIRES pour ce profil : ${morphology.mandatory.join(", ")}`);
+    lines.push(`🗣️ Conseil coach à reprendre dans le résumé : "${morphology.coachAdvice}"`);
+  }
 
   // Âge
   if (answers.age >= 55) lines.push("⚠️ 55+ ans : réduis le volume de 20%, augmente les temps de repos, priorise la mobilité, évite les exercices à fort impact articulaire");
   else if (answers.age >= 45) lines.push("⚠️ 45+ ans : augmente les temps de repos de 30%, inclus obligatoirement des exercices de mobilité");
+  else if (answers.age && answers.age < 20) lines.push("⚠️ Moins de 20 ans : évite les charges maximales, priorise la technique avant tout");
 
   // Activité quotidienne
   if (answers.activity_level?.includes("sédentaire")) lines.push("🪑 Sédentaire : réduis le volume total de 15%, récupération plus lente");
@@ -113,11 +254,14 @@ function buildPhysicalContext(answers) {
 
   // Genre + objectif
   if (answers.gender === "femme" && !answers.objectif?.includes("force")) {
-    lines.push("♀ Femme : priorise fessiers/cuisses/dos, réduis le volume des épaules/triceps, privilégie les exercices compound");
+    lines.push("♀ Femme : priorise fessiers/cuisses/dos (Hip thrust barre obligatoire), réduis le volume des épaules/triceps");
   }
 
   // Taille
   if (answers.height_cm >= 185) lines.push("📏 Grande taille : préfère deadlift sumo, squat avec stance large, évite les exercices en position basse prolongée");
+  else if (answers.height_cm && answers.height_cm < 165 && answers.weight_kg && answers.weight_kg < 60) {
+    lines.push("📏 Ossature fine : charges plus légères au départ, met l'accent sur le travail en isolation");
+  }
 
   // Charges de départ si poids connu
   if (answers.weight_kg && answers.niveau) {
@@ -127,6 +271,30 @@ function buildPhysicalContext(answers) {
   }
 
   return lines.join("\n");
+}
+
+// Corrige apres-coup les incoherences que l'IA pourrait laisser passer malgre
+// les instructions du prompt (module B.5) : remplace les exercices interdits
+// pour ce profil par une alternative sure.
+const FORBIDDEN_REPLACEMENTS = {
+  "squat barre": "Presse à cuisses",
+  "dips": "Pushdown poulie haute corde",
+  "tractions": "Tirage vertical prise large",
+};
+function validateProgram(program, morphology) {
+  if (morphology?.morphotype !== "Endomorphe marqué" || !program?.days) return program;
+
+  program.days.forEach(day => {
+    (day.exercises || []).forEach(ex => {
+      const nameLower = (ex.name || "").toLowerCase();
+      const replacementKey = Object.keys(FORBIDDEN_REPLACEMENTS).find(k => nameLower.includes(k));
+      if (replacementKey) {
+        ex.name = FORBIDDEN_REPLACEMENTS[replacementKey];
+        ex.notes = `${ex.notes ? ex.notes + " " : ""}(Exercice adapté à ton profil morphologique.)`;
+      }
+    });
+  });
+  return program;
 }
 
 // Objectif personnel libre, date cible et note de l'utilisateur (depuis son profil)
@@ -144,16 +312,31 @@ function buildGoalContext(answers) {
   return lines.join("\n");
 }
 
-async function generateProgram(answers) {
+// previousPrograms : jusqu'à 3 programmes precedents de l'utilisateur
+// ([{ title, exercises: [...noms] }]) pour eviter de reproduire le meme
+// programme (module C — anti-duplication).
+async function generateProgram(answers, previousPrograms = []) {
   if (!process.env.GROQ_API_KEY)
     throw new Error("GROQ_API_KEY manquante.");
 
   const rules = PROGRAM_RULES[answers.objectif]?.[answers.niveau] || {};
+  const specifics = OBJECTIVE_SPECIFICS[answers.objectif] || [];
+  const morphology = computeMorphology(answers);
   const physicalContext = buildPhysicalContext(answers);
   const goalContext = buildGoalContext(answers);
   const weekdays = suggestWeekdays(answers.joursParSemaine);
 
-  const userPrompt = `${physicalContext}${goalContext}
+  let antiDuplicationBlock = "";
+  if (previousPrograms.length) {
+    const usedExercises = [...new Set(previousPrograms.flatMap(p => p.exercises || []))];
+    antiDuplicationBlock = `\n━━ PROGRAMMES PRÉCÉDENTS À NE PAS REPRODUIRE ━━
+Exercices déjà utilisés récemment : ${usedExercises.join(", ")}
+Varie au minimum 40% des exercices par rapport à ces programmes précédents. Si l'objectif est le
+même, choisis des exercices différents ET un ordre différent.
+Variation #${Math.floor(Math.random() * 100) + 1} : privilégie les exercices ${["haltères", "barre", "machine", "câble"][Math.floor(Math.random() * 4)]} cette fois quand plusieurs options équivalentes existent.`;
+  }
+
+  const userPrompt = `${physicalContext}${goalContext}${antiDuplicationBlock}
 
 ━━ QUESTIONNAIRE ━━
 • Objectif : ${answers.objectif}
@@ -170,6 +353,7 @@ ${answers.feedback ? `• Retours sur l'ancien programme : ${answers.feedback}` 
 • Repos : ${rules.rest || "adapter"}
 • Intensité : ${rules.intensity || "adapter"}
 • Progression : ${rules.progression || "adapter"}
+${specifics.map(s => `• ${s}`).join("\n")}
 
 ━━ JOURS À UTILISER (obligatoire, dans cet ordre exact) ━━
 ${weekdays.map((d, i) => `${i + 1}. ${d}`).join("\n")}
@@ -205,38 +389,137 @@ Génère maintenant le programme JSON adapté à CE profil spécifique.`;
   catch { throw new Error("JSON invalide, réessaie."); }
   if (!program.days?.length) throw new Error("Programme incomplet, réessaie.");
 
-  return program;
+  return validateProgram(program, morphology);
 }
 
 // ── Chat coach ─────────────────────────────────────────────
 const CHAT_SYSTEM = `Tu es un coach sportif bienveillant, précis et expert.
-Tu connais le programme de l'utilisateur (fourni dans le contexte ci-dessous).
-Réponds en français, de manière concise (3-5 phrases max sauf si question complexe).
-Si l'utilisateur veut changer son programme, dis-lui de cliquer sur "Regénérer avec mes retours".
+Tu connais le programme, l'historique et les performances de l'utilisateur (fournis dans le
+contexte ci-dessous). Réponds en français, de manière concise (3-5 phrases max sauf si question
+complexe). Utilise l'historique et les records pour donner des conseils précis et personnalisés
+(ex: "tu stagnes au développé couché depuis 4 séances à 80kg").
 Ne jamais inventer des données médicales. Conseille un médecin pour les douleurs persistantes.`;
 
-async function chatWithCoach(history, program) {
+// Module D.1 — mots-cles qui declenchent le mode modification du programme
+const MODIFY_TRIGGER_WORDS = [
+  "refaire", "changer", "pas bien", "nul", "trop facile", "trop dur", "je n'aime pas",
+  "remplace", "sans les", "ajoute", "enlève", "enleve", "modifier", "pas fan de", "douleur",
+  "je préfère", "je prefere", "peux-tu changer", "nouveau programme",
+];
+function detectsModifyIntent(text) {
+  const lower = (text || "").toLowerCase();
+  return MODIFY_TRIGGER_WORDS.some(w => lower.includes(w));
+}
+
+const MODIFY_SYSTEM = `Tu es un coach sportif expert qui peut MODIFIER le programme d'entrainement
+de l'utilisateur directement dans la conversation, en te basant sur sa demande et sur tout le
+contexte fourni (programme actuel, historique, records, profil, plateaux).
+
+Règles de modification :
+- Ne change QUE ce qui est nécessaire pour répondre à la demande (garde le reste du programme identique)
+- Respecte les mêmes règles de construction qu'à la génération initiale (ordre composés→isolation,
+  repos adaptés, pas de superset sur composé lourd, notes techniques précises)
+- Si la demande mentionne une douleur/blessure, retire ou remplace l'exercice concerné par une
+  alternative plus sûre pour la même zone musculaire
+
+Réponds UNIQUEMENT avec un JSON valide, sans texte ni markdown :
+{
+  "reply": "Réponse courte et naturelle expliquant ce que tu as changé et pourquoi",
+  "programUpdated": true,
+  "newProgram": { "title": "...", "summary": "...", "days": [ ... même structure que le programme actuel ... ], "advice": [...] },
+  "changes": ["Description courte du changement 1", "Description courte du changement 2"]
+}
+Si finalement aucune modification n'est nécessaire (simple question, pas de demande de changement
+réelle), réponds avec programUpdated: false, newProgram: null, changes: [] et ta réponse normale
+dans "reply".`;
+
+// Construit le bloc de contexte riche injecte dans le chat (module D.4) :
+// programme complet, historique recent, records, profil, streak, plateaux, objectif.
+function buildChatContext(ctx = {}) {
+  const { program, recentSessions, topRecords, physicalProfile, streak, plateaus, initialGoal } = ctx;
+  const lines = [];
+
+  if (program) {
+    lines.push(`\n[PROGRAMME ACTUEL]\nTitre: ${program.title}\nSommaire: ${program.summary}`);
+    lines.push((program.days || []).map(d =>
+      `${d.day} (${d.focus}): ${(d.exercises || []).map(e => `${e.name} ${e.sets}x${e.reps}`).join(", ")}`
+    ).join(" | "));
+  }
+  if (recentSessions?.length) {
+    lines.push(`\n[5 DERNIÈRES SÉANCES]`);
+    lines.push(recentSessions.map(s => `${s.day} : ${s.exercises.map(e => `${e.name} ${e.weight}kg×${e.reps}`).join(", ")}`).join(" | "));
+  }
+  if (topRecords?.length) {
+    lines.push(`\n[RECORDS PERSONNELS]`);
+    lines.push(topRecords.map(r => `${r.exercise_name} ${r.max_weight}kg`).join(", "));
+  }
+  if (physicalProfile) {
+    const { weight_kg, height_cm, age, gender } = physicalProfile;
+    lines.push(`\n[PROFIL] Poids: ${weight_kg || "?"}kg, Taille: ${height_cm || "?"}cm, Âge: ${age || "?"}, Genre: ${gender || "?"}`);
+  }
+  if (streak !== undefined) lines.push(`\n[STREAK] ${streak} jour(s) consécutifs`);
+  if (plateaus?.length) {
+    lines.push(`\n[PLATEAUX DÉTECTÉS] ${plateaus.map(p => `${p.exercise_name} bloqué à ${p.max_weight}kg depuis ${p.sessions_stuck} séances`).join(", ")}`);
+  }
+  if (initialGoal) lines.push(`\n[OBJECTIF INITIAL] ${initialGoal}`);
+
+  return lines.join("\n");
+}
+
+// ctx : { program, recentSessions, topRecords, physicalProfile, streak, plateaus, initialGoal }
+// Retourne toujours { reply, programUpdated, newProgram, changes }.
+async function chatWithCoach(history, ctx = {}) {
   if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY manquante.");
 
-  const programContext = program
-    ? `\n\n[PROGRAMME ACTUEL]\nTitre: ${program.title}\nSommaire: ${program.summary}\nJours: ${(program.days||[]).map(d => `${d.day} (${d.focus}): ${(d.exercises||[]).map(e=>e.name).join(", ")}`).join(" | ")}`
-    : "";
+  const contextBlock = buildChatContext(ctx);
+  const lastUserMsg = [...history].reverse().find(m => m.role === "user")?.content || "";
+  const wantsModification = ctx.program && detectsModifyIntent(lastUserMsg);
+
+  if (!wantsModification) {
+    const response = await fetch(GROQ_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: MODEL(), temperature: 0.7, max_tokens: 600,
+        messages: [
+          { role: "system", content: CHAT_SYSTEM + contextBlock },
+          ...history.map(m => ({ role: m.role, content: m.content })),
+        ],
+      }),
+    });
+    if (!response.ok) throw new Error(`Erreur Groq chat (${response.status})`);
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || "Je n'arrive pas à répondre, réessaie.";
+    return { reply, programUpdated: false, newProgram: null, changes: [] };
+  }
 
   const response = await fetch(GROQ_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
     body: JSON.stringify({
-      model: MODEL(), temperature: 0.7, max_tokens: 600,
+      model: MODEL(), temperature: 0.5, max_tokens: 3500,
+      response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: CHAT_SYSTEM + programContext },
+        { role: "system", content: MODIFY_SYSTEM + contextBlock },
         ...history.map(m => ({ role: m.role, content: m.content })),
       ],
     }),
   });
-
   if (!response.ok) throw new Error(`Erreur Groq chat (${response.status})`);
   const data = await response.json();
-  return data.choices?.[0]?.message?.content || "Je n'arrive pas à répondre, réessaie.";
+  const raw = data.choices?.[0]?.message?.content;
+
+  try {
+    const parsed = JSON.parse(raw);
+    return {
+      reply: parsed.reply || "J'ai mis à jour ton programme.",
+      programUpdated: !!parsed.programUpdated && !!parsed.newProgram?.days?.length,
+      newProgram: parsed.newProgram || null,
+      changes: parsed.changes || [],
+    };
+  } catch {
+    return { reply: raw || "Je n'arrive pas à répondre, réessaie.", programUpdated: false, newProgram: null, changes: [] };
+  }
 }
 
 // ── Debrief post-séance ────────────────────────────────────
