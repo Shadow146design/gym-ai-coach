@@ -1,6 +1,7 @@
 const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
+const { stripHtml } = require("../middleware/sanitize");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -116,7 +117,7 @@ router.put("/goals", async (req, res) => {
     const { main_goal, goal_date, personal_note, target_weight_kg } = req.body;
     await pool.query(
       `UPDATE users SET main_goal=$1, goal_date=$2, personal_note=$3, target_weight_kg=$4 WHERE id=$5`,
-      [main_goal?.trim() || null, goal_date || null, personal_note?.trim() || null, target_weight_kg || null, req.session.userId]
+      [stripHtml(main_goal) || null, goal_date || null, stripHtml(personal_note) || null, target_weight_kg || null, req.session.userId]
     );
     res.json({ ok: true });
   } catch (err) {
@@ -144,10 +145,11 @@ router.put("/privacy", async (req, res) => {
 router.put("/identity", async (req, res) => {
   try {
     const { name, avatar_url } = req.body;
-    if (!name?.trim()) return res.status(400).json({ error: "Le nom ne peut pas être vide." });
+    const cleanName = stripHtml(name);
+    if (!cleanName) return res.status(400).json({ error: "Le nom ne peut pas être vide." });
     await pool.query(
       "UPDATE users SET name=$1, avatar_url=COALESCE($2, avatar_url) WHERE id=$3",
-      [name.trim(), avatar_url?.trim() || null, req.session.userId]
+      [cleanName, avatar_url?.trim() || null, req.session.userId]
     );
     res.json({ ok: true });
   } catch (err) {

@@ -1,11 +1,23 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
+const rateLimit = require("express-rate-limit");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
+const { stripHtml } = require("../middleware/sanitize");
 
 const router = express.Router();
 
-router.post("/register", async (req, res) => {
+// Limite les tentatives par IP sur les routes sensibles a la force brute
+// (connexion, inscription, changement de mot de passe).
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Trop de tentatives. Réessaie dans une minute." },
+});
+
+router.post("/register", authLimiter, async (req, res) => {
   try {
     const { email, password, name } = req.body;
 
@@ -26,7 +38,7 @@ router.post("/register", async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
     const result = await pool.query(
       "INSERT INTO users (email, password_hash, name) VALUES ($1, $2, $3) RETURNING id, email, name",
-      [email.toLowerCase().trim(), passwordHash, name.trim()]
+      [email.toLowerCase().trim(), passwordHash, stripHtml(name)]
     );
 
     const user = result.rows[0];
@@ -38,7 +50,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -86,7 +98,7 @@ router.get("/me", async (req, res) => {
   res.json({ user: result.rows[0] });
 });
 
-router.post("/change-password", requireAuth, async (req, res) => {
+router.post("/change-password", requireAuth, authLimiter, async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
     if (!oldPassword || !newPassword) {
