@@ -7,6 +7,8 @@ async function init() {
   const g = h < 12 ? "Bonjour" : h < 18 ? "Bonsoir" : "Bonsoir";
   document.getElementById("greeting").textContent = `${g} ${user.name} 👋`;
 
+  if (user.role === "user") showPremiumBanner();
+
   await Promise.all([
     loadKPIs(), loadNextSession(), loadCalendar(), loadRecords(),
     loadLastAndTodayRecord(), loadDailyTip(), loadPlateauAlert(), loadFormScore(),
@@ -406,5 +408,29 @@ async function loadRecords() {
 }
 
 function esc(s) { const d = document.createElement("div"); d.textContent = String(s||""); return d.innerHTML; }
+
+// Banniere non-intrusive pour les gratuits : masquee a la fermeture, reapparait
+// au bout de 3 jours (Fonctionnalite 13).
+function showPremiumBanner() {
+  const DISMISS_KEY = "premiumBannerDismissedAt";
+  const dismissedAt = Number(localStorage.getItem(DISMISS_KEY) || 0);
+  const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
+  if (dismissedAt && Date.now() - dismissedAt < THREE_DAYS) return;
+
+  const el = document.getElementById("premium-banner");
+  if (!el) return;
+  el.className = "premium-banner";
+  el.innerHTML = `
+    <span>⭐ Passe en Premium pour débloquer l'IA complète — 9.99€/mois</span>
+    <div style="display:flex;align-items:center;gap:10px">
+      <a class="btn btn-primary btn-sm" href="/premium.html">Découvrir</a>
+      <button type="button" class="premium-banner-close" id="premium-banner-close" aria-label="Fermer">✕</button>
+    </div>`;
+  document.getElementById("premium-banner-close").addEventListener("click", () => {
+    localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    el.className = "";
+    el.innerHTML = "";
+  });
+}
 
 init();

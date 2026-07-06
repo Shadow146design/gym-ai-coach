@@ -3,6 +3,7 @@ const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
 const { dailyTip } = require("../services/aiCoach");
 const { checkAndUnlockBadges } = require("./badges");
+const { requirePremium } = require("../middleware/premium");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -417,7 +418,7 @@ router.get("/projection", async (req, res) => {
 });
 
 // ── GET /plateau (detection de stagnation par exercice) ────
-router.get("/plateau", async (req, res) => {
+router.get("/plateau", requirePremium, async (req, res) => {
   try {
     const uid = req.session.userId;
     const r = await pool.query(

@@ -39,7 +39,10 @@ async function askPlateauAdvice() {
     });
     const data = await res.json();
     thinking.remove();
-    if (!res.ok) throw new Error(data.error);
+    if (!res.ok) {
+      if (data.upgrade_url) { showPremiumModal(data.error, data.upgrade_url); return; }
+      throw new Error(data.error);
+    }
     appendMsg("coach", data.advice);
   } catch {
     thinking.remove();
@@ -165,7 +168,16 @@ async function sendMessage() {
       body: JSON.stringify({ history: chatHistory }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
+    if (!res.ok) {
+      thinking.remove();
+      if (data.upgrade_url) {
+        chatHistory.pop();
+        showPremiumModal(data.error, data.upgrade_url);
+        refreshChatLimitIndicator();
+        return;
+      }
+      throw new Error(data.error);
+    }
 
     thinking.remove();
     const reply = data.reply;
@@ -179,11 +191,27 @@ async function sendMessage() {
       showToast("Programme mis à jour ✓");
       highlightExercises(changedNames);
     }
+    refreshChatLimitIndicator();
   } catch (e) {
     thinking.remove();
     appendMsg("coach", "Désolé, je n'arrive pas à répondre pour l'instant. Réessaie dans quelques secondes.");
   }
 }
+
+async function refreshChatLimitIndicator() {
+  const el = document.getElementById("chat-limit-indicator");
+  if (!el) return;
+  try {
+    const r = await fetch("/api/chat/limit").then(r => r.json());
+    if (r.isPremium) { el.classList.add("hidden"); return; }
+    el.classList.remove("hidden");
+    el.classList.toggle("limit-reached", r.used >= r.max);
+    el.textContent = r.used >= r.max
+      ? `Tu as utilisé tes ${r.max} messages gratuits aujourd'hui. Passe en Premium pour un chat illimité.`
+      : `${r.used}/${r.max} messages utilisés aujourd'hui`;
+  } catch {}
+}
+refreshChatLimitIndicator();
 
 function showToast(text) {
   const toast = document.createElement("div");

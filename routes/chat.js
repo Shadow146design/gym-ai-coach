@@ -1,6 +1,7 @@
 const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
+const { requirePremium, checkChatLimit, getChatUsage } = require("../middleware/premium");
 const { chatWithCoach, debriefSession, analyzePlateau } = require("../services/aiCoach");
 
 const router = express.Router();
@@ -83,7 +84,16 @@ async function buildFullContext(uid, programRow) {
 }
 
 // POST /api/chat — chat general (connait le programme, l'historique, les records...)
-router.post("/", async (req, res) => {
+router.get("/limit", async (req, res) => {
+  try {
+    res.json(await getChatUsage(req.session.userId));
+  } catch (err) {
+    console.error("Erreur GET /chat/limit :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+router.post("/", checkChatLimit, async (req, res) => {
   try {
     const { history } = req.body;
     if (!Array.isArray(history) || !history.length)
@@ -110,7 +120,7 @@ router.post("/", async (req, res) => {
 });
 
 // POST /api/chat/debrief — analyse automatique de la seance qui vient de se terminer
-router.post("/debrief", async (req, res) => {
+router.post("/debrief", requirePremium, async (req, res) => {
   try {
     const { exercises, totalVolume, durationMins, prs, programFocus } = req.body;
     if (!Array.isArray(exercises) || !exercises.length)
@@ -125,7 +135,7 @@ router.post("/debrief", async (req, res) => {
 });
 
 // POST /api/chat/plateau-advice — conseils IA specifiques pour sortir d'un plateau
-router.post("/plateau-advice", async (req, res) => {
+router.post("/plateau-advice", requirePremium, async (req, res) => {
   try {
     const { plateaus } = req.body;
     if (!Array.isArray(plateaus) || !plateaus.length)

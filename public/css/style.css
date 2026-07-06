@@ -2073,6 +2073,60 @@ body.landing { overflow-x: hidden; }
 .modal-card p { font-size: .9rem; }
 
 /* =========================================================
+   PREMIUM GATE — sections verrouillees (Fonctionnalite 13)
+   ========================================================= */
+.premium-lock {
+  text-align: center; padding: 28px 16px;
+  border: 1px dashed var(--border-strong); border-radius: var(--radius-lg);
+  background: var(--bg-hover);
+}
+.premium-lock-icon { font-size: 1.8rem; margin-bottom: 8px; }
+.premium-lock-title {
+  font-family: var(--font-display); font-weight: 600; font-size: .92rem;
+  color: var(--chalk); text-transform: uppercase; letter-spacing: .03em;
+}
+.premium-chat-limit {
+  font-size: .78rem; color: var(--chalk-dim); text-align: center;
+  margin-top: 8px;
+}
+.premium-chat-limit.limit-reached { color: var(--rust-soft); font-weight: 600; }
+.compare-table {
+  width: 100%; border-collapse: collapse; font-size: .85rem;
+  background: var(--bg-card); border-radius: var(--radius-lg); overflow: hidden;
+}
+.compare-table th, .compare-table td { padding: 12px 16px; text-align: center; border-bottom: 1px solid var(--border-soft); }
+.compare-table td:first-child, .compare-table th:first-child { text-align: left; color: var(--chalk-dim); font-weight: 500; }
+.compare-table thead th {
+  font-family: var(--font-display); text-transform: uppercase; letter-spacing: .04em; font-size: .75rem;
+  color: var(--chalk-dim); border-bottom: 1px solid var(--border-strong);
+}
+.compare-table thead th:nth-child(3) { color: var(--gold); }
+.compare-table tbody tr:last-child td { border-bottom: none; }
+.compare-table tbody tr:hover { background: var(--bg-hover); }
+.compare-table td:nth-child(3) { color: var(--chalk); font-weight: 500; }
+
+.premium-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--gold-bg); border: 1px solid var(--gold);
+  border-radius: var(--radius); padding: 12px 18px;
+  font-size: .85rem; color: var(--chalk); margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.premium-banner a.btn { flex-shrink: 0; }
+.premium-banner-close {
+  background: none; border: none; color: var(--chalk-dim); cursor: pointer;
+  font-size: 1rem; line-height: 1; padding: 4px; flex-shrink: 0;
+}
+.premium-banner-close:hover { color: var(--chalk); }
+.premium-badge-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-size: .62rem; font-weight: 700;
+  background: var(--gold-bg); color: var(--gold);
+  padding: 2px 7px; border-radius: 4px; text-transform: uppercase;
+  letter-spacing: .04em; margin-left: 6px; vertical-align: middle;
+}
+
+/* =========================================================
    SCORE DE FORME DU JOUR
    ========================================================= */
 .form-score-row { display: flex; align-items: center; gap: 18px; }

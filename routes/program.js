@@ -1,6 +1,7 @@
 const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
+const { requirePremium } = require("../middleware/premium");
 const { generateProgram, extractProgramParams } = require("../services/aiCoach");
 
 const router = express.Router();
@@ -86,7 +87,7 @@ router.post("/generate", async (req, res) => {
 
 // ── Module E : questionnaire conversationnel ────────────────
 // body : { conversation: [{ role: "user"|"assistant", content }, ...] }
-router.post("/chat-generate", async (req, res) => {
+router.post("/chat-generate", requirePremium, async (req, res) => {
   try {
     const { conversation } = req.body;
     if (!Array.isArray(conversation) || !conversation.length) {

@@ -143,6 +143,15 @@ CREATE TABLE IF NOT EXISTS weight_logs (
 );
 CREATE INDEX IF NOT EXISTS idx_weight_logs_user ON weight_logs(user_id, measured_at DESC);
 
+CREATE TABLE IF NOT EXISTS rate_limits (
+  id         SERIAL PRIMARY KEY,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  action     TEXT NOT NULL,
+  count      INTEGER NOT NULL DEFAULT 0,
+  reset_at   TIMESTAMP NOT NULL,
+  UNIQUE(user_id, action)
+);
+
 CREATE TABLE IF NOT EXISTS user_badges (
   id          SERIAL PRIMARY KEY,
   user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

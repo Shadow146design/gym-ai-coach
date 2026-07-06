@@ -7,6 +7,18 @@ async function init() {
   if (!meRes.ok) return (window.location.href = "/");
   const { user } = await meRes.json();
   shareData.name = user.name;
+  const isFree = user.role === "user";
+
+  if (isFree) {
+    const desc = "Les courbes de fréquence, volumes par groupe musculaire, répartition musculaire et estimation 1RM sont réservées aux membres Premium.";
+    lockSection(document.getElementById("freq-card"), { title: "Fréquence — Premium", desc });
+    lockSection(document.getElementById("muscle-bars-card"), { title: "Volume musculaire — Premium", desc });
+    lockSection(document.getElementById("radar-card"), { title: "Répartition musculaire — Premium", desc });
+    lockSection(document.getElementById("onerm-card"), { title: "Estimation 1RM — Premium", desc });
+    lockSection(document.getElementById("progress-card"), { title: "Courbe de progression — Premium", desc });
+  } else {
+    loadOneRm();
+  }
 
   const [dashRes, recordsRes, exercisesRes, streakRes] = await Promise.all([
     fetch("/api/logs/dashboard-stats"),
@@ -15,7 +27,6 @@ async function init() {
     fetch("/api/logs/streak"),
   ]);
   loadWeekCompare();
-  loadOneRm();
   const { totalSessions, avgSessionMinutes, weeklyFrequency, targetPerWeek, completionRate, muscleGroupVolume, lastSessionDate }
     = await dashRes.json();
   const { records } = await recordsRes.json();
@@ -43,25 +54,27 @@ async function init() {
     <div class="kpi-tile"><div class="kpi-label">Assiduité (4 sem.)</div><div class="kpi-value" style="color:${completionRate>=80?"var(--green)":completionRate>=50?"var(--gold)":"var(--rust-soft)"}">${completionTxt}</div><div class="kpi-sub">${targetTxt}</div></div>
     <div class="kpi-tile"><div class="kpi-label">Dernière séance</div><div class="kpi-value" style="font-size:1.2rem">${lastDate}</div></div>`;
 
-  // ── Fréquence 4 semaines ─────────────────────────────────
-  const maxFreq = Math.max(1, ...weeklyFrequency);
-  const weekLabels = ["S-4","S-3","S-2","S-1"];
-  document.getElementById("freq-chart").innerHTML = weeklyFrequency.map((v, i) => `
-    <div class="freq-bar-wrap">
-      <div class="freq-bar" style="height:${Math.round((v/maxFreq)*100)}%"></div>
-      <span class="freq-label">${weekLabels[i]}<br><b style="color:var(--chalk)">${v}</b></span>
-    </div>`).join("");
+  if (!isFree) {
+    // ── Fréquence 4 semaines ───────────────────────────────
+    const maxFreq = Math.max(1, ...weeklyFrequency);
+    const weekLabels = ["S-4","S-3","S-2","S-1"];
+    document.getElementById("freq-chart").innerHTML = weeklyFrequency.map((v, i) => `
+      <div class="freq-bar-wrap">
+        <div class="freq-bar" style="height:${Math.round((v/maxFreq)*100)}%"></div>
+        <span class="freq-label">${weekLabels[i]}<br><b style="color:var(--chalk)">${v}</b></span>
+      </div>`).join("");
 
-  // ── Volume musculaire ────────────────────────────────────
-  const maxVol = Math.max(1, ...(muscleGroupVolume || []).map(m => m.volume));
-  document.getElementById("muscle-bars").innerHTML = (muscleGroupVolume || []).slice(0, 6).map(m => `
-    <div class="muscle-bar-row">
-      <span class="muscle-bar-label">${esc(m.muscle_group)}</span>
-      <div class="muscle-bar-track"><div class="muscle-bar-fill" style="width:${Math.round((m.volume/maxVol)*100)}%"></div></div>
-      <span class="muscle-bar-val">${Math.round(m.volume/1000)}k kg</span>
-    </div>`).join("") || `<p class="muted" style="font-size:.85rem">Pas encore de données par groupe musculaire.</p>`;
+    // ── Volume musculaire ──────────────────────────────────
+    const maxVol = Math.max(1, ...(muscleGroupVolume || []).map(m => m.volume));
+    document.getElementById("muscle-bars").innerHTML = (muscleGroupVolume || []).slice(0, 6).map(m => `
+      <div class="muscle-bar-row">
+        <span class="muscle-bar-label">${esc(m.muscle_group)}</span>
+        <div class="muscle-bar-track"><div class="muscle-bar-fill" style="width:${Math.round((m.volume/maxVol)*100)}%"></div></div>
+        <span class="muscle-bar-val">${Math.round(m.volume/1000)}k kg</span>
+      </div>`).join("") || `<p class="muted" style="font-size:.85rem">Pas encore de données par groupe musculaire.</p>`;
 
-  renderMuscleRadar(muscleGroupVolume || []);
+    renderMuscleRadar(muscleGroupVolume || []);
+  }
 
   // ── Records persos ───────────────────────────────────────
   document.getElementById("records-grid").innerHTML = records.map(r => `
@@ -70,11 +83,13 @@ async function init() {
       <div class="rec-val">${Number(r.max_weight)} kg</div>
     </div>`).join("");
 
-  // ── Sélecteur exercice + courbe ──────────────────────────
-  const select = document.getElementById("exercise-select");
-  select.innerHTML = exercises.map(e => `<option value="${esc(e)}">${esc(e)}</option>`).join("");
-  select.addEventListener("change", () => loadProgressChart(select.value));
-  loadProgressChart(exercises[0]);
+  if (!isFree) {
+    // ── Sélecteur exercice + courbe ────────────────────────
+    const select = document.getElementById("exercise-select");
+    select.innerHTML = exercises.map(e => `<option value="${esc(e)}">${esc(e)}</option>`).join("");
+    select.addEventListener("change", () => loadProgressChart(select.value));
+    loadProgressChart(exercises[0]);
+  }
 }
 
 async function loadProgressChart(exerciseName) {

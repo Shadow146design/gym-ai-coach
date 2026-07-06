@@ -304,7 +304,13 @@ async function triggerDebrief(totalVolume, prs, durationMins) {
       }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
+    if (!res.ok) {
+      if (data.upgrade_url) {
+        lockSection(debriefEl, { title: "Débrief IA — Premium", desc: data.error });
+        return;
+      }
+      throw new Error(data.error);
+    }
 
     const formatted = (data.debrief || "").replace(/\n/g, "<br>");
     debriefEl.innerHTML = `
@@ -411,6 +417,12 @@ async function sendPostChat() {
     });
     const data = await res.json();
     thinking.remove();
+    if (!res.ok) {
+      postChatHistory.pop();
+      if (data.upgrade_url) { showPremiumModal(data.error, data.upgrade_url); return; }
+      throw new Error(data.error);
+    }
+
     const reply = data.reply || "Pas de réponse.";
     postChatHistory.push({ role: "assistant", content: reply });
 
