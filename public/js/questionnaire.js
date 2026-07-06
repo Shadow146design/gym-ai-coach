@@ -54,6 +54,116 @@ form.addEventListener("submit", async e => {
   }
 });
 
+// ── Module E : questionnaire conversationnel ───────────────
+const QUIZ_QUESTIONS = [
+  "Bonjour ! Quel est ton objectif principal ? (ex : prendre du muscle, perdre du poids, gagner en force, retrouver la forme)",
+  "Depuis combien de temps tu t'entraînes ? (jamais/débutant, quelques mois, ou plusieurs années)",
+  "Combien de jours par semaine peux-tu t'entraîner ?",
+  "Combien de temps max tu peux consacrer à une séance ?",
+  "Tu as accès à quel matériel ? (salle complète, juste des haltères, ou aucun matériel)",
+  "Dernière chose : as-tu des douleurs ou limitations physiques à prendre en compte ? (sinon réponds \"non\")",
+];
+let quizConversation = [];
+let quizStep = 0;
+let quizStarted = false;
+
+const modeFormBtn = document.getElementById("mode-form-btn");
+const modeChatBtn = document.getElementById("mode-chat-btn");
+const quizChatWrap = document.getElementById("quiz-chat-wrap");
+const quizForm = document.getElementById("quiz-form");
+
+modeFormBtn?.addEventListener("click", () => {
+  quizForm.classList.remove("hidden");
+  quizChatWrap.classList.add("hidden");
+  modeFormBtn.classList.replace("btn-ghost", "btn-primary");
+  modeChatBtn.classList.replace("btn-primary", "btn-ghost");
+});
+
+modeChatBtn?.addEventListener("click", () => {
+  quizForm.classList.add("hidden");
+  quizChatWrap.classList.remove("hidden");
+  modeChatBtn.classList.replace("btn-ghost", "btn-primary");
+  modeFormBtn.classList.replace("btn-primary", "btn-ghost");
+  if (!quizStarted) startQuizChat();
+});
+
+function startQuizChat() {
+  quizStarted = true;
+  quizStep = 0;
+  quizConversation = [];
+  document.getElementById("quiz-chat-messages").innerHTML = "";
+  askNextQuizQuestion();
+}
+
+function appendQuizMsg(role, text) {
+  const box = document.getElementById("quiz-chat-messages");
+  const el = document.createElement("div");
+  el.className = `chat-msg ${role}`;
+  el.textContent = text;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+  return el;
+}
+
+function askNextQuizQuestion() {
+  const question = QUIZ_QUESTIONS[quizStep];
+  appendQuizMsg("coach", question);
+  quizConversation.push({ role: "assistant", content: question });
+}
+
+async function sendQuizAnswer() {
+  const input = document.getElementById("quiz-chat-input");
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = "";
+  appendQuizMsg("user", text);
+  quizConversation.push({ role: "user", content: text });
+  quizStep++;
+
+  if (quizStep < QUIZ_QUESTIONS.length) {
+    askNextQuizQuestion();
+    return;
+  }
+
+  const sendBtn = document.getElementById("quiz-chat-send-btn");
+  const errorBox = document.getElementById("quiz-chat-error");
+  input.disabled = true;
+  sendBtn.disabled = true;
+  const thinking = appendQuizMsg("coach", "L'IA construit ton programme… ✨");
+
+  try {
+    const res = await fetch("/api/program/chat-generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ conversation: quizConversation }),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      thinking.remove();
+      if (json.upgrade_url) {
+        showUpgradeModal(json.error, json.upgrade_url);
+      } else {
+        errorBox.innerHTML = `<div class="error-msg">${json.error}</div>`;
+      }
+      input.disabled = false;
+      sendBtn.disabled = false;
+      return;
+    }
+    thinking.textContent = json.understood || "Ton programme est prêt !";
+    setTimeout(() => { window.location.href = "/dashboard.html"; }, 1200);
+  } catch {
+    thinking.remove();
+    errorBox.innerHTML = `<div class="error-msg">Impossible de joindre le serveur.</div>`;
+    input.disabled = false;
+    sendBtn.disabled = false;
+  }
+}
+
+document.getElementById("quiz-chat-send-btn")?.addEventListener("click", sendQuizAnswer);
+document.getElementById("quiz-chat-input")?.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendQuizAnswer(); }
+});
+
 function showUpgradeModal(message, upgradeUrl) {
   document.getElementById("upgrade-modal-overlay")?.remove();
 

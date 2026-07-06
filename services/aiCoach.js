@@ -155,6 +155,9 @@ RÈGLE PROGRAMME :
 - Le champ "day" DOIT être un vrai jour de la semaine (Lundi, Mardi, Mercredi, Jeudi, Vendredi,
   Samedi ou Dimanche), jamais "Jour 1" ou un nom générique. La liste exacte et l'ordre des jours
   à utiliser sont fournis dans le message utilisateur ci-dessous : respecte-les strictement.
+- "target_weight_kg" : charge de départ suggérée en kg (nombre, pas de texte) si le poids de corps
+  est connu et l'exercice se fait avec charge additionnelle ; sinon null (exercices au poids du
+  corps, machines à charge inconnue, etc.).
 
 Réponds UNIQUEMENT avec un JSON valide, sans texte ni balises markdown :
 {
@@ -172,6 +175,7 @@ Réponds UNIQUEMENT avec un JSON valide, sans texte ni balises markdown :
           "reps": "8-12",
           "rest_seconds": 90,
           "superset_group": "",
+          "target_weight_kg": 60,
           "notes": "Conseil technique + charge de départ conseillée si profil connu"
         }
       ]
@@ -645,4 +649,78 @@ async function analyzePlateau(plateaus) {
   return data.choices?.[0]?.message?.content || "Impossible de générer des conseils pour le moment.";
 }
 
-module.exports = { generateProgram, chatWithCoach, debriefSession, dailyTip, analyzePlateau };
+// ── Questionnaire conversationnel (module E) ────────────────
+const VALID_OBJECTIFS = Object.keys(PROGRAM_RULES);
+const VALID_NIVEAUX = ["debutant", "intermediaire", "avance"];
+const VALID_MATERIEL = [
+  "salle de sport complete avec machines et poids libres",
+  "haltères et banc seulement",
+  "poids du corps uniquement, pas de materiel",
+];
+const VALID_DUREES = ["30 minutes", "45 minutes", "1 heure", "1h30 ou plus"];
+
+const EXTRACT_PARAMS_SYSTEM = `Tu analyses une conversation entre un coach IA et un utilisateur qui
+répond librement à des questions sur son entraînement. Extrait les informations suivantes,
+en choisissant OBLIGATOIREMENT une valeur parmi les options listées (jamais une valeur inventée) :
+
+objectif — une valeur EXACTE parmi : ${VALID_OBJECTIFS.map(o => `"${o}"`).join(", ")}
+niveau — une valeur EXACTE parmi : ${VALID_NIVEAUX.map(o => `"${o}"`).join(", ")}
+  (débutant si <6 mois d'expérience, intermédiaire si 6 mois-2 ans, avancé si 2+ ans)
+joursParSemaine — un nombre entre 2 et 6 (string)
+dureeSeance — une valeur EXACTE parmi : ${VALID_DUREES.map(o => `"${o}"`).join(", ")}
+materiel — une valeur EXACTE parmi : ${VALID_MATERIEL.map(o => `"${o}"`).join(", ")}
+limitations — résumé court des blessures/limitations mentionnées, ou "" si aucune
+
+Réponds UNIQUEMENT avec un JSON valide :
+{
+  "objectif": "...", "niveau": "...", "joursParSemaine": "...", "dureeSeance": "...",
+  "materiel": "...", "limitations": "...",
+  "understood": "1-2 phrases résumant ce que tu as compris du profil de l'utilisateur, à lui montrer avant de générer son programme"
+}`;
+
+function clampToOptions(value, options, fallback) {
+  return options.includes(value) ? value : fallback;
+}
+
+async function extractProgramParams(conversation) {
+  if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY manquante.");
+  if (!Array.isArray(conversation) || !conversation.length) throw new Error("Conversation vide.");
+
+  const transcript = conversation.map(m => `${m.role === "user" ? "Utilisateur" : "Coach"} : ${m.content}`).join("\n");
+
+  const response = await fetch(GROQ_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: MODEL(), temperature: 0.3, max_tokens: 500,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: EXTRACT_PARAMS_SYSTEM },
+        { role: "user", content: transcript },
+      ],
+    }),
+  });
+
+  if (!response.ok) throw new Error(`Erreur Groq extraction (${response.status})`);
+  const data = await response.json();
+  const raw = data.choices?.[0]?.message?.content;
+  if (!raw) throw new Error("Réponse vide de l'API Groq.");
+
+  let extracted;
+  try { extracted = JSON.parse(raw); }
+  catch { throw new Error("Impossible d'analyser la conversation, réessaie."); }
+
+  const joursNum = Math.min(6, Math.max(2, parseInt(extracted.joursParSemaine, 10) || 3));
+
+  return {
+    objectif: clampToOptions(extracted.objectif, VALID_OBJECTIFS, VALID_OBJECTIFS[0]),
+    niveau: clampToOptions(extracted.niveau, VALID_NIVEAUX, "debutant"),
+    joursParSemaine: String(joursNum),
+    dureeSeance: clampToOptions(extracted.dureeSeance, VALID_DUREES, "45 minutes"),
+    materiel: clampToOptions(extracted.materiel, VALID_MATERIEL, VALID_MATERIEL[0]),
+    limitations: extracted.limitations || "",
+    understood: extracted.understood || "J'ai bien pris en compte tes réponses pour construire ton programme.",
+  };
+}
+
+module.exports = { generateProgram, chatWithCoach, debriefSession, dailyTip, analyzePlateau, extractProgramParams };

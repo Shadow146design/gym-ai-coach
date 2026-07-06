@@ -19,6 +19,22 @@
     </div>
   </div>
 
+  <!-- Module E : choix du mode de questionnaire -->
+  <div class="quiz-mode-toggle" style="max-width:720px">
+    <button type="button" class="btn btn-primary" id="mode-form-btn">📋 Questions rapides</button>
+    <button type="button" class="btn btn-ghost" id="mode-chat-btn">💬 Parler à l'IA (recommandé)</button>
+  </div>
+
+  <!-- Mode chat conversationnel -->
+  <div class="chat-wrap hidden" id="quiz-chat-wrap" style="max-width:720px">
+    <div class="chat-messages" id="quiz-chat-messages"></div>
+    <div class="chat-input-row">
+      <input id="quiz-chat-input" type="text" placeholder="Écris ta réponse…" autocomplete="off" />
+      <button class="btn btn-primary" id="quiz-chat-send-btn">Envoyer</button>
+    </div>
+    <div id="quiz-chat-error"></div>
+  </div>
+
   <form id="quiz-form" class="card" style="max-width:720px">
 
     <div class="field">
