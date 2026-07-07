@@ -178,6 +178,15 @@ CREATE TABLE IF NOT EXISTS user_badges (
 );
 CREATE INDEX IF NOT EXISTS idx_user_badges_user ON user_badges(user_id);
 
+CREATE TABLE IF NOT EXISTS progress_photos (
+  id         SERIAL PRIMARY KEY,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  photo_data TEXT NOT NULL,
+  caption    TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_progress_photos_user ON progress_photos(user_id, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS coach_reviews (
   id         SERIAL PRIMARY KEY,
   coach_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

@@ -196,6 +196,21 @@ router.get("/dashboard/clients/:clientId/logs", requireRole("coach","admin"), as
   } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
 });
 
+// Photos de progression d'un client (fonctionnalite 9) : visibles par son
+// coach, sauf si le client a desactive la visibilite de son profil.
+router.get("/dashboard/clients/:clientId/photos", requireRole("coach","admin"), async (req, res) => {
+  try {
+    const visR = await pool.query("SELECT profile_visible_to_coaches FROM users WHERE id=$1", [req.params.clientId]);
+    if (!visR.rows[0]?.profile_visible_to_coaches) return res.json({ photos: [], hidden: true });
+
+    const r = await pool.query(
+      "SELECT id, photo_data, caption, created_at FROM progress_photos WHERE user_id=$1 ORDER BY created_at DESC",
+      [req.params.clientId]
+    );
+    res.json({ photos: r.rows, hidden: false });
+  } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
+});
+
 // Coach génère un programme pour un client
 router.post("/dashboard/clients/:clientId/program", requireRole("coach","admin"), async (req, res) => {
   try {

@@ -2207,6 +2207,21 @@ body.landing { overflow-x: hidden; }
 .review-star { color: var(--chalk-faint); cursor: pointer; transition: color .12s; line-height: 1; }
 .review-star:hover, .review-star.active { color: var(--gold); }
 
+/* Photos de progression (fonctionnalite 9) */
+.photos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+.photo-tile { position: relative; border-radius: var(--radius-md); overflow: hidden; background: var(--bg-hover); border: 1px solid var(--border); }
+.photo-tile img { width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block; }
+.photo-tile-meta {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 8px; font-size: .7rem; color: var(--chalk-dim);
+}
+.photo-tile-delete {
+  background: none; border: none; color: var(--chalk-dim); cursor: pointer;
+  font-size: .8rem; padding: 2px 4px; line-height: 1; transition: color .15s;
+}
+.photo-tile-delete:hover { color: var(--red); }
+.photo-tile-caption { padding: 0 8px 8px; font-size: .78rem; color: var(--chalk-dim); }
+
 .wellness-slider-group { text-align: left; margin-bottom: 18px; }
 .wellness-slider-group label {
   display: flex; justify-content: space-between; font-size: .82rem;

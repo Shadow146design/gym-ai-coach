@@ -24,6 +24,7 @@ const wellnessRoutes = require("./routes/wellness");
 const competitionRoutes = require("./routes/competition");
 const publicProfileRoutes = require("./routes/publicProfile");
 const referralRoutes = require("./routes/referral");
+const photosRoutes = require("./routes/photos");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -70,6 +71,7 @@ app.use("/api/wellness", wellnessRoutes);
 app.use("/api/competition", competitionRoutes);
 app.use("/api/users",    publicProfileRoutes);
 app.use("/api/referral", referralRoutes);
+app.use("/api/photos",   photosRoutes);
 app.use("/auth",         oauthRoutes);
 
 // Profil public a URL courte (fonctionnalite 7) : sert la meme page HTML

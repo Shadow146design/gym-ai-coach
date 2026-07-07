@@ -22,6 +22,7 @@ async function init() {
   renderStats();
   loadWeightChart();
   loadBadges();
+  loadPhotos();
 }
 
 function renderIdentity() {
@@ -366,6 +367,96 @@ async function loadBadges() {
   } catch {
     grid.innerHTML = `<p class="muted" style="font-size:.85rem">Impossible de charger les badges.</p>`;
   }
+}
+
+// ── Photos de progression (fonctionnalité 9, PREMIUM) ──────
+async function loadPhotos() {
+  const content = document.getElementById("photos-content");
+  const isPremium = ["premium", "coach", "admin"].includes(fullData?.user?.role);
+
+  if (!isPremium) {
+    lockSection(content, {
+      title: "Photos de progression — Premium",
+      desc: "Garde une trace visuelle de ta progression, jusqu'à 50 photos, visibles uniquement par toi et ton coach.",
+    });
+    return;
+  }
+
+  content.innerHTML = `
+    <form id="photo-upload-form" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px">
+      <div class="field" style="margin-bottom:0;flex:1;min-width:160px">
+        <label for="photo-file">Nouvelle photo</label>
+        <input id="photo-file" type="file" accept="image/png,image/jpeg,image/webp"/>
+      </div>
+      <div class="field" style="margin-bottom:0;flex:1;min-width:160px">
+        <label for="photo-caption">Légende (optionnel)</label>
+        <input id="photo-caption" type="text" maxlength="200" placeholder="Ex : semaine 4"/>
+      </div>
+      <button class="btn btn-primary btn-sm" type="submit">Ajouter</button>
+    </form>
+    <div id="photo-upload-status" class="muted" style="font-size:.85rem;margin-bottom:10px"></div>
+    <div id="photos-grid" class="photos-grid"></div>`;
+
+  document.getElementById("photo-upload-form").addEventListener("submit", uploadProgressPhoto);
+  await refreshPhotosGrid();
+}
+
+async function refreshPhotosGrid() {
+  const grid = document.getElementById("photos-grid");
+  try {
+    const r = await fetch("/api/photos").then(r => r.json());
+    document.getElementById("photos-count").textContent = `${r.photos.length}/50`;
+    grid.innerHTML = r.photos.length
+      ? r.photos.map(p => `
+        <div class="photo-tile">
+          <img src="${p.photo_data}" alt="${esc(p.caption || "")}"/>
+          <div class="photo-tile-meta">
+            <span>${new Date(p.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}</span>
+            <button type="button" class="photo-tile-delete" data-id="${p.id}" title="Supprimer">✕</button>
+          </div>
+          ${p.caption ? `<div class="photo-tile-caption">${esc(p.caption)}</div>` : ""}
+        </div>`).join("")
+      : `<p class="muted" style="font-size:.85rem">Ajoute ta première photo pour suivre ta progression visuelle.</p>`;
+
+    grid.querySelectorAll(".photo-tile-delete").forEach(btn => {
+      btn.addEventListener("click", () => deleteProgressPhoto(btn.dataset.id));
+    });
+  } catch {
+    grid.innerHTML = `<p class="muted" style="font-size:.85rem">Impossible de charger les photos.</p>`;
+  }
+}
+
+async function uploadProgressPhoto(e) {
+  e.preventDefault();
+  const status = document.getElementById("photo-upload-status");
+  const file = document.getElementById("photo-file").files[0];
+  if (!file) { status.innerHTML = `<span style="color:var(--red)">Choisis une photo.</span>`; return; }
+
+  status.textContent = "Traitement de l'image…";
+  try {
+    const photo_data = await resizeImageToDataUrl(file, 900, 0.85);
+    const caption = document.getElementById("photo-caption").value;
+    const res = await fetch("/api/photos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ photo_data, caption }),
+    });
+    const json = await res.json();
+    if (!res.ok) { status.innerHTML = `<span style="color:var(--red)">${json.error}</span>`; return; }
+    status.textContent = "";
+    document.getElementById("photo-upload-form").reset();
+    await refreshPhotosGrid();
+  } catch {
+    status.innerHTML = `<span style="color:var(--red)">Impossible de traiter cette image.</span>`;
+  }
+}
+
+async function deleteProgressPhoto(id) {
+  if (!confirm("Supprimer cette photo ?")) return;
+  try {
+    await fetch(`/api/photos/${id}`, { method: "DELETE" });
+    await refreshPhotosGrid();
+  } catch {}
 }
 
 // Toast d'action : propose de regenerer le programme apres un changement
