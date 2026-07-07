@@ -340,7 +340,21 @@ même, choisis des exercices différents ET un ordre différent.
 Variation #${Math.floor(Math.random() * 100) + 1} : privilégie les exercices ${["haltères", "barre", "machine", "câble"][Math.floor(Math.random() * 4)]} cette fois quand plusieurs options équivalentes existent.`;
   }
 
-  const userPrompt = `${physicalContext}${goalContext}${antiDuplicationBlock}
+  const periodizationBlock = answers.periodization ? `
+━━ PÉRIODISATION 12 SEMAINES (option activée, fonctionnalité PREMIUM) ━━
+Le programme doit couvrir un cycle complet de 12 semaines en 4 phases. Génère la structure "days"
+habituelle (les mêmes exercices/jours valables sur tout le cycle), ET ajoute un champ
+"periodization" au JSON avec EXACTEMENT 4 phases dans cet ordre :
+1. Accumulation (semaines 1-4) : volume élevé, intensité 65-75% RM
+2. Intensification (semaines 5-8) : volume modéré, intensité 75-85% RM
+3. Pic (semaines 9-11) : volume réduit, intensité 85-95% RM
+4. Décharge (semaine 12) : volume -50%, charges -20%
+Chaque phase de "periodization" a : "name" (ex "Accumulation"), "weeks" (ex "1-4"),
+"volumeNote" (description courte), "intensityNote" (description courte),
+"setsMultiplier" (nombre, ex 1.0 / 0.9 / 0.75 / 0.5), "weightMultiplier" (nombre, ex 1.0 / 1.1 / 1.2 / 0.8).
+` : "";
+
+  const userPrompt = `${physicalContext}${goalContext}${antiDuplicationBlock}${periodizationBlock}
 
 ━━ QUESTIONNAIRE ━━
 • Objectif : ${answers.objectif}

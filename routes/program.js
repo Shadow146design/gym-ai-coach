@@ -56,8 +56,8 @@ async function fetchPreviousPrograms(userId) {
 async function saveNewProgram(userId, program, questionnaire) {
   await pool.query("UPDATE programs SET is_active=FALSE WHERE user_id=$1", [userId]);
   const r = await pool.query(
-    `INSERT INTO programs (user_id, title, questionnaire, content, is_active)
-     VALUES ($1,$2,$3,$4,TRUE) RETURNING id, title, content, created_at`,
+    `INSERT INTO programs (user_id, title, questionnaire, content, is_active, program_start_date)
+     VALUES ($1,$2,$3,$4,TRUE,CURRENT_DATE) RETURNING id, title, content, created_at, program_start_date`,
     [userId, program.title || "Mon programme", JSON.stringify(questionnaire), JSON.stringify(program)]
   );
   return r.rows[0];
@@ -89,7 +89,7 @@ router.post("/generate", async (req, res) => {
 // body : { conversation: [{ role: "user"|"assistant", content }, ...] }
 router.post("/chat-generate", requirePremium, async (req, res) => {
   try {
-    const { conversation } = req.body;
+    const { conversation, periodization } = req.body;
     if (!Array.isArray(conversation) || !conversation.length) {
       return res.status(400).json({ error: "La conversation est requise." });
     }
@@ -99,6 +99,7 @@ router.post("/chat-generate", requirePremium, async (req, res) => {
 
     const extracted = await extractProgramParams(conversation);
     const { understood, ...answers } = extracted;
+    if (periodization) answers.periodization = true;
 
     await mergeProfile(req.session.userId, answers);
     const previousPrograms = await fetchPreviousPrograms(req.session.userId);
@@ -115,7 +116,7 @@ router.post("/chat-generate", requirePremium, async (req, res) => {
 router.get("/active", async (req, res) => {
   try {
     const r = await pool.query(
-      "SELECT id,title,content,created_at FROM programs WHERE user_id=$1 AND is_active=TRUE ORDER BY created_at DESC LIMIT 1",
+      "SELECT id,title,content,created_at,program_start_date FROM programs WHERE user_id=$1 AND is_active=TRUE ORDER BY created_at DESC LIMIT 1",
       [req.session.userId]
     );
     res.json({ program: r.rows[0]||null });

@@ -133,10 +133,11 @@ async function sendQuizAnswer() {
   const thinking = appendQuizMsg("coach", "L'IA construit ton programme… ✨");
 
   try {
+    const periodization = document.getElementById("periodization-toggle")?.checked || false;
     const res = await fetch("/api/program/chat-generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ conversation: quizConversation }),
+      body: JSON.stringify({ conversation: quizConversation, periodization }),
     });
     const json = await res.json();
     if (!res.ok) {

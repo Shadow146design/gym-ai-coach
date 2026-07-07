@@ -80,19 +80,22 @@ CREATE INDEX IF NOT EXISTS idx_messages_conv ON messages(LEAST(from_id,to_id), G
 CREATE INDEX IF NOT EXISTS idx_messages_unread ON messages(to_id, read_at);
 
 CREATE TABLE IF NOT EXISTS programs (
-  id            SERIAL PRIMARY KEY,
-  user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  created_by    INTEGER REFERENCES users(id),
-  title         TEXT NOT NULL,
-  questionnaire JSONB NOT NULL DEFAULT '{}',
-  content       JSONB NOT NULL,
-  is_active     BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at    TIMESTAMP NOT NULL DEFAULT NOW()
+  id                  SERIAL PRIMARY KEY,
+  user_id             INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_by          INTEGER REFERENCES users(id),
+  title               TEXT NOT NULL,
+  questionnaire       JSONB NOT NULL DEFAULT '{}',
+  content             JSONB NOT NULL,
+  is_active           BOOLEAN NOT NULL DEFAULT TRUE,
+  program_start_date  DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_at          TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='programs' AND column_name='created_by')
     THEN ALTER TABLE programs ADD COLUMN created_by INTEGER REFERENCES users(id); END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='programs' AND column_name='program_start_date')
+    THEN ALTER TABLE programs ADD COLUMN program_start_date DATE NOT NULL DEFAULT CURRENT_DATE; END IF;
 END $$;
 
 CREATE TABLE IF NOT EXISTS logs (

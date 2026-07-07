@@ -2222,6 +2222,22 @@ body.landing { overflow-x: hidden; }
 .photo-tile-delete:hover { color: var(--red); }
 .photo-tile-caption { padding: 0 8px 8px; font-size: .78rem; color: var(--chalk-dim); }
 
+/* Periodisation 12 semaines (fonctionnalite 10) */
+.periodization-toggle-row {
+  display: flex; align-items: center; gap: 10px; font-size: .85rem; color: var(--chalk-dim);
+  padding: 10px 14px; margin-bottom: 12px; background: var(--bg-hover); border-radius: var(--radius);
+  cursor: pointer;
+}
+.periodization-toggle-row input { width: 16px; height: 16px; }
+.periodization-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 18px 20px; margin-bottom: 20px;
+}
+.periodization-card-title { font-family: var(--font-display); text-transform: uppercase; letter-spacing: .04em; font-size: .8rem; color: var(--chalk-dim); margin-bottom: 10px; }
+.periodization-phase-name { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
+.periodization-track { height: 8px; border-radius: 4px; background: var(--bg-hover); overflow: hidden; margin: 10px 0 6px; }
+.periodization-fill { height: 100%; background: var(--grad-rust, linear-gradient(135deg, #c94d28, #e06040)); border-radius: 4px; transition: width .3s; }
+
 .wellness-slider-group { text-align: left; margin-bottom: 18px; }
 .wellness-slider-group label {
   display: flex; justify-content: space-between; font-size: .82rem;

@@ -89,6 +89,7 @@ async function loadProgram() {
   summary.textContent  = program.content.summary || "";
 
   lastProgramExercises = new Set((program.content.days || []).flatMap(d => (d.exercises || []).map(e => e.name)));
+  renderPeriodization(program);
 
   container.innerHTML = "";
   (program.content.days || []).forEach((day, i) => {
@@ -144,6 +145,35 @@ async function loadProgram() {
       ${program.content.advice.map(a => `<li style="margin-bottom:6px">${esc(a)}</li>`).join("")}</ul>`;
     container.appendChild(adv);
   }
+}
+
+// ── Périodisation 12 semaines (fonctionnalité 10, PREMIUM) ─
+function renderPeriodization(program) {
+  const box = document.getElementById("periodization-container");
+  const phases = program.content?.periodization;
+  if (!Array.isArray(phases) || !phases.length || !program.program_start_date) {
+    box.classList.add("hidden");
+    return;
+  }
+
+  const start = new Date(program.program_start_date);
+  const daysSince = Math.floor((Date.now() - start) / 86400000);
+  const week = Math.min(12, Math.max(1, Math.floor(daysSince / 7) + 1));
+
+  const phase = phases.find(p => {
+    const [from, to] = String(p.weeks || "").split("-").map(n => parseInt(n, 10));
+    return Number.isFinite(from) && week >= from && week <= (Number.isFinite(to) ? to : from);
+  }) || phases[0];
+  const phaseIndex = phases.indexOf(phase) + 1;
+
+  box.classList.remove("hidden");
+  box.innerHTML = `
+    <div class="periodization-card">
+      <div class="periodization-card-title">📅 Périodisation 12 semaines</div>
+      <div class="periodization-phase-name">Phase ${phaseIndex} — ${esc(phase.name)} — Semaine ${week}/12</div>
+      <div class="muted" style="font-size:.85rem">${esc(phase.volumeNote || "")}${phase.volumeNote && phase.intensityNote ? " · " : ""}${esc(phase.intensityNote || "")}</div>
+      <div class="periodization-track"><div class="periodization-fill" style="width:${Math.round((week / 12) * 100)}%"></div></div>
+    </div>`;
 }
 
 // ── Chat Coach IA ─────────────────────────────────────────
