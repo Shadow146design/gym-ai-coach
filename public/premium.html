@@ -21,7 +21,9 @@
 
   <div id="banner"></div>
 
-  <div class="pricing-grid cols-2">
+  <p class="pricing-swipe-hint">← Faire glisser →</p>
+
+  <div class="pricing-grid cols-2" id="pricing-grid">
     <div class="pricing-card">
       <div class="pricing-icon">🔓</div>
       <div class="pricing-title">Gratuit</div>
@@ -47,6 +49,11 @@
       </ul>
       <button class="btn btn-primary btn-block" data-plan="premium" onclick="subscribe('premium')">Devenir Premium</button>
     </div>
+  </div>
+
+  <div class="pricing-dots" id="pricing-dots">
+    <span class="pricing-dot active"></span>
+    <span class="pricing-dot"></span>
   </div>
 
   <p class="muted" style="text-align:center;font-size:.82rem;margin-top:14px">

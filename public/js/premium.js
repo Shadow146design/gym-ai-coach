@@ -46,4 +46,42 @@ function showBanner(type, msg) {
     `<div class="${type === "success" ? "success-msg" : "error-msg"}">${msg}</div>`;
 }
 
+// Cards Gratuit/Premium en scroll horizontal sur mobile (fix accessibilité) :
+// synchronise les points de pagination avec la card actuellement visible.
+function initPricingScrollSync() {
+  const grid = document.getElementById("pricing-grid");
+  const dots = document.querySelectorAll("#pricing-dots .pricing-dot");
+  if (!grid || !dots.length) return;
+
+  const cards = Array.from(grid.querySelectorAll(".pricing-card"));
+
+  const setActive = index => {
+    dots.forEach((d, i) => d.classList.toggle("active", i === index));
+  };
+
+  let ticking = false;
+  grid.addEventListener("scroll", () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const gridCenter = grid.scrollLeft + grid.clientWidth / 2;
+      let closest = 0, closestDist = Infinity;
+      cards.forEach((card, i) => {
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+        const dist = Math.abs(cardCenter - gridCenter);
+        if (dist < closestDist) { closestDist = dist; closest = i; }
+      });
+      setActive(closest);
+      ticking = false;
+    });
+  }, { passive: true });
+
+  dots.forEach((dot, i) => {
+    dot.addEventListener("click", () => {
+      cards[i]?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+    });
+  });
+}
+initPricingScrollSync();
+
 init();
