@@ -92,6 +92,7 @@ function startQuizChat() {
   quizStep = 0;
   quizConversation = [];
   document.getElementById("quiz-chat-messages").innerHTML = "";
+  initVoiceInput("quiz-chat-input", "quiz-chat-mic-btn");
   askNextQuizQuestion();
 }
 

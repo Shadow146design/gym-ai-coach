@@ -137,6 +137,7 @@ document.getElementById("chat-form").addEventListener("submit", e => {
   e.preventDefault();
   sendMsg();
 });
+initVoiceInput("msg-input", "msg-mic-btn");
 
 function esc(s) { const d=document.createElement("div"); d.textContent=String(s||""); return d.innerHTML; }
 init();

@@ -147,6 +147,7 @@ async function loadProgram() {
 }
 
 // ── Chat Coach IA ─────────────────────────────────────────
+initVoiceInput("chat-input", "chat-mic-btn");
 document.getElementById("chat-send-btn").addEventListener("click", sendMessage);
 document.getElementById("chat-input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 

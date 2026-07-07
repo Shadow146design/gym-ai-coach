@@ -320,8 +320,10 @@ async function triggerDebrief(totalVolume, prs, durationMins) {
       <div id="post-chat-messages" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;max-height:200px;overflow-y:auto"></div>
       <div style="display:flex;gap:8px">
         <input id="post-chat-input" type="text" placeholder="Pose une question sur cette séance…" style="flex:1"/>
+        <button type="button" class="mic-btn" id="post-chat-mic-btn" title="Dicter" aria-label="Dicter">🎤</button>
         <button class="btn btn-primary btn-sm" onclick="sendPostChat()">Envoyer</button>
       </div>`;
+    initVoiceInput("post-chat-input", "post-chat-mic-btn");
 
     // Pré-charge le contexte du debrief dans l'historique de chat
     postChatHistory = [
