@@ -7,6 +7,7 @@ const I18N_DICT = {
   nav_stats:        { fr: "Statistiques",        en: "Stats" },
   nav_coaches:      { fr: "Coaches",             en: "Coaches" },
   nav_messages:     { fr: "Messages",            en: "Messages" },
+  nav_voice:        { fr: "Coach Vocal",         en: "Voice Coach" },
   nav_premium:      { fr: "Premium",             en: "Premium" },
   nav_profile:      { fr: "Mon profil",          en: "My profile" },
   nav_history:      { fr: "Historique",          en: "History" },

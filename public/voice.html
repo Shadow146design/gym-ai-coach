@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Coach Vocal — Gym AI Coach</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#c94d28"/>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<div class="page-wrapper">
+<div class="shell">
+  <div class="page-head">
+    <div>
+      <h1>🎤 Coach Vocal</h1>
+      <p class="sub muted">Parle à ton coach IA, il te répond à voix haute.</p>
+    </div>
+  </div>
+
+  <div id="voice-locked" class="hidden"></div>
+
+  <div id="voice-app" class="voice-app">
+    <div class="voice-orb-wrap">
+      <button type="button" id="voice-orb" class="voice-orb" aria-label="Parler au coach">
+        <span class="voice-orb-icon">🎤</span>
+        <span class="voice-wave voice-wave-1"></span>
+        <span class="voice-wave voice-wave-2"></span>
+        <span class="voice-wave voice-wave-3"></span>
+      </button>
+      <p class="voice-status" id="voice-status">Appuie pour parler</p>
+      <p class="voice-transcript" id="voice-transcript"></p>
+    </div>
+
+    <div class="voice-examples" id="voice-examples">
+      <span class="voice-example-tag">Quelle est ma prochaine séance ?</span>
+      <span class="voice-example-tag">Quel est mon record au développé couché ?</span>
+      <span class="voice-example-tag">J'ai mal aux épaules, qu'est-ce que tu conseilles ?</span>
+      <span class="voice-example-tag">Combien de séances cette semaine ?</span>
+    </div>
+
+    <div class="voice-history" id="voice-history"></div>
+  </div>
+</div>
+
+<footer>Gym AI Coach — programme généré par IA. Consulte un professionnel en cas de douleur.</footer>
+</div>
+<script src="/js/premium-gate.js"></script>
+<script src="/js/voice.js"></script>
+<script src="/js/i18n.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/pwa.js"></script>
+</body>
+</html>

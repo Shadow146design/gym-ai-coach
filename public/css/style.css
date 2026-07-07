@@ -2122,6 +2122,47 @@ body.landing { overflow-x: hidden; }
   50% { box-shadow: 0 0 0 8px rgba(217,64,64,0); }
 }
 
+/* Assistant vocal (fonctionnalite 12) */
+.voice-app { display: flex; flex-direction: column; align-items: center; padding: 20px 0 40px; }
+.voice-orb-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-bottom: 32px; }
+.voice-orb {
+  position: relative; width: 140px; height: 140px; border-radius: 50%;
+  background: var(--grad-rust, linear-gradient(135deg, #c94d28, #e06040));
+  border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-hover, 0 4px 24px rgba(0,0,0,.4));
+  transition: transform .18s var(--ease);
+}
+.voice-orb:hover { transform: scale(1.03); }
+.voice-orb:disabled { cursor: default; opacity: .7; }
+.voice-orb-icon { font-size: 3rem; z-index: 2; }
+.voice-wave {
+  position: absolute; inset: 0; border-radius: 50%;
+  border: 2px solid rgba(201,77,40,.5); opacity: 0; pointer-events: none;
+}
+.voice-orb.listening .voice-wave,
+.voice-orb.speaking .voice-wave { animation: voice-wave-pulse 1.8s ease-out infinite; }
+.voice-orb.listening { background: linear-gradient(135deg, #d94040, #e06060); }
+.voice-orb.thinking { animation: voice-orb-think 1s ease-in-out infinite; }
+.voice-wave-2 { animation-delay: .4s !important; }
+.voice-wave-3 { animation-delay: .8s !important; }
+@keyframes voice-wave-pulse {
+  0% { transform: scale(1); opacity: .6; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@keyframes voice-orb-think {
+  0%, 100% { opacity: 1; } 50% { opacity: .55; }
+}
+.voice-status { font-size: .95rem; color: var(--chalk-dim); font-weight: 500; }
+.voice-transcript { font-size: 1.05rem; color: var(--chalk); min-height: 1.4em; text-align: center; max-width: 480px; }
+.voice-examples { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 620px; margin-bottom: 28px; }
+.voice-example-tag {
+  font-size: .8rem; padding: 8px 14px; border-radius: 20px;
+  background: var(--bg-hover); border: 1px solid var(--border);
+  color: var(--chalk-dim); cursor: pointer; transition: all .15s;
+}
+.voice-example-tag:hover { color: var(--chalk); border-color: var(--chalk-dim); }
+.voice-history { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 620px; }
+
 .wellness-slider-group { text-align: left; margin-bottom: 18px; }
 .wellness-slider-group label {
   display: flex; justify-content: space-between; font-size: .82rem;
