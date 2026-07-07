@@ -57,11 +57,108 @@ function buildDayPicker() {
     btn.addEventListener("click", () => {
       selectedDay = program.content.days[i];
       document.getElementById("step-pick").classList.add("hidden");
-      startSession();
+      startWarmup();
     });
     grid.appendChild(btn);
   });
 }
+
+// ── Étape 1.5 : échauffement (fonctionnalité 2) ───────────
+const WARMUP_DURATION = 45;
+const WARMUP_EXERCISES = {
+  push: [
+    { name: "Rotations d'épaules", desc: "Bras tendus, grands cercles vers l'avant puis l'arrière." },
+    { name: "Pompes légères", desc: "Pompes sur les genoux ou inclinées, tempo lent et contrôlé." },
+    { name: "Bandes élastiques — tirages", desc: "Tirages horizontaux pour activer les épaules et les scapulas." },
+  ],
+  pull: [
+    { name: "Rotations d'épaules", desc: "Bras tendus, grands cercles vers l'avant puis l'arrière." },
+    { name: "Élévations légères", desc: "Élévations latérales à vide ou avec une charge très légère." },
+    { name: "Étirements dorsaux", desc: "Dos rond, bras tendus devant toi, pousse les omoplates vers l'avant." },
+  ],
+  legs: [
+    { name: "Fentes dynamiques", desc: "Fentes avant alternées, amplitude progressive." },
+    { name: "Squats à vide", desc: "Squats sans charge, descente contrôlée." },
+    { name: "Mobilité hanches", desc: "Cercles de hanches et ouvertures latérales." },
+    { name: "Rotations chevilles", desc: "Cercles des chevilles dans les deux sens." },
+  ],
+};
+WARMUP_EXERCISES.full = Array.from(
+  new Map([...WARMUP_EXERCISES.push, ...WARMUP_EXERCISES.pull, ...WARMUP_EXERCISES.legs].map(e => [e.name, e])).values()
+);
+
+let warmupList = [];
+let warmupIndex = 0;
+let warmupTimerInterval = null;
+
+function classifyWarmupCategory(day) {
+  const text = `${day.day || ""} ${day.focus || ""} ${(day.exercises || []).map(e => e.muscle_group || "").join(" ")}`.toLowerCase();
+  const hasPush = /pec|épaule|epaule|triceps|poitrine|shoulder|chest/.test(text);
+  const hasPull = /dos|biceps|back|dorsal/.test(text);
+  const hasLegs = /jambe|leg|quadri|ischio|fessier|mollet|cuisse|glute/.test(text);
+  if (/full.?body|corps entier/.test(text)) return "full";
+  const matches = [hasPush, hasPull, hasLegs].filter(Boolean).length;
+  if (matches >= 2) return "full";
+  if (hasLegs) return "legs";
+  if (hasPull) return "pull";
+  if (hasPush) return "push";
+  return "full";
+}
+
+function startWarmup() {
+  const category = classifyWarmupCategory(selectedDay);
+  warmupList = WARMUP_EXERCISES[category] || WARMUP_EXERCISES.full;
+  warmupIndex = 0;
+
+  const totalMins = Math.round((warmupList.length * WARMUP_DURATION) / 60) || 1;
+  document.getElementById("warmup-subtitle").textContent =
+    `Avant "${selectedDay.day}" — ${warmupList.length} exercices, ~${totalMins} min`;
+  document.getElementById("warmup-done").classList.add("hidden");
+  document.getElementById("warmup-card").classList.remove("hidden");
+  document.getElementById("step-warmup").classList.remove("hidden");
+  renderWarmupExercise();
+}
+
+function renderWarmupExercise() {
+  const ex = warmupList[warmupIndex];
+  document.getElementById("warmup-progress").innerHTML = warmupList.map((_, i) =>
+    `<span class="warmup-dot${i < warmupIndex ? " done" : ""}${i === warmupIndex ? " active" : ""}"></span>`).join("");
+  document.getElementById("warmup-ex-name").textContent = ex.name;
+  document.getElementById("warmup-ex-desc").textContent = ex.desc;
+
+  let remaining = WARMUP_DURATION;
+  document.getElementById("warmup-timer").textContent = remaining;
+  clearInterval(warmupTimerInterval);
+  warmupTimerInterval = setInterval(() => {
+    remaining--;
+    document.getElementById("warmup-timer").textContent = remaining;
+    if (remaining <= 0) {
+      clearInterval(warmupTimerInterval);
+      if (navigator.vibrate) navigator.vibrate(150);
+      warmupIndex++;
+      if (warmupIndex >= warmupList.length) finishWarmup();
+      else renderWarmupExercise();
+    }
+  }, 1000);
+}
+
+function finishWarmup() {
+  clearInterval(warmupTimerInterval);
+  document.getElementById("warmup-card").classList.add("hidden");
+  document.getElementById("warmup-done").classList.remove("hidden");
+}
+
+document.getElementById("warmup-skip-btn").addEventListener("click", () => {
+  if (!confirm("⚠️ Sauter l'échauffement augmente le risque de blessure. Continuer sans t'échauffer ?")) return;
+  clearInterval(warmupTimerInterval);
+  document.getElementById("step-warmup").classList.add("hidden");
+  startSession();
+});
+
+document.getElementById("warmup-start-btn").addEventListener("click", () => {
+  document.getElementById("step-warmup").classList.add("hidden");
+  startSession();
+});
 
 // ── Étape 2 : séance ──────────────────────────────────────
 function startSession() {

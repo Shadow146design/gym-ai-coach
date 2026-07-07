@@ -18,6 +18,29 @@
     <div id="day-pick-grid" style="display:flex;flex-direction:column;gap:10px;max-width:500px"></div>
   </div>
 
+  <div id="step-warmup" class="hidden">
+    <div class="page-head">
+      <div>
+        <h1>Échauffement 🔥</h1>
+        <p class="sub muted" id="warmup-subtitle"></p>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="warmup-skip-btn" type="button">Passer l'échauffement</button>
+    </div>
+    <div class="warmup-card" id="warmup-card">
+      <div class="warmup-progress" id="warmup-progress"></div>
+      <div class="warmup-exercise">
+        <div class="warmup-timer" id="warmup-timer">45</div>
+        <h2 id="warmup-ex-name"></h2>
+        <p class="muted" id="warmup-ex-desc"></p>
+      </div>
+    </div>
+    <div id="warmup-done" class="hidden" style="text-align:center;margin-top:32px">
+      <h2>Échauffement terminé 💪</h2>
+      <p class="muted" style="margin:8px 0 20px">Tu es prêt, place à la séance !</p>
+      <button class="btn btn-primary" id="warmup-start-btn" type="button">C'est parti !</button>
+    </div>
+  </div>
+
   <div id="step-session" class="hidden">
     <div class="page-head">
       <div>

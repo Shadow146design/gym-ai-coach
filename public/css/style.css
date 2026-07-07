@@ -2163,6 +2163,22 @@ body.landing { overflow-x: hidden; }
 .voice-example-tag:hover { color: var(--chalk); border-color: var(--chalk-dim); }
 .voice-history { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 620px; }
 
+/* Echauffement automatique (fonctionnalite 2) */
+.warmup-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 36px 24px; max-width: 480px; margin: 20px auto 0; text-align: center;
+}
+.warmup-progress { display: flex; justify-content: center; gap: 8px; margin-bottom: 28px; }
+.warmup-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--bg-hover); border: 1px solid var(--border-strong); transition: all .2s; }
+.warmup-dot.active { background: var(--rust); border-color: var(--rust); box-shadow: var(--glow-rust, 0 0 12px rgba(201,77,40,.4)); }
+.warmup-dot.done { background: var(--green); border-color: var(--green); }
+.warmup-timer {
+  font-family: var(--font-mono); font-size: 3rem; color: var(--rust-soft);
+  margin-bottom: 14px;
+}
+.warmup-exercise h2 { font-family: var(--font-display); text-transform: uppercase; letter-spacing: .03em; font-size: 1.2rem; margin-bottom: 8px; }
+.warmup-exercise p { font-size: .9rem; max-width: 360px; margin: 0 auto; }
+
 .wellness-slider-group { text-align: left; margin-bottom: 18px; }
 .wellness-slider-group label {
   display: flex; justify-content: space-between; font-size: .82rem;
