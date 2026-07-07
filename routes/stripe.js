@@ -2,6 +2,7 @@ const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
 const { checkAndUnlockBadges } = require("./badges");
+const { grantReferralReward } = require("./referral");
 
 const router = express.Router();
 
@@ -140,6 +141,16 @@ async function syncSubscriptionFromStripeObject(sub) {
      ON CONFLICT (stripe_subscription_id) DO UPDATE SET plan=$4, status='active', updated_at=NOW()`,
     [userId, sub.customer, sub.id, plan]
   );
+
+  // Recompense de parrainage (fonctionnalite 5) : ce nouvel abonne premium
+  // etait peut-etre parraine par quelqu'un dont la recompense est en attente.
+  try {
+    const refR = await pool.query(
+      "SELECT id, referrer_id FROM referrals WHERE referred_id=$1 AND rewarded_at IS NULL",
+      [userId]
+    );
+    if (refR.rows.length) await grantReferralReward(refR.rows[0].referrer_id, refR.rows[0].id);
+  } catch (e) { console.error("Erreur recompense parrainage :", e); }
 }
 
 module.exports = { router, webhookHandler };

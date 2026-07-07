@@ -17,8 +17,13 @@ fetch("/api/auth/me")
   .then(r => r.ok ? window.location.href = "/home.html" : null)
   .catch(() => {});
 
-// Erreur OAuth
+// Parrainage (fonctionnalité 5) : conserve le ?ref=USERNAME au cas où
+// l'utilisateur navigue avant de finaliser son inscription.
 const urlParams = new URLSearchParams(window.location.search);
+const refCode = urlParams.get("ref");
+if (refCode) localStorage.setItem("referralCode", refCode);
+
+// Erreur OAuth
 const oauthErr = urlParams.get("error");
 if (oauthErr) {
   const el = document.getElementById("oauth-error");
@@ -79,10 +84,12 @@ regForm?.addEventListener("submit", async e => {
         name: regForm.querySelector("#reg-name").value,
         email: regForm.querySelector("#reg-email").value,
         password: regForm.querySelector("#reg-password").value,
+        ref: localStorage.getItem("referralCode") || null,
       }),
     });
     const d = await r.json();
     if (!r.ok) return showErr("register-error", d.error);
+    localStorage.removeItem("referralCode");
     window.location.href = "/onboarding.html";
   } catch { showErr("register-error", "Impossible de joindre le serveur."); }
 });

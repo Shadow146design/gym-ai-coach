@@ -20,7 +20,7 @@ const authLimiter = rateLimit({
 
 router.post("/register", authLimiter, async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, ref } = req.body;
 
     if (!email || !password || !name) {
       return res.status(400).json({ error: "Email, mot de passe et nom sont requis." });
@@ -46,6 +46,19 @@ router.post("/register", authLimiter, async (req, res) => {
 
     const user = result.rows[0];
     req.session.userId = user.id;
+
+    // Parrainage (fonctionnalité 5) : lie le nouveau compte à son parrain si
+    // ?ref=USERNAME était présent. Echec silencieux (referrer inconnu) : ce
+    // n'est pas bloquant pour l'inscription.
+    if (ref) {
+      pool.query(
+        `INSERT INTO referrals (referrer_id, referred_id)
+         SELECT id, $2 FROM users WHERE username=$1 AND id != $2
+         ON CONFLICT (referred_id) DO NOTHING`,
+        [ref, user.id]
+      ).catch(e => console.error("Erreur creation referral :", e));
+    }
+
     res.status(201).json({ user });
   } catch (err) {
     console.error("Erreur /register :", err);

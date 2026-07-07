@@ -23,6 +23,7 @@ const badgesRoutes   = require("./routes/badges");
 const wellnessRoutes = require("./routes/wellness");
 const competitionRoutes = require("./routes/competition");
 const publicProfileRoutes = require("./routes/publicProfile");
+const referralRoutes = require("./routes/referral");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -68,6 +69,7 @@ app.use("/api/badges",  badgesRoutes);
 app.use("/api/wellness", wellnessRoutes);
 app.use("/api/competition", competitionRoutes);
 app.use("/api/users",    publicProfileRoutes);
+app.use("/api/referral", referralRoutes);
 app.use("/auth",         oauthRoutes);
 
 // Profil public a URL courte (fonctionnalite 7) : sert la meme page HTML
@@ -86,5 +88,18 @@ app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
   res.status(500).json({ error: "Erreur serveur." });
 });
+
+// Retrograde les comptes dont le Premium offert par parrainage (fonctionnalite 5)
+// a expire. premium_until IS NULL = Premium payant ou permanent (coach/admin) :
+// jamais touche ici.
+async function expireReferralPremium() {
+  try {
+    await pool.query(
+      "UPDATE users SET role='user', premium_until=NULL WHERE role='premium' AND premium_until IS NOT NULL AND premium_until < NOW()"
+    );
+  } catch (e) { console.error("Erreur expiration premium parrainage :", e); }
+}
+setInterval(expireReferralPremium, 60 * 60 * 1000);
+expireReferralPremium();
 
 app.listen(PORT, () => console.log(`Gym AI Coach v4 — port ${PORT}`));

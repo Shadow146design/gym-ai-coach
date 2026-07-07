@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Parrainage — Gym AI Coach</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#c94d28"/>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<div class="page-wrapper">
+<div class="shell" style="max-width:720px">
+  <div class="page-head">
+    <div>
+      <h1>🎁 Parraine tes amis</h1>
+      <p class="sub muted">Chaque ami qui passe Premium grâce à toi t'offre 30 jours Premium gratuits.</p>
+    </div>
+  </div>
+
+  <div class="profile-section">
+    <div class="profile-section-title">🔗 Ton lien de parrainage</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <input id="referral-link-input" type="text" readonly style="flex:1;min-width:220px" />
+      <button class="btn btn-primary btn-sm" id="copy-link-btn" type="button">Copier</button>
+    </div>
+    <div id="copy-status" class="muted" style="font-size:.82rem;margin-top:8px"></div>
+  </div>
+
+  <div class="profile-section">
+    <div class="profile-section-title">📊 Tes résultats</div>
+    <div class="stat-row"><span>Amis parrainés</span><span class="stat-val" id="ref-total">—</span></div>
+    <div class="stat-row"><span>Récompenses gagnées</span><span class="stat-val" id="ref-rewarded">—</span></div>
+    <div class="stat-row hidden" id="ref-until-row"><span>Premium offert jusqu'au</span><span class="stat-val" id="ref-until">—</span></div>
+  </div>
+
+  <div class="profile-section">
+    <div class="profile-section-title">💡 Comment ça marche</div>
+    <ul style="padding-left:18px;color:var(--chalk-dim);font-size:.9rem;line-height:1.8">
+      <li>Partage ton lien avec tes amis.</li>
+      <li>Ils créent leur compte via ton lien.</li>
+      <li>Dès qu'un filleul passe Premium, tu reçois 30 jours Premium offerts, automatiquement.</li>
+    </ul>
+  </div>
+</div>
+
+<footer>Gym AI Coach</footer>
+</div>
+<script src="/js/referral.js"></script>
+<script src="/js/i18n.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/pwa.js"></script>
+</body>
+</html>

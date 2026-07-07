@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS users (
   banned          BOOLEAN NOT NULL DEFAULT FALSE,
   username        TEXT UNIQUE,
   public_profile  BOOLEAN NOT NULL DEFAULT FALSE,
+  premium_until   TIMESTAMP,
   created_at      TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -45,6 +46,7 @@ DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='stats_visible_to_coaches')   THEN ALTER TABLE users ADD COLUMN stats_visible_to_coaches BOOLEAN NOT NULL DEFAULT TRUE; END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='username')         THEN ALTER TABLE users ADD COLUMN username TEXT UNIQUE; END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='public_profile')   THEN ALTER TABLE users ADD COLUMN public_profile BOOLEAN NOT NULL DEFAULT FALSE; END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='premium_until')    THEN ALTER TABLE users ADD COLUMN premium_until TIMESTAMP; END IF;
 END $$;
 
 CREATE TABLE IF NOT EXISTS coach_profiles (
@@ -175,6 +177,15 @@ CREATE TABLE IF NOT EXISTS user_badges (
   UNIQUE(user_id, badge_id)
 );
 CREATE INDEX IF NOT EXISTS idx_user_badges_user ON user_badges(user_id);
+
+CREATE TABLE IF NOT EXISTS referrals (
+  id          SERIAL PRIMARY KEY,
+  referrer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  referred_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  rewarded_at TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id);
 
 CREATE TABLE IF NOT EXISTS "session" (
   "sid"    varchar NOT NULL COLLATE "default" PRIMARY KEY,
