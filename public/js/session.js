@@ -11,6 +11,7 @@ let timerInterval = null;
 let secondsElapsed = 0;
 let postChatHistory = [];
 let restTimerInterval = null;
+let lastRecapData = null;
 
 // ── Init ──────────────────────────────────────────────────
 async function init() {
@@ -327,6 +328,7 @@ async function showRecap() {
   const totalVolume = sessionLogs.reduce((a,r) => a + r.weight * r.reps, 0);
   const prs = recap.filter(r => r.previous_weight === null || r.weight > r.previous_weight).length;
   const mins = Math.round(secondsElapsed / 60);
+  lastRecapData = { totalVolume, prs, mins };
 
   document.getElementById("recap-stats").innerHTML = `
     <div class="kpi-tile"><div class="kpi-label">Séries</div><div class="kpi-value">${sessionLogs.length}</div></div>
@@ -563,6 +565,191 @@ function renderVolumeChart(volume) {
       },
     },
   });
+}
+
+// ── Partage de séance (fonctionnalité 1, Canvas API) ──────
+document.getElementById("share-session-btn")?.addEventListener("click", openShareModal);
+
+function topShareExercises() {
+  const bestByEx = {};
+  sessionLogs.forEach(l => {
+    if (!bestByEx[l.exercise_name] || l.weight > bestByEx[l.exercise_name].weight) {
+      bestByEx[l.exercise_name] = { name: l.exercise_name, weight: l.weight };
+    }
+  });
+  return Object.values(bestByEx).sort((a, b) => b.weight - a.weight).slice(0, 3);
+}
+
+async function openShareModal() {
+  if (!lastRecapData) return;
+  const btn = document.getElementById("share-session-btn");
+  btn.disabled = true;
+
+  try {
+    const [meRes, streakRes] = await Promise.all([
+      fetch("/api/auth/me").then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch("/api/logs/streak").then(r => r.ok ? r.json() : null).catch(() => null),
+    ]);
+    const user = meRes?.user;
+    const isStyled = ["premium", "coach", "admin"].includes(user?.role);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 1080;
+    canvas.height = 1080;
+    drawShareImage(canvas, {
+      name: user?.name || "Athlète",
+      totalVolume: lastRecapData.totalVolume,
+      series: sessionLogs.length,
+      prs: lastRecapData.prs,
+      mins: lastRecapData.mins,
+      streak: streakRes?.current || 0,
+      topExercises: topShareExercises(),
+      styled: isStyled,
+    });
+    showShareModal(canvas);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function drawShareImage(canvas, d) {
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+
+  const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+  bgGrad.addColorStop(0, "#0a0a0a");
+  bgGrad.addColorStop(1, "#1a1a1a");
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  if (d.styled) {
+    const glow = ctx.createRadialGradient(W * 0.15, H * 0.1, 0, W * 0.15, H * 0.1, W * 0.55);
+    glow.addColorStop(0, "rgba(201,77,40,.28)");
+    glow.addColorStop(1, "rgba(201,77,40,0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = d.styled ? "#e06040" : "#c94d28";
+  ctx.font = "700 38px Arial";
+  ctx.fillText("GYM AI COACH", 64, 100);
+
+  ctx.fillStyle = "#ede8df";
+  ctx.font = "700 58px Arial";
+  ctx.fillText(d.name, 64, 190);
+
+  ctx.fillStyle = "#8f8b84";
+  ctx.font = "400 26px Arial";
+  const dateStr = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  ctx.fillText(dateStr.charAt(0).toUpperCase() + dateStr.slice(1), 64, 232);
+
+  ctx.strokeStyle = d.styled ? "#c94d28" : "#333";
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(64, 270); ctx.lineTo(W - 64, 270); ctx.stroke();
+
+  const stats = [
+    { label: "VOLUME", value: `${Math.round(d.totalVolume)} kg` },
+    { label: "SÉRIES", value: `${d.series}` },
+    { label: "RECORDS", value: `${d.prs} 🏆` },
+    { label: "DURÉE", value: `${d.mins} min` },
+    { label: "STREAK", value: `${d.streak} 🔥` },
+  ];
+  const colW = (W - 128) / stats.length;
+  stats.forEach((s, i) => {
+    const x = 64 + i * colW;
+    ctx.fillStyle = d.styled ? "#e8b33d" : "#ede8df";
+    ctx.font = "700 42px Arial";
+    ctx.fillText(s.value, x, 380);
+    ctx.fillStyle = "#8f8b84";
+    ctx.font = "400 19px Arial";
+    ctx.fillText(s.label, x, 415);
+  });
+
+  ctx.strokeStyle = d.styled ? "#c94d28" : "#333";
+  ctx.beginPath(); ctx.moveTo(64, 460); ctx.lineTo(W - 64, 460); ctx.stroke();
+
+  ctx.fillStyle = "#8f8b84";
+  ctx.font = "700 21px Arial";
+  ctx.fillText("EXERCICES PHARES", 64, 512);
+
+  let y = 572;
+  d.topExercises.forEach((ex, i) => {
+    ctx.textAlign = "left";
+    ctx.fillStyle = d.styled && i === 0 ? "#e8b33d" : "#ede8df";
+    ctx.font = "600 36px Arial";
+    const name = ex.name.length > 24 ? ex.name.slice(0, 23) + "…" : ex.name;
+    ctx.fillText(name, 64, y);
+    ctx.textAlign = "right";
+    ctx.fillStyle = d.styled ? "#c94d28" : "#8f8b84";
+    ctx.fillText(`${ex.weight} kg`, W - 64, y);
+    y += 64;
+  });
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#8f8b84";
+  ctx.font = "400 23px Arial";
+  ctx.fillText("gym-ai-coach-1wls.onrender.com", W / 2, H - 60);
+
+  if (d.styled) {
+    const barGrad = ctx.createLinearGradient(0, H - 8, W, H - 8);
+    barGrad.addColorStop(0, "#c94d28");
+    barGrad.addColorStop(1, "#e8b33d");
+    ctx.fillStyle = barGrad;
+    ctx.fillRect(0, H - 8, W, 8);
+  }
+}
+
+function showShareModal(canvas) {
+  document.getElementById("share-modal-overlay")?.remove();
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.id = "share-modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-card" style="max-width:420px">
+      <button class="modal-close" type="button" id="share-modal-close">✕</button>
+      <h2 style="margin-bottom:14px">Partager ma séance</h2>
+      <img src="${canvas.toDataURL("image/png")}" style="width:100%;border-radius:12px;margin-bottom:16px;display:block" alt="Aperçu de la séance à partager"/>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="share-download-btn" type="button" style="flex:1">⬇️ Télécharger</button>
+        <button class="btn btn-ghost" id="share-native-btn" type="button" style="flex:1">📤 Partager</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const close = () => overlay.remove();
+  document.getElementById("share-modal-close").addEventListener("click", close);
+  overlay.addEventListener("click", e => { if (e.target === overlay) close(); });
+
+  document.getElementById("share-download-btn").addEventListener("click", () => {
+    canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `gym-ai-coach-seance-${dayStr(new Date())}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }, "image/png");
+  });
+
+  const nativeBtn = document.getElementById("share-native-btn");
+  if (!navigator.share || !navigator.canShare) {
+    nativeBtn.style.display = "none";
+  } else {
+    nativeBtn.addEventListener("click", () => {
+      canvas.toBlob(async blob => {
+        const file = new File([blob], "seance-gym-ai-coach.png", { type: "image/png" });
+        if (navigator.canShare({ files: [file] })) {
+          try { await navigator.share({ files: [file], title: "Ma séance Gym AI Coach" }); } catch {}
+        }
+      }, "image/png");
+    });
+  }
+}
+
+function dayStr(d) {
+  const dt = new Date(d);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
 }
 
 function esc(str) {
