@@ -1,5 +1,6 @@
 const express = require("express");
 const pool = require("../db/pool");
+const { generateUsername } = require("../services/username");
 const router = express.Router();
 
 const GOOGLE_CLIENT_ID     = process.env.GOOGLE_CLIENT_ID;
@@ -87,9 +88,11 @@ router.get("/google/callback", async (req, res) => {
           [googleUser.id, googleUser.picture, userId]);
       } else {
         // Nouveau compte
+        const displayName = googleUser.given_name || googleUser.name;
+        const username = await generateUsername(displayName);
         const r = await pool.query(
-          "INSERT INTO users (email, name, google_id, avatar_url, role) VALUES ($1,$2,$3,$4,'user') RETURNING id",
-          [googleUser.email.toLowerCase(), googleUser.given_name || googleUser.name, googleUser.id, googleUser.picture]
+          "INSERT INTO users (email, name, google_id, avatar_url, role, username) VALUES ($1,$2,$3,$4,'user',$5) RETURNING id",
+          [googleUser.email.toLowerCase(), displayName, googleUser.id, googleUser.picture, username]
         );
         userId = r.rows[0].id;
       }

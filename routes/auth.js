@@ -4,6 +4,7 @@ const rateLimit = require("express-rate-limit");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
 const { stripHtml } = require("../middleware/sanitize");
+const { generateUsername } = require("../services/username");
 
 const router = express.Router();
 
@@ -36,9 +37,11 @@ router.post("/register", authLimiter, async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const cleanName = stripHtml(name);
+    const username = await generateUsername(cleanName);
     const result = await pool.query(
-      "INSERT INTO users (email, password_hash, name) VALUES ($1, $2, $3) RETURNING id, email, name",
-      [email.toLowerCase().trim(), passwordHash, stripHtml(name)]
+      "INSERT INTO users (email, password_hash, name, username) VALUES ($1, $2, $3, $4) RETURNING id, email, name",
+      [email.toLowerCase().trim(), passwordHash, cleanName, username]
     );
 
     const user = result.rows[0];

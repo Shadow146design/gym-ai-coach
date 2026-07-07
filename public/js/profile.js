@@ -41,6 +41,14 @@ function renderIdentity() {
   const since = new Date(user.created_at).toLocaleDateString("fr-FR", { year: "numeric", month: "long", day: "numeric" });
   document.getElementById("profile-since").textContent = `Membre depuis le ${since}`;
 
+  const publicBtn = document.getElementById("public-profile-btn");
+  if (user.public_profile && user.username) {
+    publicBtn.href = `/u/${user.username}`;
+    publicBtn.classList.remove("hidden");
+  } else {
+    publicBtn.classList.add("hidden");
+  }
+
   document.getElementById("edit-name").value = user.name || "";
   document.getElementById("edit-avatar").value = user.avatar_url || "";
 }

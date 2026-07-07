@@ -22,6 +22,7 @@ const weightRoutes   = require("./routes/weight");
 const badgesRoutes   = require("./routes/badges");
 const wellnessRoutes = require("./routes/wellness");
 const competitionRoutes = require("./routes/competition");
+const publicProfileRoutes = require("./routes/publicProfile");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -66,7 +67,13 @@ app.use("/api/weight",  weightRoutes);
 app.use("/api/badges",  badgesRoutes);
 app.use("/api/wellness", wellnessRoutes);
 app.use("/api/competition", competitionRoutes);
+app.use("/api/users",    publicProfileRoutes);
 app.use("/auth",         oauthRoutes);
+
+// Profil public a URL courte (fonctionnalite 7) : sert la meme page HTML
+// pour tout /u/:username, u.js lit le username depuis le chemin et appelle
+// GET /api/users/profile/:username en client.
+app.get("/u/:username", (req, res) => res.sendFile(path.join(__dirname, "public", "u.html")));
 
 app.use(express.static(path.join(__dirname, "public")));
 app.get("/healthz", (req, res) => res.json({ ok: true }));

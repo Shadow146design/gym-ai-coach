@@ -69,6 +69,7 @@ const I18N_DICT = {
   settings_privacy:         { fr: "🔐 Confidentialité", en: "🔐 Privacy" },
   settings_privacy_profile: { fr: "Rendre mon profil visible aux coaches", en: "Make my profile visible to coaches" },
   settings_privacy_stats:   { fr: "Autoriser les coaches à voir mes stats", en: "Allow coaches to see my stats" },
+  settings_privacy_public:  { fr: "Rendre mon profil public (partageable via un lien)", en: "Make my profile public (shareable link)" },
   settings_connected:  { fr: "🔗 Compte connecté", en: "🔗 Connected account" },
   settings_subscription: { fr: "💳 Abonnement", en: "💳 Subscription" },
   settings_sub_plan:    { fr: "Formule actuelle", en: "Current plan" },

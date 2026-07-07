@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS users (
   stats_visible_to_coaches   BOOLEAN NOT NULL DEFAULT TRUE,
   theme           TEXT DEFAULT 'dark',
   banned          BOOLEAN NOT NULL DEFAULT FALSE,
+  username        TEXT UNIQUE,
+  public_profile  BOOLEAN NOT NULL DEFAULT FALSE,
   created_at      TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -41,6 +43,8 @@ DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='target_weight_kg') THEN ALTER TABLE users ADD COLUMN target_weight_kg NUMERIC; END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='profile_visible_to_coaches') THEN ALTER TABLE users ADD COLUMN profile_visible_to_coaches BOOLEAN NOT NULL DEFAULT TRUE; END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='stats_visible_to_coaches')   THEN ALTER TABLE users ADD COLUMN stats_visible_to_coaches BOOLEAN NOT NULL DEFAULT TRUE; END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='username')         THEN ALTER TABLE users ADD COLUMN username TEXT UNIQUE; END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='public_profile')   THEN ALTER TABLE users ADD COLUMN public_profile BOOLEAN NOT NULL DEFAULT FALSE; END IF;
 END $$;
 
 CREATE TABLE IF NOT EXISTS coach_profiles (

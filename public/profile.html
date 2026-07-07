@@ -30,7 +30,10 @@
         <div id="profile-role-badge" style="margin-top:6px"></div>
         <div class="identity-since" id="profile-since">—</div>
       </div>
-      <button class="btn btn-ghost btn-sm" type="button" onclick="toggleIdentityEdit()">Modifier</button>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-ghost btn-sm" type="button" onclick="toggleIdentityEdit()">Modifier</button>
+        <a class="btn btn-ghost btn-sm hidden" id="public-profile-btn" href="#" target="_blank" rel="noopener noreferrer">Voir mon profil public</a>
+      </div>
     </div>
     <div id="identity-edit" class="hidden" style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border-soft)">
       <div class="field"><label for="edit-name">Nom complet</label><input id="edit-name" type="text"/></div>

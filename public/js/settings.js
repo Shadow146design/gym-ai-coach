@@ -64,6 +64,8 @@ async function loadProfileData() {
 
     document.getElementById("privacy-profile").checked = user.profile_visible_to_coaches !== false;
     document.getElementById("privacy-stats").checked = user.stats_visible_to_coaches !== false;
+    document.getElementById("privacy-public-profile").checked = !!user.public_profile;
+    renderPublicProfileLink(user);
 
     renderGoogleStatus(user);
 
@@ -71,6 +73,27 @@ async function loadProfileData() {
       subscription?.plan === "premium" ? "Premium ⭐" : subscription?.plan === "coach" ? "Coach 🎛️" : "Gratuit";
   } catch {}
 }
+
+function renderPublicProfileLink(user) {
+  const el = document.getElementById("public-profile-link");
+  if (!user.public_profile || !user.username) { el.innerHTML = ""; return; }
+  const url = `${window.location.origin}/u/${user.username}`;
+  el.innerHTML = `Ton profil public : <a href="${url}" target="_blank" rel="noopener noreferrer" style="color:var(--rust-soft)">${url}</a>`;
+}
+
+async function savePublicProfile() {
+  const checked = document.getElementById("privacy-public-profile").checked;
+  try {
+    const res = await fetch("/api/profile/public-profile", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ public_profile: checked }),
+    });
+    const json = await res.json();
+    if (res.ok) renderPublicProfileLink({ public_profile: json.public_profile, username: json.username });
+  } catch {}
+}
+document.getElementById("privacy-public-profile").addEventListener("change", savePublicProfile);
 
 function renderGoogleStatus(user) {
   const el = document.getElementById("google-status");

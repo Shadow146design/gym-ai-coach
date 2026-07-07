@@ -2,6 +2,7 @@ const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
 const { stripHtml } = require("../middleware/sanitize");
+const { ensureUsername } = require("../services/username");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -35,7 +36,8 @@ router.get("/full", async (req, res) => {
       `SELECT name, email, role, avatar_url, created_at, google_id,
               weight_kg, height_cm, age, gender, activity_level,
               main_goal, goal_date, personal_note, target_weight_kg,
-              profile_visible_to_coaches, stats_visible_to_coaches
+              profile_visible_to_coaches, stats_visible_to_coaches,
+              username, public_profile
        FROM users WHERE id=$1`,
       [uid]
     );
@@ -144,6 +146,25 @@ router.put("/privacy", async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error("Erreur PUT /profile/privacy :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+// Active/desactive le profil public (fonctionnalite 7). Genere le username
+// a la volee si le compte n'en a pas encore (ex: cree avant cette feature).
+router.put("/public-profile", async (req, res) => {
+  try {
+    const uid = req.session.userId;
+    const publicProfile = !!req.body.public_profile;
+    if (publicProfile) await ensureUsername(uid);
+
+    const r = await pool.query(
+      "UPDATE users SET public_profile=$1 WHERE id=$2 RETURNING username, public_profile",
+      [publicProfile, uid]
+    );
+    res.json({ ok: true, username: r.rows[0].username, public_profile: r.rows[0].public_profile });
+  } catch (err) {
+    console.error("Erreur PUT /profile/public-profile :", err);
     res.status(500).json({ error: "Erreur serveur." });
   }
 });
