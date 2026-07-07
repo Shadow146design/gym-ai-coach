@@ -178,6 +178,17 @@ CREATE TABLE IF NOT EXISTS user_badges (
 );
 CREATE INDEX IF NOT EXISTS idx_user_badges_user ON user_badges(user_id);
 
+CREATE TABLE IF NOT EXISTS coach_reviews (
+  id         SERIAL PRIMARY KEY,
+  coach_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  client_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  rating     INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  comment    TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE(coach_id, client_id)
+);
+CREATE INDEX IF NOT EXISTS idx_coach_reviews_coach ON coach_reviews(coach_id);
+
 CREATE TABLE IF NOT EXISTS referrals (
   id          SERIAL PRIMARY KEY,
   referrer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

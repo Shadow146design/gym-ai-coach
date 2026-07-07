@@ -78,6 +78,7 @@ async function init() {
           <div style="font-weight:600">${esc(coach.name)}</div>
           <div style="font-size:.78rem;color:var(--chalk-dim);display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span>${coach.client_count} client${coach.client_count>1?"s":""} • ${price}</span>
+            ${coach.avg_rating ? `<span style="color:var(--gold)">⭐ ${coach.avg_rating} — ${coach.review_count} avis</span>` : `<span>Pas encore d'avis</span>`}
             ${needsPremium ? `<span class="sidebar-badge badge-premium">Premium requis</span>` : ""}
           </div>
         </div>

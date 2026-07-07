@@ -2202,6 +2202,11 @@ body.landing { overflow-x: hidden; }
 .comp-volume { font-family: var(--font-mono); font-size: 1.1rem; color: var(--chalk); flex-shrink: 0; }
 .comp-volume span { font-size: .75rem; color: var(--chalk-dim); }
 
+/* Notation des coaches (fonctionnalite 6) */
+.review-stars { display: flex; gap: 6px; font-size: 1.6rem; }
+.review-star { color: var(--chalk-faint); cursor: pointer; transition: color .12s; line-height: 1; }
+.review-star:hover, .review-star.active { color: var(--gold); }
+
 .wellness-slider-group { text-align: left; margin-bottom: 18px; }
 .wellness-slider-group label {
   display: flex; justify-content: space-between; font-size: .82rem;

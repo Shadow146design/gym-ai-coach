@@ -65,6 +65,69 @@ async function openConversation(withId) {
 
   pollInterval = setInterval(() => refreshMessages(withId), 3000);
   loadConversations();
+  maybeShowReviewInvite(withId);
+}
+
+// ── Notation du coach (fonctionnalité 6) ──────────────────
+async function maybeShowReviewInvite(coachId) {
+  const box = document.getElementById("review-invite");
+  box.classList.add("hidden");
+  box.innerHTML = "";
+  try {
+    const mine = await fetch("/api/coaches/mine").then(r => r.json());
+    const a = mine.assignment;
+    if (!a || a.coach_id !== coachId || a.status !== "active") return;
+
+    const daysSince = (Date.now() - new Date(a.since)) / 86400000;
+    if (daysSince < 30) return;
+
+    const mineReview = await fetch(`/api/coaches/${coachId}/my-review`).then(r => r.json());
+    if (mineReview.review) return;
+
+    renderReviewInvite(coachId);
+  } catch {}
+}
+
+function renderReviewInvite(coachId) {
+  const box = document.getElementById("review-invite");
+  box.classList.remove("hidden");
+  box.innerHTML = `
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-title">⭐ Note ton coach</div>
+      <p class="muted" style="font-size:.85rem;margin-bottom:10px">Ça fait 30 jours que tu es suivi(e) — partage ton avis pour aider les autres membres.</p>
+      <div class="review-stars" id="review-stars">
+        ${[1,2,3,4,5].map(n => `<span class="review-star" data-val="${n}">★</span>`).join("")}
+      </div>
+      <textarea id="review-comment" maxlength="500" placeholder="Ton avis (optionnel)" style="margin:10px 0;width:100%"></textarea>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" type="button" id="review-submit-btn" disabled>Envoyer</button>
+        <button class="btn btn-ghost btn-sm" type="button" id="review-dismiss-btn">Plus tard</button>
+      </div>
+    </div>`;
+
+  let selectedRating = 0;
+  const stars = box.querySelectorAll(".review-star");
+  stars.forEach(star => {
+    star.addEventListener("click", () => {
+      selectedRating = parseInt(star.dataset.val, 10);
+      stars.forEach(s => s.classList.toggle("active", parseInt(s.dataset.val, 10) <= selectedRating));
+      document.getElementById("review-submit-btn").disabled = false;
+    });
+  });
+
+  document.getElementById("review-dismiss-btn").addEventListener("click", () => box.classList.add("hidden"));
+  document.getElementById("review-submit-btn").addEventListener("click", async () => {
+    if (!selectedRating) return;
+    const comment = document.getElementById("review-comment").value.trim();
+    try {
+      const res = await fetch(`/api/coaches/${coachId}/review`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating: selectedRating, comment }),
+      });
+      if (res.ok) box.innerHTML = `<div class="card" style="margin-bottom:10px"><p style="font-size:.88rem;color:var(--green)">Merci pour ton avis ! ✓</p></div>`;
+    } catch {}
+  });
 }
 
 async function refreshMessages(withId) {

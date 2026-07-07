@@ -9,11 +9,82 @@ router.get("/", async (req, res) => {
   try {
     const r = await pool.query(`
       SELECT u.id, u.name, u.avatar_url, cp.bio, cp.specialties, cp.price_monthly, cp.available,
-        (SELECT COUNT(*) FROM coach_assignments ca WHERE ca.coach_id=u.id AND ca.status='active') AS client_count
+        (SELECT COUNT(*) FROM coach_assignments ca WHERE ca.coach_id=u.id AND ca.status='active') AS client_count,
+        (SELECT ROUND(AVG(rating),1) FROM coach_reviews WHERE coach_id=u.id) AS avg_rating,
+        (SELECT COUNT(*) FROM coach_reviews WHERE coach_id=u.id) AS review_count
       FROM users u JOIN coach_profiles cp ON cp.user_id=u.id
       WHERE u.role IN ('coach','admin') AND cp.available=TRUE
       ORDER BY u.name`);
-    res.json({ coaches: r.rows });
+    res.json({ coaches: r.rows.map(c => ({ ...c, avg_rating: c.avg_rating ? Number(c.avg_rating) : null, review_count: parseInt(c.review_count, 10) })) });
+  } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
+});
+
+// ── Notation des coaches (fonctionnalite 6) ───────────────
+// Liste publique des avis + moyenne.
+router.get("/:id/reviews", async (req, res) => {
+  try {
+    const coachId = parseInt(req.params.id);
+    const [reviewsR, aggR] = await Promise.all([
+      pool.query(
+        `SELECT cr.id, cr.rating, cr.comment, cr.created_at, u.name AS client_name
+         FROM coach_reviews cr JOIN users u ON u.id=cr.client_id
+         WHERE cr.coach_id=$1 ORDER BY cr.created_at DESC`,
+        [coachId]
+      ),
+      pool.query("SELECT ROUND(AVG(rating),1) AS avg, COUNT(*) AS n FROM coach_reviews WHERE coach_id=$1", [coachId]),
+    ]);
+    res.json({
+      reviews: reviewsR.rows,
+      avgRating: aggR.rows[0].avg ? Number(aggR.rows[0].avg) : null,
+      count: parseInt(aggR.rows[0].n, 10) || 0,
+    });
+  } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
+});
+
+// L'avis (eventuel) du client connecte pour ce coach, pour savoir s'il a
+// deja note (et pre-remplir le formulaire d'edition).
+router.get("/:id/my-review", requireAuth, async (req, res) => {
+  try {
+    const r = await pool.query(
+      "SELECT rating, comment FROM coach_reviews WHERE coach_id=$1 AND client_id=$2",
+      [req.params.id, req.session.userId]
+    );
+    res.json({ review: r.rows[0] || null });
+  } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
+});
+
+// Poser / mettre a jour son avis. Reserve aux clients ayant (ou ayant eu)
+// une relation avec ce coach.
+router.post("/:id/review", requireAuth, async (req, res) => {
+  try {
+    const coachId = parseInt(req.params.id);
+    const clientId = req.session.userId;
+    const rating = parseInt(req.body.rating, 10);
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: "La note doit être un entier entre 1 et 5." });
+    }
+    const comment = (req.body.comment || "").toString().trim().slice(0, 500) || null;
+
+    const assignR = await pool.query(
+      "SELECT id FROM coach_assignments WHERE coach_id=$1 AND client_id=$2 AND status IN ('active','ended')",
+      [coachId, clientId]
+    );
+    if (!assignR.rows.length) return res.status(403).json({ error: "Tu dois avoir été suivi par ce coach pour le noter." });
+
+    await pool.query(
+      `INSERT INTO coach_reviews (coach_id, client_id, rating, comment) VALUES ($1,$2,$3,$4)
+       ON CONFLICT (coach_id, client_id) DO UPDATE SET rating=$3, comment=$4`,
+      [coachId, clientId, rating, comment]
+    );
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
+});
+
+// Suppression par un admin (moderation)
+router.delete("/reviews/:reviewId", requireRole("admin"), async (req, res) => {
+  try {
+    await pool.query("DELETE FROM coach_reviews WHERE id=$1", [req.params.reviewId]);
+    res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
 });
 
@@ -49,7 +120,7 @@ router.post("/:id/request", requireAuth, async (req, res) => {
 router.get("/mine", requireAuth, async (req, res) => {
   try {
     const r = await pool.query(`
-      SELECT ca.id, ca.status, u.id AS coach_id, u.name, u.avatar_url, cp.bio, cp.specialties
+      SELECT ca.id, ca.status, ca.created_at AS since, u.id AS coach_id, u.name, u.avatar_url, cp.bio, cp.specialties
       FROM coach_assignments ca
       JOIN users u ON u.id=ca.coach_id
       JOIN coach_profiles cp ON cp.user_id=u.id
