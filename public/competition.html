@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Compétition — Gym AI Coach</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#c94d28"/>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<div class="page-wrapper">
+<div class="shell">
+  <div class="page-head">
+    <div>
+      <h1>🏆 Mode compétition</h1>
+      <p class="sub muted">Classement du volume total soulevé cette semaine.</p>
+    </div>
+    <div class="comp-reset-timer">
+      <span class="muted" style="font-size:.78rem">Reset dans</span>
+      <span id="comp-reset-countdown" class="mono">--:--:--</span>
+    </div>
+  </div>
+
+  <div id="comp-your-rank" class="card hidden" style="margin-bottom:20px"></div>
+  <div id="comp-gate" class="hidden"></div>
+
+  <div id="comp-leaderboard" class="comp-leaderboard"></div>
+  <div id="comp-empty" class="empty-state hidden">
+    <h3>Personne au classement cette semaine</h3>
+    <p class="muted" style="margin-top:8px">Sois le premier à valider une séance !</p>
+  </div>
+</div>
+
+<footer>Gym AI Coach</footer>
+</div>
+<script src="/js/premium-gate.js"></script>
+<script src="/js/competition.js"></script>
+<script src="/js/i18n.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/pwa.js"></script>
+</body>
+</html>
