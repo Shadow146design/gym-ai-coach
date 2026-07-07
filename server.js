@@ -25,6 +25,8 @@ const competitionRoutes = require("./routes/competition");
 const publicProfileRoutes = require("./routes/publicProfile");
 const referralRoutes = require("./routes/referral");
 const photosRoutes = require("./routes/photos");
+const emailRoutes = require("./routes/email");
+const { sendReminderEmail, sendWeeklyRecapEmail } = require("./services/email");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -72,6 +74,7 @@ app.use("/api/competition", competitionRoutes);
 app.use("/api/users",    publicProfileRoutes);
 app.use("/api/referral", referralRoutes);
 app.use("/api/photos",   photosRoutes);
+app.use("/api/email",    emailRoutes);
 app.use("/auth",         oauthRoutes);
 
 // Profil public a URL courte (fonctionnalite 7) : sert la meme page HTML
@@ -103,5 +106,62 @@ async function expireReferralPremium() {
 }
 setInterval(expireReferralPremium, 60 * 60 * 1000);
 expireReferralPremium();
+
+// Emails automatiques (fonctionnalite 4) : rappel d'inactivite (5+ jours
+// sans seance) et recap hebdomadaire (chaque lundi, Premium uniquement).
+// La table rate_limits sert de marqueur "deja envoye" pour ne pas spammer
+// a chaque execution horaire du cron (action='inactivity_reminder'/'weekly_recap').
+async function runEmailAutomations() {
+  try {
+    const now = new Date();
+
+    const inactiveR = await pool.query(`
+      SELECT u.id, u.email, u.name, MAX(l.performed_at) AS last_session
+      FROM users u JOIN logs l ON l.user_id = u.id
+      GROUP BY u.id
+      HAVING MAX(l.performed_at) < NOW() - INTERVAL '5 days'
+    `);
+    for (const u of inactiveR.rows) {
+      const rl = await pool.query("SELECT reset_at FROM rate_limits WHERE user_id=$1 AND action='inactivity_reminder'", [u.id]);
+      if (rl.rows[0] && new Date(rl.rows[0].reset_at) > now) continue;
+
+      const daysSince = Math.floor((now - new Date(u.last_session)) / 86400000);
+      await sendReminderEmail(u.email, u.name, daysSince);
+      await pool.query(
+        `INSERT INTO rate_limits (user_id, action, count, reset_at) VALUES ($1,'inactivity_reminder',1,$2)
+         ON CONFLICT (user_id, action) DO UPDATE SET count=1, reset_at=$2`,
+        [u.id, new Date(now.getTime() + 3 * 86400000)]
+      );
+    }
+
+    if (now.getDay() === 1) { // Lundi
+      const premiumR = await pool.query("SELECT id, email, name FROM users WHERE role IN ('premium','coach')");
+      for (const u of premiumR.rows) {
+        const rl = await pool.query("SELECT reset_at FROM rate_limits WHERE user_id=$1 AND action='weekly_recap'", [u.id]);
+        if (rl.rows[0] && new Date(rl.rows[0].reset_at) > now) continue;
+
+        const statsR = await pool.query(
+          `SELECT COUNT(DISTINCT performed_at::date) AS sessions, COALESCE(SUM(weight*reps*sets),0) AS volume
+           FROM logs WHERE user_id=$1 AND performed_at >= NOW() - INTERVAL '7 days'`,
+          [u.id]
+        );
+        const stats = statsR.rows[0];
+        const sessions = parseInt(stats.sessions, 10) || 0;
+        const nextMonday = new Date(now.getTime() + 7 * 86400000);
+
+        if (sessions > 0) {
+          await sendWeeklyRecapEmail(u.email, u.name, { sessions, volume: Number(stats.volume), prs: 0 });
+        }
+        await pool.query(
+          `INSERT INTO rate_limits (user_id, action, count, reset_at) VALUES ($1,'weekly_recap',1,$2)
+           ON CONFLICT (user_id, action) DO UPDATE SET count=1, reset_at=$2`,
+          [u.id, nextMonday]
+        );
+      }
+    }
+  } catch (e) { console.error("Erreur automatisations email :", e); }
+}
+setInterval(runEmailAutomations, 60 * 60 * 1000);
+runEmailAutomations();
 
 app.listen(PORT, () => console.log(`Gym AI Coach v4 — port ${PORT}`));

@@ -1,6 +1,7 @@
 const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
+const { sendBadgeUnlockedEmail } = require("../services/email");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -100,6 +101,11 @@ async function unlockBadge(uid, badgeId) {
     `INSERT INTO notifications (user_id, type, message, link) VALUES ($1,'badge_unlocked',$2,'/profile.html')`,
     [uid, `${def?.icon || "🏅"} Badge débloqué : ${def?.title || badgeId} !`]
   ).catch(e => console.error("Erreur notif badge :", e));
+
+  pool.query("SELECT email, name FROM users WHERE id=$1", [uid])
+    .then(r => r.rows[0] && def && sendBadgeUnlockedEmail(r.rows[0].email, r.rows[0].name, def.title, def.icon))
+    .catch(e => console.error("Erreur email badge :", e));
+
   return true;
 }
 

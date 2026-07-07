@@ -5,6 +5,7 @@ const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
 const { stripHtml } = require("../middleware/sanitize");
 const { generateUsername } = require("../services/username");
+const { sendWelcomeEmail } = require("../services/email");
 
 const router = express.Router();
 
@@ -46,6 +47,8 @@ router.post("/register", authLimiter, async (req, res) => {
 
     const user = result.rows[0];
     req.session.userId = user.id;
+
+    sendWelcomeEmail(user.email, user.name).catch(e => console.error("Erreur email bienvenue :", e));
 
     // Parrainage (fonctionnalité 5) : lie le nouveau compte à son parrain si
     // ?ref=USERNAME était présent. Echec silencieux (referrer inconnu) : ce

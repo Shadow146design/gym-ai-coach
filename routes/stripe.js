@@ -3,6 +3,7 @@ const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
 const { checkAndUnlockBadges } = require("./badges");
 const { grantReferralReward } = require("./referral");
+const { sendPremiumConfirmationEmail } = require("../services/email");
 
 const router = express.Router();
 
@@ -141,6 +142,10 @@ async function syncSubscriptionFromStripeObject(sub) {
      ON CONFLICT (stripe_subscription_id) DO UPDATE SET plan=$4, status='active', updated_at=NOW()`,
     [userId, sub.customer, sub.id, plan]
   );
+
+  pool.query("SELECT email, name FROM users WHERE id=$1", [userId])
+    .then(r => r.rows[0] && sendPremiumConfirmationEmail(r.rows[0].email, r.rows[0].name))
+    .catch(e => console.error("Erreur email confirmation premium :", e));
 
   // Recompense de parrainage (fonctionnalite 5) : ce nouvel abonne premium
   // etait peut-etre parraine par quelqu'un dont la recompense est en attente.
