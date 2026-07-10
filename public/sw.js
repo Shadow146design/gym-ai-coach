@@ -1,4 +1,4 @@
-const CACHE_NAME = "gym-ai-coach-v5";
+const CACHE_NAME = "gym-ai-coach-v6";
 const STATIC_ASSETS = [
   "/css/style.css",
   "/js/sidebar.js",

@@ -1,6 +1,7 @@
 let allUsers = [];
 
 async function testEmail() {
+  console.log("bouton cliqué");
   const btn = document.getElementById("test-email-btn");
   const status = document.getElementById("test-email-status");
   btn.disabled = true;
@@ -125,5 +126,7 @@ function filterUsers(q) {
 }
 
 function esc(s) { const d=document.createElement("div"); d.textContent=String(s||""); return d.innerHTML; }
+
+document.getElementById("test-email-btn")?.addEventListener("click", testEmail);
 
 init();
