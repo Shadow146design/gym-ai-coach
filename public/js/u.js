@@ -29,7 +29,7 @@ async function init() {
         </div>`;
       return;
     }
-    const { user, stats, topRecords, badgeCount, activeProgramTitle } = await res.json();
+    const { user, stats, topRecords, badgeCount, activeProgramTitle, certifiedAt } = await res.json();
 
     const avatarHtml = user.avatar_url
       ? `<img src="${esc(user.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`
@@ -40,9 +40,10 @@ async function init() {
         <div class="identity-row">
           <div class="avatar-large" id="u-avatar">${avatarHtml}</div>
           <div class="identity-meta">
-            <div class="identity-name">${esc(user.name)}</div>
+            <div class="identity-name">${esc(user.name)}${certifiedAt ? ` <span title="Athlète Certifié Gym AI Coach">🎓</span>` : ""}</div>
             <div style="margin-top:6px">${roleBadgeHtml(user.role)}</div>
             <div class="identity-since">Membre depuis le ${new Date(user.memberSince).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</div>
+            ${certifiedAt ? `<div class="identity-since" style="color:var(--gold)">🎓 Athlète Certifié depuis le ${new Date(certifiedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</div>` : ""}
           </div>
         </div>
       </div>

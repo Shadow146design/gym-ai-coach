@@ -46,7 +46,7 @@ router.get("/profile/:username", async (req, res) => {
     }
 
     const uid = user.id;
-    const [daysR, recordsR, badgesR, progR] = await Promise.all([
+    const [daysR, recordsR, badgesR, progR, certR] = await Promise.all([
       pool.query("SELECT DISTINCT performed_at::date AS day FROM logs WHERE user_id=$1 ORDER BY day DESC", [uid]),
       pool.query(
         `SELECT exercise_name, MAX(weight) AS max_weight FROM logs WHERE user_id=$1
@@ -58,6 +58,7 @@ router.get("/profile/:username", async (req, res) => {
         "SELECT title FROM programs WHERE user_id=$1 AND is_active=TRUE ORDER BY created_at DESC LIMIT 1",
         [uid]
       ),
+      pool.query("SELECT unlocked_at FROM user_badges WHERE user_id=$1 AND badge_id='certified_athlete'", [uid]),
     ]);
 
     const days = daysR.rows.map(r => dayStr(r.day));
@@ -77,6 +78,7 @@ router.get("/profile/:username", async (req, res) => {
       topRecords: recordsR.rows.map(r => ({ exercise_name: r.exercise_name, max_weight: Number(r.max_weight) })),
       badgeCount: parseInt(badgesR.rows[0]?.n, 10) || 0,
       activeProgramTitle: progR.rows[0]?.title || null,
+      certifiedAt: certR.rows[0]?.unlocked_at ? dayStr(certR.rows[0].unlocked_at) : null,
     });
   } catch (err) {
     console.error("Erreur GET /users/profile/:username :", err);

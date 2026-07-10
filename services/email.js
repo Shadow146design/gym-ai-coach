@@ -127,6 +127,18 @@ async function sendMessageNotification(toEmail, toName, fromName, messagePreview
   });
 }
 
+async function sendCertificationEmail(to, name) {
+  return sendEmail({
+    to,
+    subject: "Tu es un Athlète Certifié Gym AI Coach 🎓",
+    html: wrapTemplate(
+      `Félicitations ${escapeHtml(name)} !`,
+      `Tu es maintenant un <strong>Athlète Certifié Gym AI Coach</strong> 🎓 — programme complété, régularité au rendez-vous. C'est une vraie reconnaissance de ton engagement, continue comme ça !`,
+      "Voir mon profil", `${APP_URL}/profile.html`
+    ),
+  });
+}
+
 async function sendPremiumConfirmationEmail(to, name) {
   return sendEmail({
     to,
@@ -147,4 +159,5 @@ module.exports = {
   sendBadgeUnlockedEmail,
   sendPremiumConfirmationEmail,
   sendMessageNotification,
+  sendCertificationEmail,
 };

@@ -110,6 +110,15 @@ if (_themePref === "system") {
       notifUnread = n?.unread || 0;
     } catch {}
 
+    // La route repond differemment pour un admin ({ certified: [...] }, la
+    // liste globale) que pour un utilisateur normal ({ certified: bool }) :
+    // on ignore le cas liste ici, seul le badge personnel nous interesse.
+    let certified = false;
+    try {
+      const c = await fetch("/api/badges/certified").then(r => r.ok ? r.json() : null);
+      certified = typeof c?.certified === "boolean" && c.certified;
+    } catch {}
+
     const items = NAV_ITEMS.filter(it => !(it.hideForRoles && it.hideForRoles.includes(role)));
 
     if (role === "coach" || role === "admin") {
@@ -177,7 +186,7 @@ if (_themePref === "system") {
         <div class="sidebar-user">
           <div class="sidebar-avatar">${avatarHtml}</div>
           <div class="user-info" style="flex:1;min-width:0">
-            <div style="font-size:.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(user.name)}</div>
+            <div style="font-size:.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(user.name)}${certified ? ` <span title="Athlète Certifié Gym AI Coach">🎓</span>` : ""}</div>
             ${roleBadge}
           </div>
           <a href="#" class="sidebar-logout" id="sidebar-logout" title="${esc(t("nav_logout"))}">⏻</a>

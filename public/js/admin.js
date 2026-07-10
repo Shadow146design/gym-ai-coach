@@ -50,6 +50,24 @@ async function init() {
 
   allUsers = usersR.users || [];
   renderUsers(allUsers);
+  loadCertifiedList();
+}
+
+async function loadCertifiedList() {
+  const container = document.getElementById("certified-list");
+  try {
+    const r = await fetch("/api/badges/certified").then(res => res.json());
+    const certified = r.certified || [];
+    container.innerHTML = certified.length
+      ? certified.map(c => `
+        <div class="stat-row">
+          <span>${esc(c.name)} <span class="muted" style="font-size:.8rem">${esc(c.email)}</span></span>
+          <span class="stat-val">${new Date(c.unlocked_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</span>
+        </div>`).join("")
+      : `<p class="muted" style="font-size:.85rem">Aucun athlète certifié pour l'instant.</p>`;
+  } catch {
+    container.innerHTML = `<p class="muted" style="font-size:.85rem">Impossible de charger la liste.</p>`;
+  }
 }
 
 function renderUsers(users) {

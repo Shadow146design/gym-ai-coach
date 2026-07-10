@@ -1,7 +1,7 @@
 const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
-const { sendBadgeUnlockedEmail } = require("../services/email");
+const { sendBadgeUnlockedEmail, sendCertificationEmail } = require("../services/email");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -40,7 +40,10 @@ const BADGE_DEFS = [
   { id: "night_owl",      icon: "🦉", title: "Oiseau de nuit",         desc: "Une séance après 22h",                metric: "nightOwl",     target: 1 },
   { id: "premium_member", icon: "⭐", title: "Membre Premium",         desc: "Passer à la formule Premium",         metric: "premium",      target: 1 },
   { id: "social_share",   icon: "📱", title: "Partage social",         desc: "Avoir partagé une séance",            metric: "share",        target: 1, manual: true },
+  { id: "certified_athlete", icon: "🎓", title: "Athlète Certifié",    desc: "Programme 12 semaines complété, 100 séances, ou 1 an de streak", metric: "certification", target: 1, manual: true },
 ];
+
+const CERTIFICATION_BADGE_ID = "certified_athlete";
 
 async function computeMetrics(uid) {
   const [daysR, prR, volR, dayVolR, timeR, userR] = await Promise.all([
@@ -97,16 +100,76 @@ async function unlockBadge(uid, badgeId) {
   if (!r.rows.length) return false;
 
   const def = BADGE_DEFS.find(b => b.id === badgeId);
+  const isCertification = badgeId === CERTIFICATION_BADGE_ID;
+
   await pool.query(
     `INSERT INTO notifications (user_id, type, message, link) VALUES ($1,'badge_unlocked',$2,'/profile.html')`,
-    [uid, `${def?.icon || "🏅"} Badge débloqué : ${def?.title || badgeId} !`]
+    [uid, isCertification
+      ? "🎓 Félicitations ! Tu es maintenant un Athlète Certifié Gym AI Coach !"
+      : `${def?.icon || "🏅"} Badge débloqué : ${def?.title || badgeId} !`]
   ).catch(e => console.error("Erreur notif badge :", e));
 
   pool.query("SELECT email, name FROM users WHERE id=$1", [uid])
-    .then(r => r.rows[0] && def && sendBadgeUnlockedEmail(r.rows[0].email, r.rows[0].name, def.title, def.icon))
+    .then(r => {
+      if (!r.rows[0]) return;
+      if (isCertification) return sendCertificationEmail(r.rows[0].email, r.rows[0].name);
+      if (def) return sendBadgeUnlockedEmail(r.rows[0].email, r.rows[0].name, def.title, def.icon);
+    })
     .catch(e => console.error("Erreur email badge :", e));
 
   return true;
+}
+
+// Un programme "termine" 12 semaines consecutives avec au moins le nombre de
+// seances prevu par semaine (questionnaire.joursParSemaine) compte pour la
+// certification. On regarde tous les programmes de l'utilisateur (pas
+// seulement l'actif : un programme termine a pu etre remplace depuis).
+async function checkProgram12WeeksCompletion(uid) {
+  const progsR = await pool.query(
+    "SELECT questionnaire, program_start_date FROM programs WHERE user_id=$1 AND program_start_date IS NOT NULL",
+    [uid]
+  );
+  if (!progsR.rows.length) return false;
+
+  const logsR = await pool.query("SELECT DISTINCT performed_at::date AS day FROM logs WHERE user_id=$1", [uid]);
+  const loggedDays = new Set(logsR.rows.map(r => dayStr(r.day)));
+  const now = new Date();
+
+  for (const prog of progsR.rows) {
+    const targetPerWeek = parseInt(prog.questionnaire?.joursParSemaine, 10) || 3;
+    const start = new Date(prog.program_start_date);
+    const twelveWeeksLater = new Date(start.getTime() + 12 * 7 * 86400000);
+    if (twelveWeeksLater > now) continue; // 12 semaines pas encore ecoulees pour ce programme
+
+    let allWeeksOk = true;
+    for (let w = 0; w < 12 && allWeeksOk; w++) {
+      const weekStart = new Date(start.getTime() + w * 7 * 86400000);
+      let count = 0;
+      for (let d = 0; d < 7; d++) {
+        if (loggedDays.has(dayStr(new Date(weekStart.getTime() + d * 86400000)))) count++;
+      }
+      if (count < targetPerWeek) allWeeksOk = false;
+    }
+    if (allWeeksOk) return true;
+  }
+  return false;
+}
+
+// Verifie les 3 criteres de certification (fonctionnalite 7) et debloque le
+// badge special s'il ne l'est pas deja. Retourne true si nouvellement debloque.
+async function checkCertification(uid) {
+  const already = await pool.query(
+    "SELECT id FROM user_badges WHERE user_id=$1 AND badge_id=$2", [uid, CERTIFICATION_BADGE_ID]
+  );
+  if (already.rows.length) return false;
+
+  const metrics = await computeMetrics(uid);
+  const eligible = metrics.sessions >= 100
+    || metrics.bestStreak >= 365
+    || await checkProgram12WeeksCompletion(uid);
+
+  if (!eligible) return false;
+  return unlockBadge(uid, CERTIFICATION_BADGE_ID);
 }
 
 // A appeler apres toute action pertinente (nouveau log, abonnement, partage...).
@@ -125,6 +188,11 @@ async function checkAndUnlockBadges(uid) {
       if (await unlockBadge(uid, b.id)) newlyUnlocked.push(b.id);
     }
   }
+
+  if (!alreadyUnlocked.has(CERTIFICATION_BADGE_ID) && await checkCertification(uid)) {
+    newlyUnlocked.push(CERTIFICATION_BADGE_ID);
+  }
+
   return newlyUnlocked;
 }
 
@@ -166,6 +234,47 @@ router.post("/share", async (req, res) => {
     const unlocked = await unlockBadge(req.session.userId, "social_share");
     res.json({ ok: true, unlocked });
   } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
+});
+
+// Reponse selon le role : un admin recoit la liste complete des athletes
+// certifies (pour admin.html) ; un utilisateur normal recoit uniquement son
+// propre statut (utilise par la sidebar pour afficher le badge a cote du nom).
+router.get("/certified", async (req, res) => {
+  try {
+    const uid = req.session.userId;
+    const userR = await pool.query("SELECT role FROM users WHERE id=$1", [uid]);
+
+    if (userR.rows[0]?.role === "admin") {
+      const r = await pool.query(
+        `SELECT u.id, u.name, u.email, ub.unlocked_at
+         FROM user_badges ub JOIN users u ON u.id=ub.user_id
+         WHERE ub.badge_id=$1 ORDER BY ub.unlocked_at DESC`,
+        [CERTIFICATION_BADGE_ID]
+      );
+      return res.json({ certified: r.rows });
+    }
+
+    const ownR = await pool.query(
+      "SELECT unlocked_at FROM user_badges WHERE user_id=$1 AND badge_id=$2",
+      [uid, CERTIFICATION_BADGE_ID]
+    );
+    res.json({ certified: !!ownR.rows[0], certifiedAt: ownR.rows[0]?.unlocked_at || null });
+  } catch (err) {
+    console.error("Erreur GET /badges/certified :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+// Declenche manuellement la verification de certification (aussi appelee
+// automatiquement apres chaque nouveau log via checkAndUnlockBadges).
+router.post("/check-certification", async (req, res) => {
+  try {
+    const unlocked = await checkCertification(req.session.userId);
+    res.json({ ok: true, unlocked });
+  } catch (err) {
+    console.error("Erreur POST /badges/check-certification :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
 });
 
 module.exports = router;
