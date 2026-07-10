@@ -225,6 +225,12 @@ CREATE TABLE IF NOT EXISTS nutrition_logs (
 );
 CREATE INDEX IF NOT EXISTS idx_nutrition_logs_user ON nutrition_logs(user_id, date DESC);
 
+CREATE TABLE IF NOT EXISTS nutrition_plans (
+  user_id    INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  content    JSONB NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS "session" (
   "sid"    varchar NOT NULL COLLATE "default" PRIMARY KEY,
   "sess"   json NOT NULL,

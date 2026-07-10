@@ -1,7 +1,9 @@
 const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
+const { requirePremium } = require("../middleware/premium");
 const { computeNutritionGoals } = require("../services/nutrition");
+const { generateNutritionPlan } = require("../services/aiCoach");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -14,23 +16,30 @@ function dayStr(d) {
   return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
 }
 
+// Recupere le profil physique + l'objectif du programme actif, et calcule les
+// objectifs nutritionnels. Renvoie { profile, goals } avec goals=null si le
+// profil est incomplet — partage par GET /goals et POST /plan.
+async function loadProfileAndGoals(userId) {
+  const profileR = await pool.query(
+    "SELECT weight_kg, height_cm, age, gender, activity_level FROM users WHERE id=$1",
+    [userId]
+  );
+  const profile = profileR.rows[0];
+
+  const programR = await pool.query(
+    "SELECT questionnaire FROM programs WHERE user_id=$1 AND is_active=TRUE ORDER BY created_at DESC LIMIT 1",
+    [userId]
+  );
+  const objectif = programR.rows[0]?.questionnaire?.objectif || null;
+
+  return { profile, goals: computeNutritionGoals(profile, objectif) };
+}
+
 // Objectifs journaliers (calories/macros), calcules depuis le profil physique
 // et l'objectif du programme actif (musculation/seche/maintien).
 router.get("/goals", async (req, res) => {
   try {
-    const profileR = await pool.query(
-      "SELECT weight_kg, height_cm, age, gender, activity_level FROM users WHERE id=$1",
-      [req.session.userId]
-    );
-    const profile = profileR.rows[0];
-
-    const programR = await pool.query(
-      "SELECT questionnaire FROM programs WHERE user_id=$1 AND is_active=TRUE ORDER BY created_at DESC LIMIT 1",
-      [req.session.userId]
-    );
-    const objectif = programR.rows[0]?.questionnaire?.objectif || null;
-
-    const goals = computeNutritionGoals(profile, objectif);
+    const { goals } = await loadProfileAndGoals(req.session.userId);
     if (!goals) {
       return res.status(400).json({
         error: "Complète ton profil (poids, taille, âge) pour calculer tes besoins nutritionnels.",
@@ -90,6 +99,43 @@ router.post("/", async (req, res) => {
   } catch (err) {
     console.error("Erreur POST /nutrition :", err);
     res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+// Dernier plan alimentaire 7 jours genere (s'il existe)
+router.get("/plan", async (req, res) => {
+  try {
+    const r = await pool.query("SELECT content, created_at FROM nutrition_plans WHERE user_id=$1", [req.session.userId]);
+    res.json({ plan: r.rows[0]?.content || null, generatedAt: r.rows[0]?.created_at || null });
+  } catch (err) {
+    console.error("Erreur GET /nutrition/plan :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+// Genere (et remplace) le plan alimentaire 7 jours via l'IA — PREMIUM
+router.post("/plan", requirePremium, async (req, res) => {
+  try {
+    const { profile, goals } = await loadProfileAndGoals(req.session.userId);
+    if (!goals) {
+      return res.status(400).json({
+        error: "Complète ton profil (poids, taille, âge) pour générer un plan alimentaire.",
+        incomplete: true,
+      });
+    }
+
+    const plan = await generateNutritionPlan(profile, goals);
+
+    await pool.query(
+      `INSERT INTO nutrition_plans (user_id, content, created_at) VALUES ($1, $2, NOW())
+       ON CONFLICT (user_id) DO UPDATE SET content=$2, created_at=NOW()`,
+      [req.session.userId, JSON.stringify(plan)]
+    );
+
+    res.json({ plan });
+  } catch (err) {
+    console.error("Erreur POST /nutrition/plan :", err);
+    res.status(500).json({ error: err.message || "Erreur serveur." });
   }
 });
 

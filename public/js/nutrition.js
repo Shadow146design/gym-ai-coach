@@ -30,8 +30,10 @@ async function init() {
   renderGoals();
   renderToday();
   renderChart();
+  loadPlan();
 
   document.getElementById("nutrition-form").addEventListener("submit", saveToday);
+  document.getElementById("generate-plan-btn").addEventListener("click", generatePlan);
 }
 
 function renderGoals() {
@@ -191,6 +193,66 @@ function renderChart() {
       },
     },
   });
+}
+
+// ── Plan repas IA 7 jours (fonctionnalité 4, PREMIUM) ──────
+async function loadPlan() {
+  try {
+    const res = await fetch("/api/nutrition/plan");
+    if (!res.ok) return;
+    const { plan } = await res.json();
+    if (plan) renderPlan(plan);
+  } catch {}
+}
+
+async function generatePlan() {
+  const btn = document.getElementById("generate-plan-btn");
+  const content = document.getElementById("nutrition-plan-content");
+  btn.disabled = true;
+  content.innerHTML = `<p class="muted" style="font-size:.9rem">L'IA prépare ton plan alimentaire…</p>`;
+
+  try {
+    const res = await fetch("/api/nutrition/plan", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) {
+      if (data.upgrade_url) {
+        showPremiumModal(data.error, data.upgrade_url);
+        content.innerHTML = `<p class="muted" style="font-size:.9rem">Génère un plan alimentaire complet sur 7 jours, adapté à tes objectifs caloriques.</p>`;
+        return;
+      }
+      content.innerHTML = `<p class="muted" style="font-size:.9rem">${esc(data.error || "Erreur lors de la génération.")}</p>`;
+      return;
+    }
+    renderPlan(data.plan);
+  } catch {
+    content.innerHTML = `<p class="muted" style="font-size:.9rem">Impossible de joindre le serveur.</p>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderPlan(plan) {
+  const content = document.getElementById("nutrition-plan-content");
+  if (!plan?.days?.length) return;
+
+  content.innerHTML = plan.days.map(day => {
+    const totalCal = day.meals?.reduce((a, m) => a + (Number(m.calories) || 0), 0) || 0;
+    return `
+    <div style="margin-bottom:18px">
+      <div style="font-family:var(--font-display);font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;display:flex;justify-content:space-between">
+        <span>${esc(day.day)}</span>
+        <span class="muted" style="font-family:var(--font-mono);font-size:.78rem">${totalCal} kcal</span>
+      </div>
+      ${(day.meals || []).map(m => `
+        <div class="exercise-row" style="grid-template-columns:1fr auto">
+          <div>
+            <div class="ex-name">${esc(m.name)}</div>
+            <div class="ex-notes">${esc(m.description)}</div>
+          </div>
+          <div class="ex-meta">${m.calories || 0} kcal<br><span style="font-size:.72rem;color:var(--steel-soft)">P${m.proteins || 0} G${m.carbs || 0} L${m.fats || 0}</span></div>
+        </div>`).join("")}
+    </div>`;
+  }).join("");
 }
 
 init();

@@ -737,4 +737,74 @@ async function extractProgramParams(conversation) {
   };
 }
 
-module.exports = { generateProgram, chatWithCoach, debriefSession, dailyTip, analyzePlateau, extractProgramParams };
+// ── Plan nutritionnel 7 jours (fonctionnalité 4, PREMIUM) ──
+const NUTRITION_SYSTEM = `Tu es un coach en nutrition sportive. Tu génères des plans alimentaires
+simples et réalistes (pas de recettes compliquées, des aliments courants et faciles à trouver),
+adaptés à l'objectif et aux besoins caloriques/macros fournis. Réponds en français, uniquement
+avec un JSON valide de cette forme exacte :
+{
+  "days": [
+    {
+      "day": "Lundi",
+      "meals": [
+        { "name": "Petit-déjeuner", "description": "Flocons d'avoine 80g + whey 30g + banane", "calories": 650, "proteins": 40, "carbs": 90, "fats": 12 },
+        { "name": "Déjeuner", "description": "...", "calories": 0, "proteins": 0, "carbs": 0, "fats": 0 },
+        { "name": "Dîner", "description": "...", "calories": 0, "proteins": 0, "carbs": 0, "fats": 0 },
+        { "name": "Collation", "description": "...", "calories": 0, "proteins": 0, "carbs": 0, "fats": 0 }
+      ]
+    }
+  ]
+}
+Génère EXACTEMENT 7 jours (Lundi à Dimanche), chacun avec 3 repas principaux + 1 à 2 collations.
+La somme des calories/macros des repas d'un jour doit être proche (±5%) des objectifs journaliers
+fournis. Varie les aliments d'un jour à l'autre pour éviter la monotonie, tout en restant simple.`;
+
+async function generateNutritionPlan(profile, goals) {
+  if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY manquante.");
+  if (!goals) throw new Error("Objectifs nutritionnels manquants.");
+
+  const userPrompt = `━━ PROFIL ━━
+• Poids : ${profile.weight_kg || "?"} kg
+• Objectif : ${goals.goalLabel}
+
+━━ OBJECTIFS JOURNALIERS ━━
+• Calories : ${goals.calories} kcal
+• Protéines : ${goals.proteins} g
+• Glucides : ${goals.carbs} g
+• Lipides : ${goals.fats} g
+
+Génère maintenant le plan alimentaire JSON sur 7 jours adapté à ces objectifs.`;
+
+  const response = await fetch(GROQ_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: MODEL(),
+      temperature: 0.6,
+      max_tokens: 4000,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: NUTRITION_SYSTEM },
+        { role: "user", content: userPrompt },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const t = await response.text().catch(() => "");
+    throw new Error(`Erreur API Groq (${response.status}) : ${t}`);
+  }
+
+  const data = await response.json();
+  const raw = data.choices?.[0]?.message?.content;
+  if (!raw) throw new Error("Réponse vide de l'API Groq.");
+
+  let plan;
+  try { plan = JSON.parse(raw); }
+  catch { throw new Error("JSON invalide, réessaie."); }
+  if (!plan.days?.length) throw new Error("Plan incomplet, réessaie.");
+
+  return plan;
+}
+
+module.exports = { generateProgram, chatWithCoach, debriefSession, dailyTip, analyzePlateau, extractProgramParams, generateNutritionPlan };

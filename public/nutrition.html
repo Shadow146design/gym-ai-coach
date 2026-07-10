@@ -65,9 +65,18 @@
     </div>
 
     <!-- Graphe 30 jours -->
-    <div class="chart-wrap">
+    <div class="chart-wrap" style="margin-bottom:20px">
       <div class="card-title">Calories — 30 derniers jours</div>
       <canvas id="nutrition-chart" height="90"></canvas>
+    </div>
+
+    <!-- Plan repas IA 7 jours (fonctionnalité 4, PREMIUM) -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+        <div class="card-title" style="margin:0">🍽️ Plan repas IA — 7 jours</div>
+        <button class="btn btn-primary btn-sm" type="button" id="generate-plan-btn">Générer mon plan repas</button>
+      </div>
+      <div id="nutrition-plan-content"><p class="muted" style="font-size:.9rem">Génère un plan alimentaire complet sur 7 jours, adapté à tes objectifs caloriques.</p></div>
     </div>
   </div>
 
@@ -78,6 +87,7 @@
 <footer>Gym AI Coach — les besoins nutritionnels sont estimés, consulte un professionnel pour un suivi personnalisé.</footer>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="/js/premium-gate.js"></script>
 <script src="/js/nutrition.js"></script>
 <script src="/js/i18n.js"></script>
 <script src="/js/sidebar.js"></script>
