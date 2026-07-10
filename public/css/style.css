@@ -327,6 +327,21 @@ select option { background: var(--bg-card-solid); }
   align-items: start;
 }
 .exercise-row .ex-name { font-weight: 500; font-size: .93rem; }
+.exercise-row[data-ex-name] .ex-name, .ex-name-clickable { cursor: pointer; }
+.exercise-row[data-ex-name] .ex-name:hover, .ex-name-clickable:hover { color: var(--rust-soft); text-decoration: underline; }
+
+/* =========================================================
+   MODAL DÉMONSTRATION EXERCICE (fonctionnalité 3)
+   ========================================================= */
+.modal-card.exercise-modal-card { max-width: 480px; text-align: left; }
+.exercise-modal-media {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-hover); border-radius: var(--radius-lg);
+  padding: 14px; margin-bottom: 18px; min-height: 220px;
+}
+.exercise-modal-media img { max-width: 100%; border-radius: var(--radius); }
+.exercise-modal-body h2 { text-align: left; margin-bottom: 8px; }
+.exercise-modal-desc { color: var(--chalk-dim); font-size: .9rem; margin: 12px 0; }
 .exercise-row .ex-badge { display: inline-block; font-size: .72rem; background: var(--rust-bg); color: var(--rust-soft); border-radius: 4px; padding: 2px 8px; margin-top: 3px; }
 .exercise-row .ex-meta { font-family: var(--font-mono); color: var(--steel-soft); font-size: .82rem; text-align: right; white-space: nowrap; }
 .exercise-row .ex-notes { grid-column: 1 / -1; color: var(--chalk-dim); font-size: .8rem; margin-top: -2px; }
@@ -2168,6 +2183,19 @@ body.landing { overflow-x: hidden; }
 @keyframes mic-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(217,64,64,.5); }
   50% { box-shadow: 0 0 0 8px rgba(217,64,64,0); }
+}
+.voice-error-hint {
+  position: fixed;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-strong);
+  color: var(--chalk-dim);
+  font-size: .76rem;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  max-width: 220px;
+  z-index: 500;
+  animation: fade-in-up .2s var(--ease);
 }
 
 /* Assistant vocal (fonctionnalite 12) */

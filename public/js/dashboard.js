@@ -103,7 +103,7 @@ async function loadProgram() {
     const exHtml = exercises.map((ex, idx) => {
       if (rendered.has(idx)) return "";
       const exRow = e => `
-        <div class="exercise-row${e.superset_group ? " in-superset" : ""}" data-ex-name="${esc(e.name)}">
+        <div class="exercise-row${e.superset_group ? " in-superset" : ""}" data-ex-name="${esc(e.name)}" data-muscle-group="${esc(e.muscle_group || "")}" data-ex-notes="${esc(e.notes || "")}">
           <div>
             <div class="ex-name">${esc(e.name)}</div>
             ${e.muscle_group ? `<span class="ex-badge">${esc(e.muscle_group)}</span>` : ""}

@@ -43,9 +43,16 @@ async function init() {
   // Programme
   if (program) {
     document.getElementById("client-program-section").classList.remove("hidden");
+    const daysHtml = (program.content.days || []).map(d => `
+      <div style="margin-bottom:12px">
+        <div style="font-size:.82rem;color:var(--chalk-dim);margin-bottom:6px">${esc(d.day)} — ${esc(d.focus || "")}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${(d.exercises || []).map(e => `<span class="ex-name-clickable" style="font-size:.82rem;padding:3px 9px;background:var(--bg-hover);border-radius:6px" data-ex-name="${esc(e.name)}" data-muscle-group="${esc(e.muscle_group || "")}" data-ex-notes="${esc(e.notes || "")}">${esc(e.name)}</span>`).join("")}
+        </div>
+      </div>`).join("");
     document.getElementById("client-program-content").innerHTML = `
-      <div style="font-weight:600;margin-bottom:6px">${esc(program.title)}</div>
-      <div style="font-size:.82rem;color:var(--chalk-dim)">${(program.content.days||[]).map(d=>`${d.day} (${d.focus})`).join(" · ")}</div>`;
+      <div style="font-weight:600;margin-bottom:10px">${esc(program.title)}</div>
+      ${daysHtml}`;
   }
 
   // Records

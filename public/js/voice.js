@@ -26,6 +26,27 @@ async function init() {
   setupRecognition();
 }
 
+// iOS (Safari ET Chrome/Firefox iOS, qui partagent tous le moteur WebKit)
+// expose webkitSpeechRecognition mais l'implementation y est peu fiable.
+function isIOSDevice() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+function voiceErrorMessage(error) {
+  switch (error) {
+    case "not-allowed":
+    case "service-not-allowed":
+      return "Accès au micro refusé. Autorise le micro dans les paramètres du navigateur.";
+    case "no-speech":
+      return "Je n'ai rien entendu, réessaie.";
+    case "network":
+      return "Problème réseau, réessaie.";
+    default:
+      return "Appuie pour parler";
+  }
+}
+
 function setupRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const orb = document.getElementById("voice-orb");
@@ -34,6 +55,12 @@ function setupRecognition() {
   if (!SpeechRecognition) {
     orb.disabled = true;
     status.textContent = "Reconnaissance vocale non disponible sur ce navigateur.";
+    return;
+  }
+
+  if (isIOSDevice()) {
+    orb.disabled = true;
+    status.textContent = "Reconnaissance vocale peu fiable sur iOS. Utilise Chrome sur ordinateur ou Android pour parler au coach.";
     return;
   }
 
@@ -57,8 +84,8 @@ function setupRecognition() {
     }
   });
 
-  recognition.addEventListener("error", () => {
-    if (state === "listening") setState("idle", "Je n'ai rien entendu, réessaie.");
+  recognition.addEventListener("error", e => {
+    if (state === "listening" && e.error !== "aborted") setState("idle", voiceErrorMessage(e.error));
   });
 
   orb.addEventListener("click", () => {

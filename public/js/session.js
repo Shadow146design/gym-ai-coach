@@ -11,6 +11,7 @@ let timerInterval = null;
 let secondsElapsed = 0;
 let postChatHistory = [];
 let restTimerInterval = null;
+let restTimerTimeout = null;
 let lastRecapData = null;
 
 // ── Init ──────────────────────────────────────────────────
@@ -198,7 +199,7 @@ function startSession() {
     card.innerHTML = `
       <div class="session-exercise-header">
         <div>
-          <h3>${esc(ex.name)}</h3>
+          <h3 class="ex-name-clickable" data-ex-name="${esc(ex.name)}" data-muscle-group="${esc(ex.muscle_group || "")}" data-ex-notes="${esc(ex.notes || "")}">${esc(ex.name)}</h3>
           <div style="font-size:.78rem;color:var(--chalk-dim);margin-top:3px">${sets} × ${repsHint} — repos ${ex.rest_seconds||"?"}s</div>
           <div style="font-size:.72rem;color:var(--steel-soft);margin-top:2px">${esc(prevTxt)}</div>
         </div>
@@ -251,7 +252,14 @@ function completeSet(btn) {
 
 // ── Minuteur de repos ─────────────────────────────────────
 function startRestTimer(seconds) {
-  if (restTimerInterval) { clearInterval(restTimerInterval); removeRestOverlay(); }
+  // Annule le minuteur précédent ET le setTimeout de nettoyage qu'il avait
+  // programmé (sinon ce setTimeout retardé peut supprimer le nouvel overlay
+  // qu'on est sur le point de créer).
+  clearInterval(restTimerInterval);
+  clearTimeout(restTimerTimeout);
+  restTimerInterval = null;
+  restTimerTimeout = null;
+  removeRestOverlay();
 
   const overlay = document.createElement("div");
   overlay.className = "rest-timer-overlay";
@@ -275,17 +283,21 @@ function startRestTimer(seconds) {
 
     if (remaining <= 0) {
       clearInterval(restTimerInterval);
+      restTimerInterval = null;
       // Vibration sur mobile
       if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
       overlay.classList.add("done");
       if (el) el.textContent = "GO !";
-      setTimeout(removeRestOverlay, 2000);
+      restTimerTimeout = setTimeout(removeRestOverlay, 2000);
     }
   }, 1000);
 }
 
 function skipRest() {
-  if (restTimerInterval) clearInterval(restTimerInterval);
+  clearInterval(restTimerInterval);
+  clearTimeout(restTimerTimeout);
+  restTimerInterval = null;
+  restTimerTimeout = null;
   removeRestOverlay();
 }
 
@@ -299,7 +311,9 @@ document.getElementById("finish-btn").addEventListener("click", async () => {
   if (sessionLogs.length === 0) { alert("Valide au moins une série avant de terminer !"); return; }
 
   clearInterval(timerInterval);
-  if (restTimerInterval) { clearInterval(restTimerInterval); removeRestOverlay(); }
+  clearInterval(restTimerInterval);
+  clearTimeout(restTimerTimeout);
+  removeRestOverlay();
   document.getElementById("finish-btn").disabled = true;
   document.getElementById("finish-btn").textContent = "Enregistrement…";
 
