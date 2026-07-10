@@ -3,6 +3,7 @@ const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
 const { checkAndUnlockBadges } = require("./badges");
 const { grantReferralReward } = require("./referral");
+const { creditCoachAffiliateCommission } = require("./affiliations");
 const { sendPremiumConfirmationEmail } = require("../services/email");
 
 const router = express.Router();
@@ -100,6 +101,21 @@ async function webhookHandler(req, res) {
       if (invoice.subscription) {
         const sub = await stripe.subscriptions.retrieve(invoice.subscription);
         await syncSubscriptionFromStripeObject(sub);
+
+        // Commission d'affiliation coach (fonctionnalite 8) : 20% de CHAQUE
+        // paiement mensuel reussi, pas seulement le premier.
+        let userId = parseInt(sub.metadata?.userId, 10);
+        if (!userId) {
+          const r = await pool.query(
+            "SELECT user_id FROM subscriptions WHERE stripe_customer_id=$1 ORDER BY created_at DESC LIMIT 1",
+            [sub.customer]
+          );
+          userId = r.rows[0]?.user_id;
+        }
+        if (userId) {
+          const amountEur = (invoice.amount_paid || 0) / 100;
+          creditCoachAffiliateCommission(userId, amountEur).catch(e => console.error("Erreur commission affiliation :", e));
+        }
       }
     } else if (event.type === "customer.subscription.deleted") {
       const sub = event.data.object;

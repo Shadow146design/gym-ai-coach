@@ -23,6 +23,10 @@ const urlParams = new URLSearchParams(window.location.search);
 const refCode = urlParams.get("ref");
 if (refCode) localStorage.setItem("referralCode", refCode);
 
+// Affiliation coach (fonctionnalité 8) : conserve le ?aff=CODE de la même façon.
+const affCode = urlParams.get("aff");
+if (affCode) localStorage.setItem("affiliateCode", affCode);
+
 // Erreur OAuth
 const oauthErr = urlParams.get("error");
 if (oauthErr) {
@@ -85,11 +89,13 @@ regForm?.addEventListener("submit", async e => {
         email: regForm.querySelector("#reg-email").value,
         password: regForm.querySelector("#reg-password").value,
         ref: localStorage.getItem("referralCode") || null,
+        aff: localStorage.getItem("affiliateCode") || null,
       }),
     });
     const d = await r.json();
     if (!r.ok) return showErr("register-error", d.error);
     localStorage.removeItem("referralCode");
+    localStorage.removeItem("affiliateCode");
     window.location.href = "/onboarding.html";
   } catch { showErr("register-error", "Impossible de joindre le serveur."); }
 });

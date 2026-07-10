@@ -48,6 +48,7 @@ DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='public_profile')   THEN ALTER TABLE users ADD COLUMN public_profile BOOLEAN NOT NULL DEFAULT FALSE; END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='premium_until')    THEN ALTER TABLE users ADD COLUMN premium_until TIMESTAMP; END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='notify_email_messages') THEN ALTER TABLE users ADD COLUMN notify_email_messages BOOLEAN NOT NULL DEFAULT TRUE; END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='referred_by_coach_id') THEN ALTER TABLE users ADD COLUMN referred_by_coach_id INTEGER REFERENCES users(id); END IF;
 END $$;
 
 CREATE TABLE IF NOT EXISTS coach_profiles (
@@ -272,6 +273,25 @@ CREATE TABLE IF NOT EXISTS team_challenges (
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   UNIQUE(team_id, week_start)
 );
+
+CREATE TABLE IF NOT EXISTS coach_affiliations (
+  id              SERIAL PRIMARY KEY,
+  coach_id        INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  affiliate_code  TEXT UNIQUE NOT NULL,
+  total_referrals INTEGER NOT NULL DEFAULT 0,
+  total_earnings  NUMERIC NOT NULL DEFAULT 0,
+  created_at      TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS affiliate_conversions (
+  id               SERIAL PRIMARY KEY,
+  coach_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  referred_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  amount           NUMERIC NOT NULL,
+  commission       NUMERIC NOT NULL,
+  created_at       TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_affiliate_conversions_coach ON affiliate_conversions(coach_id, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS injury_flags (
   id            SERIAL PRIMARY KEY,

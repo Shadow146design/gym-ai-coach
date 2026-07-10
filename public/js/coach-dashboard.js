@@ -5,8 +5,41 @@ async function init() {
   }
   document.getElementById("coach-greeting").textContent = `Bonjour ${me.user.name} 👋`;
 
-  await Promise.all([loadClients(), loadProfile()]);
+  await Promise.all([loadClients(), loadProfile(), loadAffiliations()]);
 }
+
+// ── Affiliations (fonctionnalité 8) ────────────────────────
+async function loadAffiliations() {
+  try {
+    const r = await fetch("/api/affiliations/stats").then(res => res.json());
+
+    document.getElementById("aff-link").value = r.link;
+    document.getElementById("aff-kpis").innerHTML = `
+      <div class="kpi-tile"><div class="kpi-label">Filleuls Premium</div><div class="kpi-value">${r.totalReferrals}</div></div>
+      <div class="kpi-tile"><div class="kpi-label">Gains ce mois</div><div class="kpi-value" style="color:var(--gold)">${r.earningsThisMonth.toFixed(2)}<span style="font-size:.9rem"> €</span></div></div>
+      <div class="kpi-tile"><div class="kpi-label">Gains totaux</div><div class="kpi-value">${r.totalEarnings.toFixed(2)}<span style="font-size:.9rem"> €</span></div></div>`;
+
+    document.getElementById("aff-history").innerHTML = r.conversions.length
+      ? r.conversions.map(c => `
+        <div class="stat-row">
+          <span>${esc(c.referred_name)} <span class="muted" style="font-size:.78rem">${new Date(c.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}</span></span>
+          <span class="stat-val">+${Number(c.commission).toFixed(2)} €</span>
+        </div>`).join("")
+      : `<p class="muted" style="font-size:.85rem">Aucune conversion pour l'instant. Partage ton lien pour commencer à gagner des commissions.</p>`;
+  } catch {
+    document.getElementById("aff-history").innerHTML = `<p class="muted" style="font-size:.85rem">Impossible de charger les affiliations.</p>`;
+  }
+}
+
+document.getElementById("aff-copy-btn")?.addEventListener("click", () => {
+  const input = document.getElementById("aff-link");
+  input.select();
+  navigator.clipboard?.writeText(input.value).catch(() => {});
+  const btn = document.getElementById("aff-copy-btn");
+  const original = btn.textContent;
+  btn.textContent = "Copié ✓";
+  setTimeout(() => { btn.textContent = original; }, 1500);
+});
 
 async function loadClients() {
   const r = await fetch("/api/coaches/dashboard/clients").then(r=>r.json());

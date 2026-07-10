@@ -21,7 +21,7 @@ const authLimiter = rateLimit({
 
 router.post("/register", authLimiter, async (req, res) => {
   try {
-    const { email, password, name, ref } = req.body;
+    const { email, password, name, ref, aff } = req.body;
 
     if (!email || !password || !name) {
       return res.status(400).json({ error: "Email, mot de passe et nom sont requis." });
@@ -40,9 +40,21 @@ router.post("/register", authLimiter, async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
     const cleanName = stripHtml(name);
     const username = await generateUsername(cleanName);
+
+    // Affiliation coach (fonctionnalite 8) : lie le compte au coach dont le
+    // lien d'affiliation (?aff=CODE) a ete utilise, pour credit de commission
+    // au premier passage Premium (et chaque renouvellement mensuel ensuite).
+    let referredByCoachId = null;
+    if (aff) {
+      const affR = await pool.query(
+        "SELECT coach_id FROM coach_affiliations WHERE affiliate_code=$1", [String(aff).toUpperCase()]
+      );
+      referredByCoachId = affR.rows[0]?.coach_id || null;
+    }
+
     const result = await pool.query(
-      "INSERT INTO users (email, password_hash, name, username) VALUES ($1, $2, $3, $4) RETURNING id, email, name",
-      [email.toLowerCase().trim(), passwordHash, cleanName, username]
+      "INSERT INTO users (email, password_hash, name, username, referred_by_coach_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, name",
+      [email.toLowerCase().trim(), passwordHash, cleanName, username, referredByCoachId]
     );
 
     const user = result.rows[0];

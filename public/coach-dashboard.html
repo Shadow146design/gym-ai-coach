@@ -34,6 +34,19 @@
     <div id="profile-msg" style="margin-top:8px;font-size:.85rem"></div>
   </div>
 
+  <!-- Affiliations (fonctionnalité 8) -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">💰 Mes affiliations</div>
+    <p class="muted" style="font-size:.85rem;margin-bottom:12px">Partage ce lien : tu touches 20% de chaque paiement mensuel des utilisateurs qui passent Premium grâce à toi.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <input id="aff-link" type="text" readonly style="flex:1;min-width:220px;font-family:var(--font-mono);font-size:.82rem"/>
+      <button class="btn btn-ghost btn-sm" type="button" id="aff-copy-btn">Copier</button>
+    </div>
+    <div id="aff-kpis" class="kpi-grid" style="margin-bottom:16px"></div>
+    <div class="card-title" style="font-size:.85rem;margin-bottom:10px">Historique des conversions</div>
+    <div id="aff-history"></div>
+  </div>
+
   <!-- Demandes en attente -->
   <div id="pending-section" class="hidden" style="margin-bottom:20px">
     <h2 style="font-family:var(--font-display);text-transform:uppercase;letter-spacing:.04em;font-size:.95rem;margin-bottom:12px">⏳ Demandes en attente</h2>

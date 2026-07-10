@@ -30,6 +30,7 @@ const nutritionRoutes = require("./routes/nutrition");
 const exercisesRoutes = require("./routes/exercises");
 const injuriesRoutes = require("./routes/injuries");
 const teamsRoutes = require("./routes/teams");
+const affiliationsRoutes = require("./routes/affiliations");
 const { sendReminderEmail, sendWeeklyRecapEmail } = require("./services/email");
 
 const app  = express();
@@ -83,6 +84,7 @@ app.use("/api/nutrition", nutritionRoutes);
 app.use("/api/exercises", exercisesRoutes);
 app.use("/api/injuries", injuriesRoutes);
 app.use("/api/teams", teamsRoutes);
+app.use("/api/affiliations", affiliationsRoutes);
 app.use("/auth",         oauthRoutes);
 
 // Profil public a URL courte (fonctionnalite 7) : sert la meme page HTML
