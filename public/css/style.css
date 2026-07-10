@@ -545,6 +545,16 @@ select option { background: var(--bg-card-solid); }
 }
 .app-toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
 @media (max-width: 768px) { .app-toast { bottom: 80px; } }
+
+/* Bandeau "Mode hors-ligne" (fonctionnalite 9) */
+.offline-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 600;
+  background: var(--gold-bg, rgba(232,179,61,.15)); color: var(--gold);
+  border-bottom: 1px solid var(--gold);
+  padding: 8px 16px; text-align: center;
+  font-size: .8rem; font-weight: 600;
+  animation: fade-in-up .2s var(--ease);
+}
 .app-toast.action-toast {
   display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
   border-color: var(--rust); max-width: min(90vw, 520px);

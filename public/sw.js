@@ -1,11 +1,13 @@
-const CACHE_NAME = "gym-ai-coach-v16";
+const CACHE_NAME = "gym-ai-coach-v17";
 const STATIC_ASSETS = [
   "/css/style.css",
   "/js/sidebar.js",
   "/js/i18n.js",
+  "/js/offline-sync.js",
   "/logo.svg",
   "/favicon.svg",
   "/manifest.json",
+  "/offline.html",
 ];
 
 self.addEventListener("install", event => {
@@ -40,9 +42,12 @@ self.addEventListener("fetch", event => {
       }).catch(() => cached))
     );
   } else if (request.mode === "navigate") {
-    // Network-first pour les pages, repli sur le cache (ou l'accueil) hors ligne.
+    // Network-first pour les pages, repli sur le cache si deja visitee hors
+    // ligne, puis sur /offline.html si la page n'a jamais ete mise en cache.
     event.respondWith(
-      fetch(request).catch(() => caches.match(request).then(cached => cached || caches.match("/home.html")))
+      fetch(request).catch(() =>
+        caches.match(request).then(cached => cached || caches.match("/offline.html"))
+      )
     );
   }
 });

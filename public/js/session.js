@@ -16,24 +16,38 @@ let lastRecapData = null;
 
 // ── Init ──────────────────────────────────────────────────
 async function init() {
-  const meRes = await fetch("/api/auth/me");
-  if (!meRes.ok) return (window.location.href = "/");
+  let prog, recent;
+  try {
+    const meRes = await fetch("/api/auth/me");
+    if (!meRes.ok) return (window.location.href = "/");
 
-  const [progRes, recentRes] = await Promise.all([
-    fetch("/api/program/active"),
-    fetch("/api/logs/recent"),
-  ]);
-  const { program: prog } = await progRes.json();
-  const { recent } = await recentRes.json();
+    const [progRes, recentRes] = await Promise.all([
+      fetch("/api/program/active"),
+      fetch("/api/logs/recent"),
+    ]);
+    ({ program: prog } = await progRes.json());
+    ({ recent } = await recentRes.json());
+    window.offlineSync?.cacheData("program", prog);
+    window.offlineSync?.cacheData("recentLogs", recent || []);
+  } catch {
+    // Hors ligne (fonctionnalite 9) : impossible de verifier l'auth ou de
+    // recharger le programme depuis le serveur — on retente avec la derniere
+    // copie mise en cache localement, si elle existe, pour permettre de
+    // demarrer quand meme une seance.
+    prog = await window.offlineSync?.getCachedData("program");
+    recent = await window.offlineSync?.getCachedData("recentLogs");
+  }
 
   document.getElementById("loading").classList.add("hidden");
 
   if (!prog) {
     document.getElementById("loading").classList.remove("hidden");
-    document.getElementById("loading").innerHTML = `
+    document.getElementById("loading").innerHTML = navigator.onLine ? `
       <h3>Pas de programme actif</h3>
       <p class="muted" style="margin-top:8px">Génère un programme d'abord.</p>
-      <a class="btn btn-primary" href="/questionnaire.html" style="margin-top:18px">Créer mon programme</a>`;
+      <a class="btn btn-primary" href="/questionnaire.html" style="margin-top:18px">Créer mon programme</a>` : `
+      <h3>📡 Hors ligne</h3>
+      <p class="muted" style="margin-top:8px">Aucun programme en cache sur cet appareil. Connecte-toi une première fois avant de pouvoir t'entraîner hors ligne.</p>`;
     return;
   }
 
@@ -342,13 +356,38 @@ document.getElementById("finish-btn").addEventListener("click", async () => {
   document.getElementById("finish-btn").disabled = true;
   document.getElementById("finish-btn").textContent = "Enregistrement…";
 
-  await Promise.all(sessionLogs.map(log => fetch("/api/logs", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(log),
-  })));
+  // Mode hors-ligne (fonctionnalite 9) : toute serie dont l'envoi echoue
+  // (coupure reseau) est mise en file dans IndexedDB au lieu d'etre perdue —
+  // offline-sync.js la synchronisera automatiquement au retour de la connexion.
+  let queuedOffline = 0;
+  await Promise.all(sessionLogs.map(async log => {
+    try {
+      const res = await fetch("/api/logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(log),
+      });
+      if (!res.ok) throw new Error("Echec de l'enregistrement.");
+    } catch {
+      if (window.offlineSync) { await window.offlineSync.saveOfflineLog(log); queuedOffline++; }
+    }
+  }));
 
   document.getElementById("step-session").classList.add("hidden");
+
+  if (queuedOffline > 0) {
+    // Hors ligne : le recap normal depend de trois routes serveur qui
+    // echoueraient aussi, on affiche donc une confirmation locale a la place.
+    document.getElementById("step-recap").classList.remove("hidden");
+    document.getElementById("recap-stats").innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <h3>📡 Séance enregistrée hors ligne</h3>
+        <p class="muted" style="margin-top:8px">${queuedOffline} série${queuedOffline > 1 ? "s" : ""} sauvegardée${queuedOffline > 1 ? "s" : ""} sur cet appareil. Elles seront envoyées automatiquement dès que tu seras reconnecté.</p>
+      </div>`;
+    document.getElementById("recap-exercises").innerHTML = "";
+    return;
+  }
+
   await showRecap();
   document.getElementById("step-recap").classList.remove("hidden");
 });
