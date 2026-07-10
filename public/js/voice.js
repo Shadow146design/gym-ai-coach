@@ -4,7 +4,6 @@
 let voiceHistory = [];
 let recognition = null;
 let state = "idle"; // idle | listening | thinking | speaking
-let frenchVoice = null;
 let autoListenAfterSpeech = false;
 
 function esc(s) { const d = document.createElement("div"); d.textContent = String(s || ""); return d.innerHTML; }
@@ -26,23 +25,6 @@ async function init() {
   }
 
   setupRecognition();
-  setupVoiceSelection();
-}
-
-// Choisit une voix francaise parmi celles du navigateur. Sur iOS/Safari (et
-// parfois Chrome au tout premier chargement), la liste des voix se charge de
-// facon asynchrone : getVoices() peut renvoyer un tableau vide au depart, d'ou
-// l'ecoute de "voiceschanged" pour reessayer des qu'elle est disponible.
-function pickFrenchVoice() {
-  const voices = window.speechSynthesis?.getVoices() || [];
-  const lang = (window.i18n && window.i18n.getLang() === "en") ? "en" : "fr";
-  frenchVoice = voices.find(v => v.lang.toLowerCase().startsWith(lang)) || null;
-}
-
-function setupVoiceSelection() {
-  if (!window.speechSynthesis) return;
-  pickFrenchVoice();
-  window.speechSynthesis.addEventListener("voiceschanged", pickFrenchVoice);
 }
 
 // iOS (Safari ET Chrome/Firefox iOS, qui partagent tous le moteur WebKit)
@@ -173,59 +155,36 @@ async function askCoach(text) {
   }
 }
 
-// Nettoie le texte avant lecture a voix haute : les emojis, le markdown et
-// les URLs sonnent bizarre lus mot a mot par la synthese vocale.
-function cleanTextForSpeech(text) {
-  return text
-    .replace(/[\u{1F300}-\u{1F9FF}]/gu, "") // emojis
-    .replace(/\*\*/g, "")                    // markdown gras
-    .replace(/\*/g, "")                      // markdown italique
-    .replace(/https?:\/\/\S+/g, "")          // URLs
-    .replace(/#{1,6}\s/g, "")                // titres markdown
-    .replace(/\s{2,}/g, " ")
-    .trim();
-}
-
+// Le nettoyage du texte, le choix de la voix et les reglages de lecture sont
+// centralises dans voice-synthesis.js (partage avec le coach vocal du chat
+// dashboard) — speak() se contente ici de brancher l'etat de l'orbe et le
+// bouton stop sur le cycle de vie de l'utterance.
 function speak(text) {
-  const synth = window.speechSynthesis;
-  if (!synth) { setState("idle", "Appuie pour parler"); return; }
-
-  synth.cancel();
-
-  const cleaned = cleanTextForSpeech(text);
-  const lang = (window.i18n && window.i18n.getLang() === "en") ? "en-US" : "fr-FR";
-  const utter = new SpeechSynthesisUtterance(cleaned);
-  utter.lang = lang;
-  utter.rate = 0.9;
-  utter.pitch = 1.0;
-  utter.volume = 1.0;
-  if (frenchVoice) utter.voice = frenchVoice;
-
   const stopBtn = document.getElementById("voice-stop-btn");
 
-  utter.addEventListener("start", () => {
-    setState("speaking", "L'IA répond…");
-    stopBtn.classList.remove("hidden");
+  const utter = window.speakText(text, {
+    onStart: () => {
+      setState("speaking", "L'IA répond…");
+      stopBtn.classList.remove("hidden");
+    },
+    onEnd: () => {
+      stopBtn.classList.add("hidden");
+      setState("idle", "Appuie pour parler");
+      // Enchainement automatique : redonne la parole a l'utilisateur sans
+      // qu'il ait a re-cliquer, sauf s'il a coupe la synthese lui-meme
+      // (stopSpeaking met autoListenAfterSpeech a false).
+      if (autoListenAfterSpeech && recognition && !document.getElementById("voice-orb").disabled) {
+        setTimeout(() => { if (state === "idle") startListening(); }, 1000);
+      }
+    },
+    onError: () => {
+      stopBtn.classList.add("hidden");
+      setState("idle", "Appuie pour parler");
+    },
   });
 
-  utter.addEventListener("end", () => {
-    stopBtn.classList.add("hidden");
-    setState("idle", "Appuie pour parler");
-    // Enchainement automatique : redonne la parole a l'utilisateur sans
-    // qu'il ait a re-cliquer, sauf s'il a coupe la synthese lui-meme
-    // (stopSpeaking met autoListenAfterSpeech a false).
-    if (autoListenAfterSpeech && recognition && !document.getElementById("voice-orb").disabled) {
-      setTimeout(() => { if (state === "idle") startListening(); }, 1000);
-    }
-  });
-
-  utter.addEventListener("error", () => {
-    stopBtn.classList.add("hidden");
-    setState("idle", "Appuie pour parler");
-  });
-
+  if (!utter) { setState("idle", "Appuie pour parler"); return; }
   autoListenAfterSpeech = true;
-  synth.speak(utter);
 }
 
 function appendHistory(role, text) {

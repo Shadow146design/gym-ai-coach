@@ -213,6 +213,7 @@ async function sendMessage() {
     thinking.remove();
     const reply = data.reply;
     appendMsg("coach", reply);
+    window.speakText?.(reply);
     chatHistory.push({ role: "assistant", content: reply });
 
     if (data.programUpdated) {
