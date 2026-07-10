@@ -231,6 +231,25 @@ CREATE TABLE IF NOT EXISTS nutrition_plans (
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS exercise_videos (
+  exercise_name TEXT PRIMARY KEY,
+  youtube_id    TEXT NOT NULL,
+  thumbnail_url TEXT
+);
+
+INSERT INTO exercise_videos (exercise_name, youtube_id, thumbnail_url) VALUES
+  ('Développé couché barre', 'dZgVxmf6jkA', 'https://img.youtube.com/vi/dZgVxmf6jkA/mqdefault.jpg'),
+  ('Squat barre',            'ultWZbUMPL8', 'https://img.youtube.com/vi/ultWZbUMPL8/mqdefault.jpg'),
+  ('Soulevé de terre',       'op9kVnSso6Q', 'https://img.youtube.com/vi/op9kVnSso6Q/mqdefault.jpg'),
+  ('Rowing barre',           'FWJR5Ve8bnQ', 'https://img.youtube.com/vi/FWJR5Ve8bnQ/mqdefault.jpg'),
+  ('Développé militaire',    '2yjwXTZQDDI', 'https://img.youtube.com/vi/2yjwXTZQDDI/mqdefault.jpg'),
+  ('Tractions',              'eGo4IYlbE5g', 'https://img.youtube.com/vi/eGo4IYlbE5g/mqdefault.jpg'),
+  ('Hack squat',             'DbFgyvMl-Wg', 'https://img.youtube.com/vi/DbFgyvMl-Wg/mqdefault.jpg'),
+  ('Presse à cuisses',       'IZxyjW7MPJQ', 'https://img.youtube.com/vi/IZxyjW7MPJQ/mqdefault.jpg'),
+  ('Curl barre EZ',          'av7-8igSXTs', 'https://img.youtube.com/vi/av7-8igSXTs/mqdefault.jpg'),
+  ('Pushdown corde',         'vB5OHsJ3EME', 'https://img.youtube.com/vi/vB5OHsJ3EME/mqdefault.jpg')
+ON CONFLICT (exercise_name) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS "session" (
   "sid"    varchar NOT NULL COLLATE "default" PRIMARY KEY,
   "sess"   json NOT NULL,

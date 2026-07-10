@@ -163,6 +163,46 @@ document.getElementById("warmup-start-btn").addEventListener("click", () => {
 });
 
 // ── Étape 2 : séance ──────────────────────────────────────
+function buildExerciseCard(ex, ei) {
+  const recent = recentLogs[ex.name];
+  const defaultWeight = recent ? recent.weight : "";
+  const sets = typeof ex.sets === "number" ? ex.sets : parseInt(ex.sets) || 3;
+  const repsHint = ex.reps || "?";
+  const prevTxt = recent ? `Dernière fois : ${recent.weight} kg × ${recent.reps} reps` : "Première fois 🌟";
+
+  const card = document.createElement("div");
+  card.className = "session-exercise-card";
+  card.dataset.exercise = ex.name;
+  card.dataset.muscleGroup = ex.muscle_group || "";
+  card.dataset.restSeconds = ex.rest_seconds || 90;
+
+  let setsHtml = `<div style="padding:6px 18px 4px;font-size:.7rem;color:var(--chalk-dim);display:grid;grid-template-columns:28px 1fr 1fr 40px;gap:8px;text-transform:uppercase;letter-spacing:.04em">
+    <span>#</span><span>Poids kg</span><span>Reps</span><span></span></div>`;
+
+  for (let s = 1; s <= sets; s++) {
+    setsHtml += `
+      <div class="set-row" data-set="${s}" data-ex="${ei}">
+        <div class="set-num">${s}</div>
+        <input type="number" class="weight-input" step="0.5" min="0" value="${defaultWeight}" placeholder="kg"/>
+        <input type="number" class="reps-input" min="1" value="${recent ? recent.reps : ""}" placeholder="${repsHint}"/>
+        <button class="done-btn" data-ex="${ei}" data-set="${s}" data-rest="${ex.rest_seconds||90}">✓</button>
+      </div>`;
+  }
+
+  card.innerHTML = `
+    <div class="session-exercise-header">
+      <div>
+        <h3 class="ex-name-clickable" data-ex-name="${esc(ex.name)}" data-muscle-group="${esc(ex.muscle_group || "")}" data-ex-notes="${esc(ex.notes || "")}">${esc(ex.name)}</h3>
+        <div style="font-size:.78rem;color:var(--chalk-dim);margin-top:3px">${sets} × ${repsHint} — repos ${ex.rest_seconds||"?"}s</div>
+        <div style="font-size:.72rem;color:var(--steel-soft);margin-top:2px">${esc(prevTxt)}</div>
+      </div>
+      ${ex.muscle_group ? `<span class="muscle-tag">${esc(ex.muscle_group)}</span>` : ""}
+    </div>
+    ${setsHtml}`;
+
+  return card;
+}
+
 function startSession() {
   document.getElementById("session-day-title").textContent = selectedDay.day;
   document.getElementById("session-day-focus").textContent = selectedDay.focus || "";
@@ -171,43 +211,7 @@ function startSession() {
   container.innerHTML = "";
 
   (selectedDay.exercises || []).forEach((ex, ei) => {
-    const recent = recentLogs[ex.name];
-    const defaultWeight = recent ? recent.weight : "";
-    const sets = typeof ex.sets === "number" ? ex.sets : parseInt(ex.sets) || 3;
-    const repsHint = ex.reps || "?";
-    const prevTxt = recent ? `Dernière fois : ${recent.weight} kg × ${recent.reps} reps` : "Première fois 🌟";
-
-    const card = document.createElement("div");
-    card.className = "session-exercise-card";
-    card.dataset.exercise = ex.name;
-    card.dataset.muscleGroup = ex.muscle_group || "";
-    card.dataset.restSeconds = ex.rest_seconds || 90;
-
-    let setsHtml = `<div style="padding:6px 18px 4px;font-size:.7rem;color:var(--chalk-dim);display:grid;grid-template-columns:28px 1fr 1fr 40px;gap:8px;text-transform:uppercase;letter-spacing:.04em">
-      <span>#</span><span>Poids kg</span><span>Reps</span><span></span></div>`;
-
-    for (let s = 1; s <= sets; s++) {
-      setsHtml += `
-        <div class="set-row" data-set="${s}" data-ex="${ei}">
-          <div class="set-num">${s}</div>
-          <input type="number" class="weight-input" step="0.5" min="0" value="${defaultWeight}" placeholder="kg"/>
-          <input type="number" class="reps-input" min="1" value="${recent ? recent.reps : ""}" placeholder="${repsHint}"/>
-          <button class="done-btn" data-ex="${ei}" data-set="${s}" data-rest="${ex.rest_seconds||90}">✓</button>
-        </div>`;
-    }
-
-    card.innerHTML = `
-      <div class="session-exercise-header">
-        <div>
-          <h3 class="ex-name-clickable" data-ex-name="${esc(ex.name)}" data-muscle-group="${esc(ex.muscle_group || "")}" data-ex-notes="${esc(ex.notes || "")}">${esc(ex.name)}</h3>
-          <div style="font-size:.78rem;color:var(--chalk-dim);margin-top:3px">${sets} × ${repsHint} — repos ${ex.rest_seconds||"?"}s</div>
-          <div style="font-size:.72rem;color:var(--steel-soft);margin-top:2px">${esc(prevTxt)}</div>
-        </div>
-        ${ex.muscle_group ? `<span class="muscle-tag">${esc(ex.muscle_group)}</span>` : ""}
-      </div>
-      ${setsHtml}`;
-
-    container.appendChild(card);
+    container.appendChild(buildExerciseCard(ex, ei));
   });
 
   container.querySelectorAll(".done-btn").forEach(btn => {
@@ -225,6 +229,27 @@ function startSession() {
 
   document.getElementById("step-session").classList.remove("hidden");
 }
+
+// Ajoute un exercice ad-hoc a la seance en cours, depuis le bouton "Ajouter
+// à ma séance" de la modal de démonstration (fonctionnalité 1). Reglages par
+// defaut raisonnables (3 series, repos 90s) puisqu'aucune donnee IA n'existe
+// pour un exercice ajoute manuellement en cours de seance.
+window.addExerciseToSession = function (name, muscleGroup) {
+  if (!selectedDay || document.getElementById("step-session").classList.contains("hidden")) {
+    alert("Démarre d'abord ta séance pour pouvoir y ajouter un exercice.");
+    return;
+  }
+  const ex = { name, muscle_group: muscleGroup || "", sets: 3, reps: "?", rest_seconds: 90 };
+  selectedDay.exercises = selectedDay.exercises || [];
+  selectedDay.exercises.push(ex);
+  const ei = selectedDay.exercises.length - 1;
+
+  const container = document.getElementById("session-exercises");
+  const card = buildExerciseCard(ex, ei);
+  container.appendChild(card);
+  card.querySelectorAll(".done-btn").forEach(btn => btn.addEventListener("click", () => completeSet(btn)));
+  card.scrollIntoView({ behavior: "smooth", block: "center" });
+};
 
 function completeSet(btn) {
   const row = btn.closest(".set-row");

@@ -25,7 +25,7 @@ function render() {
   const list = activeGroup === "Tous" ? EXERCISES : EXERCISES.filter(e => e.muscle_group === activeGroup);
 
   grid.innerHTML = list.map(ex => `
-    <div class="card exercise-card">
+    <div class="card exercise-card" data-ex-name="${esc(ex.name)}" data-muscle-group="${esc(ex.muscle_group)}">
       <div class="exercise-card-head">
         <span class="ex-badge">${esc(ex.muscle_group)}</span>
       </div>

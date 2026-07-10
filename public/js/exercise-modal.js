@@ -103,6 +103,19 @@ function bodySilhouetteSvg(view, activeRegions) {
   return `<svg viewBox="0 0 160 320" width="140" height="280" class="exercise-svg-${view}">${parts.join("")}</svg>`;
 }
 
+// Vidéo YouTube de démonstration (fonctionnalité 1, bibliothèque exercise_videos)
+// — priorité sur l'image Wger, elle-même prioritaire sur la silhouette SVG.
+async function fetchExerciseVideoId(name) {
+  try {
+    const res = await fetch(`/api/exercises/video/${encodeURIComponent(name)}`);
+    if (!res.ok) return null;
+    const { video } = await res.json();
+    return video?.youtube_id || null;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchWgerMedia(name) {
   try {
     const res = await fetch(`https://wger.de/api/v2/exercise/?format=json&language=2&name=${encodeURIComponent(name)}`);
@@ -129,8 +142,13 @@ async function openExerciseModal(name, muscleGroupHint, notesHint) {
   const secondary = data?.secondary || [];
   const description = data?.description || "";
   const tip = notesHint || data?.tip || "";
+  // Le nom canonique (resolu par la recherche floue) donne de meilleures
+  // chances de trouver une video/image que le nom brut, potentiellement une
+  // variante generee par l'IA ("Développé couché haltères plat").
+  const lookupName = data?.name || name;
 
   const svgCfg = MUSCLE_SVG_REGIONS[muscleGroup.toLowerCase().trim()] || { view: "front", regions: [] };
+  const canAddToSession = typeof window.addExerciseToSession === "function";
 
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
@@ -145,6 +163,7 @@ async function openExerciseModal(name, muscleGroupHint, notesHint) {
         ${secondary.length ? `<div class="exercise-secondary">Muscles secondaires : ${secondary.map(escExMod).join(", ")}</div>` : ""}
         ${description ? `<p class="exercise-modal-desc">${escExMod(description)}</p>` : ""}
         ${tip ? `<div class="exercise-tip">💡 ${escExMod(tip)}</div>` : ""}
+        ${canAddToSession ? `<button class="btn btn-primary btn-sm" type="button" id="exercise-modal-add-btn" style="margin-top:14px;width:100%">Ajouter à ma séance</button>` : ""}
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -152,10 +171,25 @@ async function openExerciseModal(name, muscleGroupHint, notesHint) {
   const close = () => overlay.remove();
   document.getElementById("exercise-modal-close").addEventListener("click", close);
   overlay.addEventListener("click", e => { if (e.target === overlay) close(); });
+  document.getElementById("exercise-modal-add-btn")?.addEventListener("click", () => {
+    window.addExerciseToSession(name, muscleGroup);
+    close();
+  });
 
   const mediaEl = document.getElementById("exercise-modal-media");
-  const gifUrl = await fetchWgerMedia(name);
+
+  const youtubeId = await fetchExerciseVideoId(lookupName);
   if (!document.body.contains(overlay)) return; // fermé entre-temps
+  if (youtubeId) {
+    mediaEl.innerHTML = `<iframe class="exercise-modal-video" src="https://www.youtube.com/embed/${escExMod(youtubeId)}"
+      title="Démonstration ${escExMod(name)}" frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen></iframe>`;
+    return;
+  }
+
+  const gifUrl = await fetchWgerMedia(lookupName);
+  if (!document.body.contains(overlay)) return;
   if (gifUrl) {
     mediaEl.innerHTML = `<img src="${escExMod(gifUrl)}" alt="Démonstration ${escExMod(name)}" loading="lazy"/>`;
   }
