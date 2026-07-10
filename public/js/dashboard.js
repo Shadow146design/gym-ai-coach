@@ -11,11 +11,58 @@ async function init() {
   document.getElementById("user-greeting").textContent = `Salut ${user.name} 👋`;
   loadProgram();
   loadCoachMessage();
+  checkInjuryFlags();
 
   // Arrivee depuis l'alerte plateau de la page d'accueil : demande directement
   // des conseils IA specifiques et les affiche dans le chat.
   if (new URLSearchParams(window.location.search).get("plateau") === "1") {
     askPlateauAdvice();
+  }
+}
+
+// ── Alertes fatigue/blessure (fonctionnalité 5) ────────────
+async function checkInjuryFlags() {
+  try {
+    const r = await fetch("/api/injuries/current").then(res => res.json());
+    const injuries = r.injuries || [];
+    const container = document.getElementById("injury-alerts");
+    if (!injuries.length) { container.innerHTML = ""; return; }
+
+    container.innerHTML = injuries.map(inj => `
+      <div class="card" style="border-left:3px solid var(--gold);margin-bottom:10px" data-injury-id="${inj.id}">
+        <p style="font-size:.9rem;margin-bottom:12px">⚠️ On a détecté une possible fatigue au ${esc(inj.exercise_name)}. Veux-tu adapter ton programme ?</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm injury-adapt-btn" data-id="${inj.id}">Adapter le programme</button>
+          <button class="btn btn-ghost btn-sm injury-ignore-btn" data-id="${inj.id}">C'est ok, continuer</button>
+        </div>
+      </div>`).join("");
+
+    container.querySelectorAll(".injury-adapt-btn").forEach(btn => {
+      btn.addEventListener("click", () => resolveInjury(btn.dataset.id, "adapt"));
+    });
+    container.querySelectorAll(".injury-ignore-btn").forEach(btn => {
+      btn.addEventListener("click", () => resolveInjury(btn.dataset.id, "ignore"));
+    });
+  } catch {}
+}
+
+async function resolveInjury(id, action) {
+  const card = document.querySelector(`[data-injury-id="${id}"]`);
+  if (card) card.querySelectorAll("button").forEach(b => b.disabled = true);
+  try {
+    const res = await fetch(`/api/injuries/resolve/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    const data = await res.json();
+    if (card) {
+      card.innerHTML = `<p style="font-size:.88rem;color:var(--green)">${data.adapted ? "Programme adapté ✓" : "Ok, note bien enregistrée."}</p>`;
+      setTimeout(() => card.remove(), 2500);
+    }
+    if (data.adapted) await loadProgram();
+  } catch {
+    if (card) card.querySelectorAll("button").forEach(b => b.disabled = false);
   }
 }
 

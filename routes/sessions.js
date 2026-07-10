@@ -3,6 +3,7 @@ const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
 const { dailyTip } = require("../services/aiCoach");
 const { checkAndUnlockBadges } = require("./badges");
+const { flagInjury } = require("../services/injuries");
 const { requirePremium } = require("../middleware/premium");
 
 const router = express.Router();
@@ -44,10 +45,40 @@ router.post("/", async (req, res) => {
     }
 
     checkAndUnlockBadges(uid).catch(e => console.error("Erreur verification badges :", e));
+    detectInjurySignals(uid, exercise_name.trim(), Number(weight)).catch(e => console.error("Erreur detection blessure :", e));
 
     res.status(201).json({ log: r.rows[0] });
   } catch (err) { console.error(err); res.status(500).json({ error: "Erreur serveur." }); }
 });
+
+// Detection automatique des blessures (fonctionnalite 5, signaux 2 et 3) :
+// chute de performance >30% par rapport a la derniere seance sur cet exercice,
+// ou regression sur 3 seances consecutives (chaque seance plus faible que la
+// precedente). Comparaison par seance (MAX du jour), pas par serie individuelle,
+// pour ne pas confondre une serie d'echauffement avec une vraie regression.
+async function detectInjurySignals(userId, exerciseName, weight) {
+  const bySession = await pool.query(
+    `SELECT performed_at::date AS date, MAX(weight) AS max_weight
+     FROM logs WHERE user_id=$1 AND exercise_name=$2
+     GROUP BY performed_at::date ORDER BY date DESC LIMIT 4`,
+    [userId, exerciseName]
+  );
+  const sessions = bySession.rows.map(r => ({ date: r.date, maxWeight: Number(r.max_weight) }));
+  if (sessions.length < 2) return;
+
+  const [current, previous] = sessions;
+  if (previous.maxWeight > 0 && current.maxWeight < previous.maxWeight * 0.7) {
+    await flagInjury(userId, exerciseName, "performance_drop");
+    return; // un seul flag a la fois suffit, evite un double signal le meme jour
+  }
+
+  if (sessions.length >= 3) {
+    const [s0, s1, s2] = sessions;
+    if (s0.maxWeight < s1.maxWeight && s1.maxWeight < s2.maxWeight) {
+      await flagInjury(userId, exerciseName, "regression_streak");
+    }
+  }
+}
 
 // ── PUT : modifier un log ─────────────────────────────────
 router.put("/:id", async (req, res) => {

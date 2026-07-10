@@ -3,6 +3,7 @@ const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
 const { requirePremium, checkChatLimit, getChatUsage } = require("../middleware/premium");
 const { chatWithCoach, debriefSession, analyzePlateau } = require("../services/aiCoach");
+const { flagInjury, detectChatInjuryMention } = require("../services/injuries");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -105,6 +106,14 @@ router.post("/", checkChatLimit, async (req, res) => {
     );
     const programRow = programResult.rows[0] || null;
     const context = await buildFullContext(req.session.userId, programRow);
+
+    // Detection automatique des blessures (fonctionnalite 5, signal 1) :
+    // mention de douleur/mal/blessure dans le dernier message de l'utilisateur.
+    const lastUserMsg = [...history].reverse().find(m => m.role === "user");
+    if (lastUserMsg) {
+      const mention = detectChatInjuryMention(lastUserMsg.content, context.topRecords.map(r => r.exercise_name));
+      if (mention) flagInjury(req.session.userId, mention, "chat_mention").catch(() => {});
+    }
 
     const result = await chatWithCoach(history, context);
 

@@ -237,6 +237,16 @@ CREATE TABLE IF NOT EXISTS exercise_videos (
   thumbnail_url TEXT
 );
 
+CREATE TABLE IF NOT EXISTS injury_flags (
+  id            SERIAL PRIMARY KEY,
+  user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  exercise_name TEXT NOT NULL,
+  type          TEXT NOT NULL,
+  detected_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+  resolved_at   TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_injury_flags_user ON injury_flags(user_id, resolved_at);
+
 INSERT INTO exercise_videos (exercise_name, youtube_id, thumbnail_url) VALUES
   ('Développé couché barre', 'dZgVxmf6jkA', 'https://img.youtube.com/vi/dZgVxmf6jkA/mqdefault.jpg'),
   ('Squat barre',            'ultWZbUMPL8', 'https://img.youtube.com/vi/ultWZbUMPL8/mqdefault.jpg'),
