@@ -237,6 +237,42 @@ CREATE TABLE IF NOT EXISTS exercise_videos (
   thumbnail_url TEXT
 );
 
+CREATE TABLE IF NOT EXISTS teams (
+  id         SERIAL PRIMARY KEY,
+  name       TEXT NOT NULL,
+  code       TEXT UNIQUE NOT NULL,
+  creator_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS team_members (
+  id        SERIAL PRIMARY KEY,
+  team_id   INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role      TEXT NOT NULL DEFAULT 'member',
+  joined_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE(team_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_team_members_user ON team_members(user_id);
+
+CREATE TABLE IF NOT EXISTS team_messages (
+  id         SERIAL PRIMARY KEY,
+  team_id    INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content    TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_team_messages_team ON team_messages(team_id, created_at);
+
+CREATE TABLE IF NOT EXISTS team_challenges (
+  id         SERIAL PRIMARY KEY,
+  team_id    INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  goal_kg    NUMERIC NOT NULL,
+  week_start DATE NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE(team_id, week_start)
+);
+
 CREATE TABLE IF NOT EXISTS injury_flags (
   id            SERIAL PRIMARY KEY,
   user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

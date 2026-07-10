@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Équipe — Gym AI Coach</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#c94d28"/>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<div class="page-wrapper">
+<div class="shell">
+  <div class="page-head">
+    <div>
+      <h1>👥 Équipe</h1>
+      <p class="sub muted">Entraîne-toi en groupe, comparez vos progrès et relevez des défis ensemble.</p>
+    </div>
+  </div>
+
+  <!-- Pas encore d'équipe -->
+  <div id="no-team-state" class="two-col hidden">
+    <div class="card">
+      <div class="card-title">Créer une équipe</div>
+      <form id="create-team-form">
+        <div class="field">
+          <label for="team-name">Nom de l'équipe</label>
+          <input id="team-name" type="text" maxlength="60" placeholder="Ex : Les Warriors de la Fonte" required/>
+        </div>
+        <button class="btn btn-primary btn-sm" type="submit">Créer</button>
+      </form>
+      <div id="create-team-msg" style="margin-top:8px;font-size:.85rem"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Rejoindre une équipe</div>
+      <form id="join-team-form">
+        <div class="field">
+          <label for="team-code">Code d'équipe</label>
+          <input id="team-code" type="text" maxlength="6" placeholder="Ex : AB12CD" style="text-transform:uppercase" required/>
+        </div>
+        <button class="btn btn-primary btn-sm" type="submit">Rejoindre</button>
+      </form>
+      <div id="join-team-msg" style="margin-top:8px;font-size:.85rem"></div>
+    </div>
+  </div>
+
+  <!-- Vue équipe -->
+  <div id="team-app" class="hidden">
+    <div class="card" style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div>
+          <div class="card-title" style="margin:0" id="team-name-display"></div>
+          <p class="muted" style="font-size:.82rem;margin-top:4px">Code à partager : <strong id="team-code-display" style="font-family:var(--font-mono);color:var(--rust-soft)"></strong></p>
+        </div>
+        <span class="muted" id="team-member-count" style="font-size:.85rem"></span>
+      </div>
+    </div>
+
+    <!-- Défi de la semaine -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title">🎯 Défi de la semaine</div>
+      <p class="muted" style="font-size:.88rem;margin:8px 0" id="challenge-label"></p>
+      <div class="periodization-track"><div class="periodization-fill" id="challenge-fill"></div></div>
+    </div>
+
+    <div class="two-col">
+      <!-- Classement -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px">🏆 Classement (volume cette semaine)</div>
+        <div id="team-leaderboard"></div>
+      </div>
+
+      <!-- Chat d'équipe -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px">💬 Chat d'équipe</div>
+        <div id="team-chat-messages" style="display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto;margin-bottom:12px"></div>
+        <div style="display:flex;gap:8px">
+          <input id="team-chat-input" type="text" placeholder="Écris à ton équipe…" autocomplete="off"/>
+          <button class="btn btn-primary btn-sm" type="button" id="team-chat-send-btn">Envoyer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="team-loading" class="empty-state" style="margin-top:40px">
+    <p class="muted">Chargement…</p>
+  </div>
+</div>
+<footer>Gym AI Coach</footer>
+</div>
+<script src="/js/team.js"></script>
+<script src="/js/i18n.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/pwa.js"></script>
+</body>
+</html>

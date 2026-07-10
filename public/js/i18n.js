@@ -16,6 +16,7 @@ const I18N_DICT = {
   nav_settings:     { fr: "Paramètres",          en: "Settings" },
   nav_exercises:    { fr: "Exercices",           en: "Exercises" },
   nav_nutrition:    { fr: "Nutrition",           en: "Nutrition" },
+  nav_team:         { fr: "Équipe",              en: "Team" },
   nav_admin:        { fr: "Admin",               en: "Admin" },
   nav_coach_clients:{ fr: "Mes clients",         en: "My clients" },
   nav_logout:       { fr: "Déconnexion",         en: "Log out" },
