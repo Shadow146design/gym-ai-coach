@@ -16,6 +16,15 @@
   <!-- KPI globaux -->
   <div id="admin-kpis" class="kpi-grid" style="margin-bottom:24px"></div>
 
+  <!-- Système -->
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-title">Système</div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" type="button" id="test-email-btn" onclick="testEmail()">Tester l'envoi d'email (Resend)</button>
+      <span id="test-email-status" class="muted" style="font-size:.85rem"></span>
+    </div>
+  </div>
+
   <!-- Utilisateurs -->
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">

@@ -1,5 +1,32 @@
 let allUsers = [];
 
+async function testEmail() {
+  const btn = document.getElementById("test-email-btn");
+  const status = document.getElementById("test-email-status");
+  btn.disabled = true;
+  status.textContent = "Envoi en cours…";
+  status.style.color = "";
+  try {
+    const res = await fetch("/api/email/test", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) {
+      status.textContent = `Erreur : ${data.error || "échec de l'envoi."}`;
+      status.style.color = "var(--red)";
+    } else if (data.skipped) {
+      status.textContent = data.message;
+      status.style.color = "var(--gold)";
+    } else {
+      status.textContent = `✓ Email de test envoyé à ${data.sentTo}`;
+      status.style.color = "var(--green)";
+    }
+  } catch {
+    status.textContent = "Impossible de joindre le serveur.";
+    status.style.color = "var(--red)";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 async function init() {
   const me = await fetch("/api/auth/me").then(r=>r.json());
   if (!me.user || me.user.role !== "admin") return window.location.href="/home.html";
