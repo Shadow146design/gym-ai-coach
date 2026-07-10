@@ -13,9 +13,14 @@ router.post("/test", requireRole("admin"), async (req, res) => {
     const user = r.rows[0];
     if (!user) return res.status(404).json({ error: "Utilisateur introuvable." });
 
+    console.log("RESEND_API_KEY present:", !!process.env.RESEND_API_KEY);
+    console.log("Sending to:", user.email);
+
     const result = await sendWelcomeEmail(user.email, user.name);
+    console.log("Resend response:", JSON.stringify(result));
+
     if (result.skipped) return res.json({ ok: true, skipped: true, message: "RESEND_API_KEY non configurée : email non envoyé (voir logs serveur)." });
-    if (result.error) return res.status(500).json({ error: result.error });
+    if (result.error) return res.status(500).json({ error: result.error.message || result.error });
     res.json({ ok: true, sentTo: user.email });
   } catch (err) {
     console.error("Erreur POST /email/test :", err);

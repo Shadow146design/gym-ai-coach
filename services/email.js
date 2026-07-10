@@ -3,7 +3,12 @@
 // ailleurs dans le projet) : les appels loggent et retournent { skipped: true }
 // au lieu de planter le serveur.
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM = process.env.EMAIL_FROM || "Gym AI Coach <onboarding@resend.dev>";
+// "onboarding@resend.dev" est le seul expediteur garanti de fonctionner sans
+// domaine verifie sur Resend (mode gratuit/test). Si EMAIL_FROM pointe vers
+// un domaine personnalise non verifie, Resend refuse l'envoi ("domain not
+// verified") : sendEmail() retente alors automatiquement avec ce fallback.
+const FALLBACK_FROM = "Gym AI Coach <onboarding@resend.dev>";
+const FROM = process.env.EMAIL_FROM || FALLBACK_FROM;
 const APP_URL = process.env.APP_URL || "https://gym-ai-coach-1wls.onrender.com";
 
 let resendClient = null;
@@ -21,12 +26,26 @@ function escapeHtml(s) {
 }
 
 async function sendEmail({ to, subject, html }) {
+  console.log("RESEND_API_KEY present:", !!process.env.RESEND_API_KEY);
   if (!resendClient) {
     console.log(`[email désactivé] "${subject}" -> ${to}`);
     return { skipped: true };
   }
+  console.log("Sending to:", to, "| from:", FROM);
   try {
-    return await resendClient.emails.send({ from: FROM, to, subject, html });
+    // Le SDK Resend ne leve pas d'exception sur les erreurs API (cle
+    // invalide, domaine non verifie, etc.) : il renvoie { data, error }.
+    // Il faut donc verifier result.error explicitement, pas juste catch().
+    let result = await resendClient.emails.send({ from: FROM, to, subject, html });
+    console.log("Resend response:", JSON.stringify(result));
+
+    if (result.error && FROM !== FALLBACK_FROM && /domain|verif/i.test(result.error.message || "")) {
+      console.warn(`Domaine expéditeur "${FROM}" refusé par Resend, nouvel essai avec ${FALLBACK_FROM}`);
+      result = await resendClient.emails.send({ from: FALLBACK_FROM, to, subject, html });
+      console.log("Resend response (fallback from):", JSON.stringify(result));
+    }
+
+    return result;
   } catch (e) {
     console.error("Erreur envoi email Resend :", e.message);
     return { error: e.message };
