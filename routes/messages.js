@@ -1,8 +1,52 @@
 const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
+const { sendMessageNotification } = require("../services/email");
 const router = express.Router();
 router.use(requireAuth);
+
+const MESSAGE_EMAIL_COOLDOWN_MS = 15 * 60 * 1000;
+
+// Notifie le destinataire par email (fonctionnalite : notification email
+// nouveau message), sauf s'il a desactive ces notifications ou si un email
+// a deja ete envoye pour ce couple expediteur/destinataire il y a -15min
+// (evite le spam sur une conversation active). La table rate_limits sert de
+// marqueur "deja envoye", meme pattern que les rappels d'inactivite (server.js).
+async function notifyNewMessageByEmail(fromId, toId) {
+  try {
+    const recipientR = await pool.query(
+      "SELECT email, name, notify_email_messages FROM users WHERE id=$1", [toId]
+    );
+    const recipient = recipientR.rows[0];
+    if (!recipient || recipient.notify_email_messages === false) return;
+
+    const action = `msg_email_${fromId}`;
+    const rl = await pool.query(
+      "SELECT reset_at FROM rate_limits WHERE user_id=$1 AND action=$2", [toId, action]
+    );
+    if (rl.rows[0] && new Date(rl.rows[0].reset_at) > new Date()) return;
+
+    const senderR = await pool.query("SELECT name FROM users WHERE id=$1", [fromId]);
+    const senderName = senderR.rows[0]?.name || "Quelqu'un";
+
+    const contentR = await pool.query(
+      "SELECT content FROM messages WHERE from_id=$1 AND to_id=$2 ORDER BY created_at DESC LIMIT 1",
+      [fromId, toId]
+    );
+    const preview = contentR.rows[0]?.content || "";
+
+    await sendMessageNotification(
+      recipient.email, recipient.name, senderName, preview,
+      `${process.env.APP_URL || "https://gym-ai-coach-1wls.onrender.com"}/messages.html`
+    );
+
+    await pool.query(
+      `INSERT INTO rate_limits (user_id, action, count, reset_at) VALUES ($1,$2,1,$3)
+       ON CONFLICT (user_id, action) DO UPDATE SET count=1, reset_at=$3`,
+      [toId, action, new Date(Date.now() + MESSAGE_EMAIL_COOLDOWN_MS)]
+    );
+  } catch (e) { console.error("Erreur notification email message :", e); }
+}
 
 // Conversations (liste)
 router.get("/conversations", async (req, res) => {
@@ -59,6 +103,8 @@ router.post("/:toId", async (req, res) => {
         [req.params.toId, `💬 ${label} t'a envoyé un message.`]
       );
     }).catch(e => console.error("Erreur notif message :", e));
+
+    notifyNewMessageByEmail(req.session.userId, parseInt(req.params.toId, 10));
 
     res.status(201).json({ message: r.rows[0] });
   } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }

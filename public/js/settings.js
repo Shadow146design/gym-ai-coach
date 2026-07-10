@@ -65,6 +65,7 @@ async function loadProfileData() {
     document.getElementById("privacy-profile").checked = user.profile_visible_to_coaches !== false;
     document.getElementById("privacy-stats").checked = user.stats_visible_to_coaches !== false;
     document.getElementById("privacy-public-profile").checked = !!user.public_profile;
+    document.getElementById("notif-email-msg").checked = user.notify_email_messages !== false;
     renderPublicProfileLink(user);
 
     renderGoogleStatus(user);
@@ -155,6 +156,16 @@ async function savePrivacy() {
 }
 document.getElementById("privacy-profile").addEventListener("change", savePrivacy);
 document.getElementById("privacy-stats").addEventListener("change", savePrivacy);
+
+document.getElementById("notif-email-msg").addEventListener("change", async e => {
+  try {
+    await fetch("/api/profile/notifications", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notify_email_messages: e.target.checked }),
+    });
+  } catch {}
+});
 
 document.getElementById("password-form").addEventListener("submit", async e => {
   e.preventDefault();

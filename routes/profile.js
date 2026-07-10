@@ -37,7 +37,7 @@ router.get("/full", async (req, res) => {
               weight_kg, height_cm, age, gender, activity_level,
               main_goal, goal_date, personal_note, target_weight_kg,
               profile_visible_to_coaches, stats_visible_to_coaches,
-              username, public_profile
+              username, public_profile, notify_email_messages
        FROM users WHERE id=$1`,
       [uid]
     );
@@ -146,6 +146,21 @@ router.put("/privacy", async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error("Erreur PUT /profile/privacy :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+// Active/desactive l'email de notification recu a chaque nouveau message
+router.put("/notifications", async (req, res) => {
+  try {
+    const { notify_email_messages } = req.body;
+    await pool.query(
+      "UPDATE users SET notify_email_messages=$1 WHERE id=$2",
+      [!!notify_email_messages, req.session.userId]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Erreur PUT /profile/notifications :", err);
     res.status(500).json({ error: "Erreur serveur." });
   }
 });

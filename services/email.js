@@ -14,6 +14,12 @@ if (RESEND_API_KEY) {
   console.warn("⚠️  RESEND_API_KEY manquant — les emails transactionnels sont désactivés tant que la variable d'environnement n'est pas définie.");
 }
 
+function escapeHtml(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
 async function sendEmail({ to, subject, html }) {
   if (!resendClient) {
     console.log(`[email désactivé] "${subject}" -> ${to}`);
@@ -88,6 +94,20 @@ async function sendBadgeUnlockedEmail(to, name, badgeTitle, badgeIcon) {
   });
 }
 
+async function sendMessageNotification(toEmail, toName, fromName, messagePreview, conversationUrl) {
+  const truncated = messagePreview.length > 200 ? `${messagePreview.slice(0, 200)}…` : messagePreview;
+  return sendEmail({
+    to: toEmail,
+    subject: `💬 Nouveau message de ${fromName} sur Gym AI Coach`,
+    html: wrapTemplate(
+      `Bonjour ${escapeHtml(toName)},`,
+      `<strong>${escapeHtml(fromName)}</strong> vous a envoyé un message sur Gym AI Coach :
+       <p style="margin-top:12px;padding:14px 16px;background:#1e1e1e;border-left:3px solid #c94d28;border-radius:6px;font-style:italic">${escapeHtml(truncated)}</p>`,
+      "Répondre", conversationUrl
+    ),
+  });
+}
+
 async function sendPremiumConfirmationEmail(to, name) {
   return sendEmail({
     to,
@@ -107,4 +127,5 @@ module.exports = {
   sendWeeklyRecapEmail,
   sendBadgeUnlockedEmail,
   sendPremiumConfirmationEmail,
+  sendMessageNotification,
 };

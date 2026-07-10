@@ -47,6 +47,7 @@ DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='username')         THEN ALTER TABLE users ADD COLUMN username TEXT UNIQUE; END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='public_profile')   THEN ALTER TABLE users ADD COLUMN public_profile BOOLEAN NOT NULL DEFAULT FALSE; END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='premium_until')    THEN ALTER TABLE users ADD COLUMN premium_until TIMESTAMP; END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='notify_email_messages') THEN ALTER TABLE users ADD COLUMN notify_email_messages BOOLEAN NOT NULL DEFAULT TRUE; END IF;
 END $$;
 
 CREATE TABLE IF NOT EXISTS coach_profiles (
