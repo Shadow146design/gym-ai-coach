@@ -22,6 +22,7 @@ if (_themePref === "system") {
     { href: "/stats.html", icon: "📊", labelKey: "nav_stats" },
     { sep: true },
     { href: "/exercises.html", icon: "🏋️", labelKey: "nav_exercises" },
+    { href: "/nutrition.html", icon: "🥗", labelKey: "nav_nutrition" },
     { href: "/coaches.html", icon: "🏅", labelKey: "nav_coaches" },
     { href: "/messages.html", icon: "💬", labelKey: "nav_messages", badge: true },
     { href: "/voice.html", icon: "🎤", labelKey: "nav_voice" },
@@ -54,6 +55,7 @@ if (_themePref === "system") {
     tool: svgIcon(`<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/>`),
     users: svgIcon(`<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>`),
     logout: svgIcon(`<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>`),
+    pieChart: svgIcon(`<circle cx="12" cy="12" r="10"/><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>`),
     close: svgIcon(`<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>`),
   };
 
@@ -67,6 +69,7 @@ if (_themePref === "system") {
 
   // Liens complementaires accessibles depuis le drawer "Plus" de la bottom nav mobile.
   const MORE_ITEMS = [
+    { href: "/nutrition.html", icon: ICONS.pieChart, labelKey: "nav_nutrition" },
     { href: "/coaches.html", icon: ICONS.award, labelKey: "nav_coaches" },
     { href: "/messages.html", icon: ICONS.message, labelKey: "nav_messages", badge: true },
     { href: "/voice.html", icon: ICONS.message, labelKey: "nav_voice" },

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nutrition — Gym AI Coach</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#c94d28"/>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<div class="page-wrapper">
+<div class="shell">
+  <div class="page-head">
+    <div>
+      <h1>🥗 Nutrition</h1>
+      <p class="sub muted">Ton journal alimentaire quotidien, calculé selon ton profil.</p>
+    </div>
+  </div>
+
+  <div id="nutrition-incomplete" class="card hidden" style="border-left:3px solid var(--gold)">
+    <div class="card-title">Profil incomplet</div>
+    <p class="muted" style="font-size:.9rem;margin-bottom:14px">Renseigne ton poids, ta taille et ton âge pour que l'IA calcule tes besoins caloriques.</p>
+    <a class="btn btn-primary btn-sm" href="/profile.html">Compléter mon profil</a>
+  </div>
+
+  <div id="nutrition-app" class="hidden">
+    <!-- Objectifs journaliers -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title">Objectifs du jour — <span id="goal-label" class="muted" style="font-weight:400;font-size:.85rem"></span></div>
+      <div id="nutrition-kpis" class="kpi-grid"></div>
+    </div>
+
+    <!-- Progression du jour -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title">Progression aujourd'hui</div>
+      <div id="macro-bars"></div>
+    </div>
+
+    <div class="two-col" style="margin-bottom:20px">
+      <!-- Saisie rapide -->
+      <div class="card">
+        <div class="card-title">Saisie du jour</div>
+        <form id="nutrition-form">
+          <div class="two-col">
+            <div class="field"><label for="in-calories">Calories (kcal)</label><input id="in-calories" type="number" min="0" max="20000" placeholder="0"/></div>
+            <div class="field"><label for="in-proteins">Protéines (g)</label><input id="in-proteins" type="number" min="0" max="2000" placeholder="0"/></div>
+          </div>
+          <div class="two-col">
+            <div class="field"><label for="in-carbs">Glucides (g)</label><input id="in-carbs" type="number" min="0" max="2000" placeholder="0"/></div>
+            <div class="field"><label for="in-fats">Lipides (g)</label><input id="in-fats" type="number" min="0" max="2000" placeholder="0"/></div>
+          </div>
+          <div class="field"><label for="in-notes">Notes (optionnel)</label><input id="in-notes" type="text" maxlength="500" placeholder="Ex : repas de triche ce soir"/></div>
+          <button class="btn btn-primary btn-sm" type="submit">Enregistrer</button>
+          <span id="nutrition-save-status" class="muted" style="font-size:.85rem;margin-left:8px"></span>
+        </form>
+      </div>
+
+      <!-- Message IA -->
+      <div class="card">
+        <div class="card-title">🤖 Analyse du jour</div>
+        <p id="nutrition-ai-message" class="muted" style="font-size:.9rem;line-height:1.6"></p>
+      </div>
+    </div>
+
+    <!-- Graphe 30 jours -->
+    <div class="chart-wrap">
+      <div class="card-title">Calories — 30 derniers jours</div>
+      <canvas id="nutrition-chart" height="90"></canvas>
+    </div>
+  </div>
+
+  <div id="nutrition-loading" class="empty-state" style="margin-top:40px">
+    <p class="muted">Chargement…</p>
+  </div>
+</div>
+<footer>Gym AI Coach — les besoins nutritionnels sont estimés, consulte un professionnel pour un suivi personnalisé.</footer>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="/js/nutrition.js"></script>
+<script src="/js/i18n.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/pwa.js"></script>
+</body>
+</html>
