@@ -63,6 +63,19 @@
     <canvas id="progress-chart" height="90"></canvas>
   </div>
 
+  <!-- Comparaison avant/après séances (fonctionnalité 2) -->
+  <div class="card" id="compare-card" style="margin-top:24px">
+    <div class="card-title" style="margin-bottom:16px">📊 Comparaison de séances</div>
+    <div class="compare-selectors">
+      <select id="compare-exercise-select" style="min-width:180px"></select>
+      <select id="compare-date1-select" style="min-width:140px"></select>
+      <span class="muted">vs</span>
+      <select id="compare-date2-select" style="min-width:140px"></select>
+      <button class="btn btn-primary btn-sm" type="button" id="compare-btn">Comparer</button>
+    </div>
+    <div id="compare-result" style="margin-top:18px"></div>
+  </div>
+
   <div id="empty-state" class="empty-state hidden" style="margin-top:20px">
     <h3>Aucune donnée</h3>
     <p class="muted" style="margin-top:8px">Logge ta première séance pour voir tes stats ici.</p>

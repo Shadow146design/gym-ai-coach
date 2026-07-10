@@ -90,6 +90,100 @@ async function init() {
     select.addEventListener("change", () => loadProgressChart(select.value));
     loadProgressChart(exercises[0]);
   }
+
+  initCompare(exercises);
+}
+
+// ── Comparaison de séances (fonctionnalité 2) ─────────────
+async function initCompare(exercises) {
+  const exSelect = document.getElementById("compare-exercise-select");
+  if (!exSelect || !exercises.length) return;
+  exSelect.innerHTML = exercises.map(e => `<option value="${esc(e)}">${esc(e)}</option>`).join("");
+  exSelect.addEventListener("change", () => loadCompareDates(exSelect.value));
+  document.getElementById("compare-btn").addEventListener("click", runCompare);
+  await loadCompareDates(exSelect.value);
+}
+
+async function loadCompareDates(exercise) {
+  const res = await fetch(`/api/logs/exercise-dates?exercise=${encodeURIComponent(exercise)}`);
+  const { dates } = await res.json();
+  const d1 = document.getElementById("compare-date1-select");
+  const d2 = document.getElementById("compare-date2-select");
+  const result = document.getElementById("compare-result");
+  const btn = document.getElementById("compare-btn");
+
+  if (dates.length < 2) {
+    d1.innerHTML = "";
+    d2.innerHTML = "";
+    result.innerHTML = `<p class="muted" style="font-size:.85rem">Il faut au moins 2 séances différentes sur cet exercice pour comparer.</p>`;
+    btn.disabled = true;
+    return;
+  }
+  btn.disabled = false;
+  const opts = dates.map(d => `<option value="${d}">${new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" })}</option>`).join("");
+  d1.innerHTML = opts;
+  d2.innerHTML = opts;
+  // Par défaut : la plus ancienne vs la plus récente (comparaison "avant/après" la plus parlante)
+  d1.value = dates[dates.length - 1];
+  d2.value = dates[0];
+  result.innerHTML = "";
+}
+
+async function runCompare() {
+  const exercise = document.getElementById("compare-exercise-select").value;
+  const date1 = document.getElementById("compare-date1-select").value;
+  const date2 = document.getElementById("compare-date2-select").value;
+  const result = document.getElementById("compare-result");
+  if (!date1 || !date2) return;
+  if (date1 === date2) {
+    result.innerHTML = `<p class="muted" style="font-size:.85rem">Choisis deux dates différentes.</p>`;
+    return;
+  }
+
+  result.innerHTML = `<p class="muted" style="font-size:.85rem">Chargement…</p>`;
+  try {
+    const res = await fetch(`/api/logs/compare?exercise=${encodeURIComponent(exercise)}&date1=${date1}&date2=${date2}`);
+    const data = await res.json();
+    if (!res.ok) {
+      result.innerHTML = `<p class="muted" style="font-size:.85rem">${esc(data.error)}</p>`;
+      return;
+    }
+    renderCompareResult(data);
+  } catch {
+    result.innerHTML = `<p class="muted" style="font-size:.85rem">Impossible de joindre le serveur.</p>`;
+  }
+}
+
+function compareSessionCard(label, session) {
+  return `
+    <div class="recap-card">
+      <div class="recap-card-header">
+        <span>${label} — ${new Date(session.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" })}</span>
+      </div>
+      ${session.sets.map(s => `<div class="recap-row"><span>${s.weight} kg × ${s.reps} reps</span><span class="recap-meta">${s.sets} série${s.sets > 1 ? "s" : ""}</span></div>`).join("")}
+      <div class="recap-row" style="background:var(--bg-hover)">
+        <span style="font-size:.8rem;color:var(--chalk-dim)">Volume total</span>
+        <span class="recap-meta">${Math.round(session.totalVolume)} kg</span>
+      </div>
+    </div>`;
+}
+
+function renderCompareResult(data) {
+  const { sessionA, sessionB, delta, message } = data;
+  const badgeClass = delta.weightKg > 0 ? "up" : delta.weightKg < 0 ? "down" : "same";
+  const badgeArrow = delta.weightKg > 0 ? "▲" : delta.weightKg < 0 ? "▼" : "=";
+  const sign = delta.weightKg > 0 ? "+" : "";
+
+  document.getElementById("compare-result").innerHTML = `
+    <div class="compare-sessions">
+      ${compareSessionCard("Séance A", sessionA)}
+      ${compareSessionCard("Séance B", sessionB)}
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+      <span class="delta-badge ${badgeClass}">${badgeArrow} ${sign}${delta.weightKg} kg (${sign}${delta.weightPct}%)</span>
+      <span class="delta-badge ${delta.volumeKg >= 0 ? "up" : "down"}">Volume ${delta.volumeKg >= 0 ? "+" : ""}${delta.volumeKg} kg</span>
+    </div>
+    <div class="compare-message">🤖 ${esc(message)}</div>`;
 }
 
 async function loadProgressChart(exerciseName) {

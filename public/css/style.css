@@ -406,6 +406,16 @@ select option { background: var(--bg-card-solid); }
 .delta-badge.same { background: var(--bg-hover); color: var(--chalk-dim); }
 .delta-badge.new { background: var(--gold-bg); color: var(--gold); }
 
+/* ——— Comparaison de séances (fonctionnalité 2) ——— */
+.compare-selectors { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.compare-sessions { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 600px) { .compare-sessions { grid-template-columns: 1fr; } }
+.compare-message {
+  margin-top: 14px; padding: 12px 16px; border-radius: var(--radius);
+  background: var(--rust-bg); border-left: 3px solid var(--rust);
+  font-size: .88rem; line-height: 1.5;
+}
+
 /* ——— Récap séance ——— */
 .recap-card {
   border: 1px solid var(--border);

@@ -627,4 +627,78 @@ router.get("/form-score", async (req, res) => {
   }
 });
 
+// ── GET /exercise-dates (dates de séance disponibles pour un exercice, pour
+// alimenter les deux sélecteurs de la comparaison) ────────
+router.get("/exercise-dates", async (req, res) => {
+  try {
+    const exercise = req.query.exercise;
+    if (!exercise) return res.status(400).json({ error: "Exercice requis." });
+    const r = await pool.query(
+      `SELECT DISTINCT performed_at::date AS date FROM logs
+       WHERE user_id=$1 AND exercise_name=$2 ORDER BY date DESC`,
+      [req.session.userId, exercise]
+    );
+    res.json({ dates: r.rows.map(row => dayStr(row.date)) });
+  } catch (err) {
+    console.error("Erreur GET /exercise-dates :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+// ── GET /compare (comparaison avant/après séances, fonctionnalité 2) ──────
+router.get("/compare", async (req, res) => {
+  try {
+    const { exercise, date1, date2 } = req.query;
+    if (!exercise || !date1 || !date2) {
+      return res.status(400).json({ error: "Exercice et deux dates requis." });
+    }
+
+    async function loadSession(date) {
+      const r = await pool.query(
+        `SELECT weight, reps, sets, performed_at FROM logs
+         WHERE user_id=$1 AND exercise_name=$2 AND performed_at::date=$3::date
+         ORDER BY performed_at ASC`,
+        [req.session.userId, exercise, date]
+      );
+      const sets = r.rows.map(row => ({ weight: Number(row.weight), reps: row.reps, sets: row.sets }));
+      const maxWeight = sets.length ? Math.max(...sets.map(s => s.weight)) : 0;
+      const totalVolume = sets.reduce((a, s) => a + s.weight * s.reps * s.sets, 0);
+      return { date, sets, maxWeight, totalVolume, setCount: sets.reduce((a, s) => a + s.sets, 0) };
+    }
+
+    const [sessionA, sessionB] = await Promise.all([loadSession(date1), loadSession(date2)]);
+
+    if (!sessionA.sets.length || !sessionB.sets.length) {
+      return res.status(404).json({ error: "Pas de données pour l'une de ces deux dates." });
+    }
+
+    const weightDelta = Math.round((sessionB.maxWeight - sessionA.maxWeight) * 10) / 10;
+    const weightPct = sessionA.maxWeight > 0 ? Math.round((weightDelta / sessionA.maxWeight) * 1000) / 10 : 0;
+    const volumeDelta = Math.round(sessionB.totalVolume - sessionA.totalVolume);
+
+    const daysBetween = Math.abs(Math.round((new Date(date2) - new Date(date1)) / 86400000));
+    const elapsed = daysBetween >= 60 ? `${Math.round(daysBetween / 30)} mois`
+      : daysBetween >= 14 ? `${Math.round(daysBetween / 7)} semaines`
+      : `${daysBetween} jour${daysBetween > 1 ? "s" : ""}`;
+
+    let message;
+    if (weightDelta > 0) {
+      message = `En ${elapsed}, tu as progressé de ${weightDelta} kg au ${exercise}. C'est excellent !`;
+    } else if (weightDelta < 0) {
+      message = `En ${elapsed}, ton poids a baissé de ${Math.abs(weightDelta)} kg au ${exercise}. Regarde ton repos et ta récupération.`;
+    } else {
+      message = `Ton poids est resté stable au ${exercise} sur ${elapsed}. Essaie d'augmenter progressivement la charge.`;
+    }
+
+    res.json({
+      exercise, sessionA, sessionB,
+      delta: { weightKg: weightDelta, weightPct, volumeKg: volumeDelta },
+      message,
+    });
+  } catch (err) {
+    console.error("Erreur GET /compare :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
 module.exports = router;
