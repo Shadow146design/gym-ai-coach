@@ -19,13 +19,58 @@ const MUSCLE_SVG_REGIONS = {
   "full body": { view: "front", regions: ["chest", "abs", "legs", "shoulders", "arms"] },
 };
 
+// Retire les diacritiques (accents) d'une chaine : decompose en NFD (une
+// lettre de base + marques combinantes separees), puis filtre les marques
+// combinantes par point de code plutot que via une plage regex Unicode
+// (plus fiable a travers les outils/editeurs que d'ecrire la plage litteralement).
+function stripAccents(s) {
+  return Array.from(String(s || "").normalize("NFD"))
+    .filter(ch => { const c = ch.codePointAt(0); return c < 0x0300 || c > 0x036f; })
+    .join("");
+}
+
+const EXERCISE_MATCH_STOPWORDS = new Set([
+  "de", "du", "des", "la", "le", "les", "et", "a", "au", "aux", "un", "une", "sur", "avec", "pour", "en",
+]);
+
+function tokenizeExerciseName(name) {
+  return stripAccents(String(name || "").toLowerCase())
+    .replace(/[()]/g, " ")
+    .split(/[^a-z0-9]+/)
+    .filter(w => w.length > 1 && !EXERCISE_MATCH_STOPWORDS.has(w));
+}
+
+// Les noms d'exercices generes par l'IA ("Développé couché haltères plat")
+// ne correspondent que rarement mot pour mot aux entrees de la bibliotheque
+// statique ("Développé couché barre") : on cherche donc l'entree dont les
+// mots-cles (accents/casse ignores) recouvrent le mieux ceux du nom cible,
+// plutot que d'exiger une egalite stricte.
 function findExerciseData(name) {
   if (typeof EXERCISES === "undefined") return null;
-  const norm = s => (s || "").toLowerCase().trim();
-  const target = norm(name);
-  return EXERCISES.find(e => norm(e.name) === target)
-    || EXERCISES.find(e => target.includes(norm(e.name)) || norm(e.name).includes(target))
-    || null;
+  const normEq = s => stripAccents(String(s || "").toLowerCase().trim());
+  const target = normEq(name);
+
+  const exact = EXERCISES.find(e => normEq(e.name) === target);
+  if (exact) return exact;
+
+  const targetWords = new Set(tokenizeExerciseName(name));
+  if (!targetWords.size) return null;
+
+  let best = null, bestScore = 0;
+  for (const ex of EXERCISES) {
+    const exWords = tokenizeExerciseName(ex.name);
+    if (!exWords.length) continue;
+    const shared = exWords.filter(w => targetWords.has(w)).length;
+    if (!shared) continue;
+    // Normalise par le plus petit des deux ensembles de mots : un nom court
+    // et generique (ex "Pompes") doit pouvoir matcher une variante plus
+    // longue ("Pompes lestées") sans etre penalise par la difference de taille.
+    const score = shared / Math.min(exWords.length, targetWords.size);
+    if (score > bestScore) { bestScore = score; best = ex; }
+  }
+  // Au moins la moitie des mots-cles du plus petit nom doivent se retrouver
+  // dans l'autre : evite les faux positifs sur un seul mot commun trop generique.
+  return bestScore >= 0.5 ? best : null;
 }
 
 function bodySilhouetteSvg(view, activeRegions) {
