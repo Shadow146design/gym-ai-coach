@@ -18,13 +18,23 @@ async function notifyNewMessageByEmail(fromId, toId) {
       "SELECT email, name, notify_email_messages FROM users WHERE id=$1", [toId]
     );
     const recipient = recipientR.rows[0];
-    if (!recipient || recipient.notify_email_messages === false) return;
+    if (!recipient) {
+      console.log(`Notification email annulée : destinataire ${toId} introuvable en base.`);
+      return;
+    }
+    if (recipient.notify_email_messages === false) {
+      console.log(`Notification email annulée : ${recipient.email} a désactivé ces notifications.`);
+      return;
+    }
 
     const action = `msg_email_${fromId}`;
     const rl = await pool.query(
       "SELECT reset_at FROM rate_limits WHERE user_id=$1 AND action=$2", [toId, action]
     );
-    if (rl.rows[0] && new Date(rl.rows[0].reset_at) > new Date()) return;
+    if (rl.rows[0] && new Date(rl.rows[0].reset_at) > new Date()) {
+      console.log(`Notification email annulée : cooldown actif pour ${recipient.email} (expéditeur ${fromId}) jusqu'à ${rl.rows[0].reset_at}.`);
+      return;
+    }
 
     const senderR = await pool.query("SELECT name FROM users WHERE id=$1", [fromId]);
     const senderName = senderR.rows[0]?.name || "Quelqu'un";
@@ -35,10 +45,15 @@ async function notifyNewMessageByEmail(fromId, toId) {
     );
     const preview = contentR.rows[0]?.content || "";
 
-    await sendMessageNotification(
+    console.log("Envoi notification email à:", recipient.email);
+    const result = await sendMessageNotification(
       recipient.email, recipient.name, senderName, preview,
       `${process.env.APP_URL || "https://gym-ai-coach-1wls.onrender.com"}/messages.html`
     );
+    console.log("Résultat Resend:", result);
+    if (result?.error) {
+      console.error(`Échec envoi notification email à ${recipient.email} :`, result.error);
+    }
 
     await pool.query(
       `INSERT INTO rate_limits (user_id, action, count, reset_at) VALUES ($1,$2,1,$3)
