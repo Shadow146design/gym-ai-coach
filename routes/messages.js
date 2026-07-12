@@ -1,11 +1,39 @@
 const express = require("express");
 const pool = require("../db/pool");
-const { requireAuth } = require("../middleware/auth");
+const { requireAuth, requireRole } = require("../middleware/auth");
 const { sendMessageNotification } = require("../services/email");
 const router = express.Router();
 router.use(requireAuth);
 
 const MESSAGE_EMAIL_COOLDOWN_MS = 15 * 60 * 1000;
+
+// Diagnostic (admin uniquement) : appelle sendMessageNotification() en
+// direct avec des valeurs hardcodées, pour isoler un problème cote Resend
+// (cle API, domaine non verifie, restriction sandbox) de la logique de
+// récupération du destinataire/cooldown. Doit être déclarée avant /:withId
+// (sinon Express interprète "debug" comme un id).
+// Usage : GET /api/messages/debug/test-email?to=email@exemple.com
+router.get("/debug/test-email", requireRole("admin"), async (req, res) => {
+  const to = req.query.to;
+  if (!to) return res.status(400).json({ error: "Paramètre ?to=email@exemple.com requis." });
+  console.log("[debug test-email] Envoi direct vers:", to, "| RESEND_API_KEY présente:", !!process.env.RESEND_API_KEY, "| EMAIL_FROM:", process.env.EMAIL_FROM || "(fallback onboarding@resend.dev)");
+  try {
+    const result = await sendMessageNotification(
+      to, "Test", "Gym AI Coach (debug)",
+      "Ceci est un test direct de sendMessageNotification avec des valeurs hardcodées.",
+      `${process.env.APP_URL || "https://gym-ai-coach-1wls.onrender.com"}/messages.html`
+    );
+    console.log("[debug test-email] Résultat brut Resend:", JSON.stringify(result));
+    res.json({
+      result,
+      resendApiKeyPresent: !!process.env.RESEND_API_KEY,
+      emailFrom: process.env.EMAIL_FROM || "onboarding@resend.dev (fallback)",
+    });
+  } catch (e) {
+    console.error("[debug test-email] Erreur:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // Notifie le destinataire par email (fonctionnalite : notification email
 // nouveau message), sauf s'il a desactive ces notifications ou si un email

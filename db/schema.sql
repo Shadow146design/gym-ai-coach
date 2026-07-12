@@ -328,7 +328,16 @@ INSERT INTO exercise_videos (exercise_name, youtube_id, thumbnail_url) VALUES
   ('Dips',                   '2z8JmcrW-As', 'https://img.youtube.com/vi/2z8JmcrW-As/mqdefault.jpg'),
   ('Mollets debout',         'gwLzBJYoWlQ', 'https://img.youtube.com/vi/gwLzBJYoWlQ/mqdefault.jpg'),
   ('Curl pupitre',           'av7-8igSXTs', 'https://img.youtube.com/vi/av7-8igSXTs/mqdefault.jpg'),
-  ('Face pull',              'rep0guA2D4s', 'https://img.youtube.com/vi/rep0guA2D4s/mqdefault.jpg')
+  ('Face pull',              'rep0guA2D4s', 'https://img.youtube.com/vi/rep0guA2D4s/mqdefault.jpg'),
+  ('Adducteurs machine',     'MCRFhGHIhhE', 'https://img.youtube.com/vi/MCRFhGHIhhE/mqdefault.jpg'),
+  ('Abducteurs machine',     'MCRFhGHIhhE', 'https://img.youtube.com/vi/MCRFhGHIhhE/mqdefault.jpg'),
+  ('Planche',                'pSHjTRChQZY', 'https://img.youtube.com/vi/pSHjTRChQZY/mqdefault.jpg'),
+  ('Crunch',                 'Xyd_fa5zoEU', 'https://img.youtube.com/vi/Xyd_fa5zoEU/mqdefault.jpg'),
+  ('Pull-over haltère',      'MkK4-GFRfMQ', 'https://img.youtube.com/vi/MkK4-GFRfMQ/mqdefault.jpg'),
+  ('Shrugs barre',           'g6qbq4Lf1FI', 'https://img.youtube.com/vi/g6qbq4Lf1FI/mqdefault.jpg'),
+  ('Skull crusher',          'dKpn5HvFGFI', 'https://img.youtube.com/vi/dKpn5HvFGFI/mqdefault.jpg'),
+  ('Kickback haltère',       'ZWUqPtlMSgY', 'https://img.youtube.com/vi/ZWUqPtlMSgY/mqdefault.jpg'),
+  ('Développé couché prise serrée', 'b_lB2GlZxpk', 'https://img.youtube.com/vi/b_lB2GlZxpk/mqdefault.jpg')
 ON CONFLICT (exercise_name) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS "session" (

@@ -2241,9 +2241,11 @@ body.landing { overflow-x: hidden; }
   -webkit-backdrop-filter: blur(10px);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 22px; padding: 32px 20px;
-  opacity: 0; transition: opacity .25s var(--ease);
+  opacity: 0; pointer-events: none; transition: opacity .25s var(--ease);
 }
-.voice-assistant-overlay.open { opacity: 1; }
+/* Injectee (cachee) des le chargement de la page plutot que creee au clic :
+   moins de risque de race condition, plus facile a inspecter en devtools. */
+.voice-assistant-overlay.open { opacity: 1; pointer-events: auto; }
 .voice-assistant-close {
   position: absolute; top: 20px; right: 20px;
   width: 38px; height: 38px; border-radius: 50%;
