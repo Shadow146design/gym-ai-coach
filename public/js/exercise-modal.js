@@ -181,10 +181,17 @@ async function openExerciseModal(name, muscleGroupHint, notesHint) {
   const youtubeId = await fetchExerciseVideoId(lookupName);
   if (!document.body.contains(overlay)) return; // fermé entre-temps
   if (youtubeId) {
-    mediaEl.innerHTML = `<iframe class="exercise-modal-video" src="https://www.youtube.com/embed/${escExMod(youtubeId)}"
-      title="Démonstration ${escExMod(name)}" frameborder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowfullscreen></iframe>`;
+    // Lien de secours sous l'iframe : certains navigateurs/bloqueurs de pub
+    // empêchent l'intégration YouTube sans déclencher d'erreur JS détectable
+    // (l'iframe "charge" mais reste vide) — ce lien garantit que la vidéo
+    // reste accessible en un clic dans tous les cas.
+    mediaEl.innerHTML = `<div class="exercise-modal-video-wrap">
+      <iframe class="exercise-modal-video" src="https://www.youtube.com/embed/${escExMod(youtubeId)}"
+        title="Démonstration ${escExMod(name)}" frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen></iframe>
+      <a class="exercise-video-fallback" href="https://www.youtube.com/watch?v=${escExMod(youtubeId)}" target="_blank" rel="noopener noreferrer">▶ Voir la démonstration sur YouTube</a>
+    </div>`;
     return;
   }
 
