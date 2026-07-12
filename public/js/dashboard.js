@@ -224,16 +224,24 @@ function renderPeriodization(program) {
 }
 
 // ── Chat Coach IA ─────────────────────────────────────────
-initVoiceInput("chat-input", "chat-mic-btn");
-document.getElementById("chat-send-btn").addEventListener("click", sendMessage);
+// Le micro ouvre l'assistant vocal conversationnel plein ecran (bulle) au
+// lieu de simplement dicter dans le champ texte — voir voice-assistant.js.
+document.getElementById("chat-mic-btn")?.addEventListener("click", () => window.openVoiceAssistant?.(sendMessage));
+document.getElementById("chat-send-btn").addEventListener("click", () => sendMessage());
 document.getElementById("chat-input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 
-async function sendMessage() {
+// textOverride : message a envoyer sans passer par le champ texte (utilise
+// par l'assistant vocal). skipSpeak : n'appelle pas la synthese vocale ici
+// car l'appelant (voice-assistant.js) gere sa propre lecture avec des
+// callbacks de debut/fin pour animer la bulle. Retourne le texte de la
+// reponse (ou null en cas d'erreur/limite) pour que l'appelant puisse la
+// lire a voix haute lui-meme.
+async function sendMessage(textOverride, { skipSpeak = false } = {}) {
   const input = document.getElementById("chat-input");
-  const text = input.value.trim();
-  if (!text) return;
+  const text = (textOverride != null ? textOverride : input.value).trim();
+  if (!text) return null;
 
-  input.value = "";
+  if (textOverride == null) input.value = "";
   appendMsg("user", text);
   chatHistory.push({ role: "user", content: text });
 
@@ -252,7 +260,7 @@ async function sendMessage() {
         chatHistory.pop();
         showPremiumModal(data.error, data.upgrade_url);
         refreshChatLimitIndicator();
-        return;
+        return null;
       }
       throw new Error(data.error);
     }
@@ -260,7 +268,7 @@ async function sendMessage() {
     thinking.remove();
     const reply = data.reply;
     appendMsg("coach", reply);
-    window.speakText?.(reply);
+    if (!skipSpeak) window.speakText?.(reply);
     chatHistory.push({ role: "assistant", content: reply });
 
     if (data.programUpdated) {
@@ -271,9 +279,11 @@ async function sendMessage() {
       highlightExercises(changedNames);
     }
     refreshChatLimitIndicator();
+    return reply;
   } catch (e) {
     thinking.remove();
     appendMsg("coach", "Désolé, je n'arrive pas à répondre pour l'instant. Réessaie dans quelques secondes.");
+    return null;
   }
 }
 

@@ -181,17 +181,19 @@ async function openExerciseModal(name, muscleGroupHint, notesHint) {
   const youtubeId = await fetchExerciseVideoId(lookupName);
   if (!document.body.contains(overlay)) return; // fermé entre-temps
   if (youtubeId) {
-    // Lien de secours sous l'iframe : certains navigateurs/bloqueurs de pub
-    // empêchent l'intégration YouTube sans déclencher d'erreur JS détectable
-    // (l'iframe "charge" mais reste vide) — ce lien garantit que la vidéo
-    // reste accessible en un clic dans tous les cas.
-    mediaEl.innerHTML = `<div class="exercise-modal-video-wrap">
-      <iframe class="exercise-modal-video" src="https://www.youtube.com/embed/${escExMod(youtubeId)}"
-        title="Démonstration ${escExMod(name)}" frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen></iframe>
-      <a class="exercise-video-fallback" href="https://www.youtube.com/watch?v=${escExMod(youtubeId)}" target="_blank" rel="noopener noreferrer">▶ Voir la démonstration sur YouTube</a>
-    </div>`;
+    // Thumbnail cliquable plutôt qu'iframe intégrée : les bloqueurs de pub
+    // (uBlock, AdBlock…) bloquent silencieusement l'intégration YouTube
+    // (l'iframe "charge" mais reste vide, sans erreur JS détectable). Une
+    // image + lien externe est fiable sur tous les navigateurs.
+    // hqdefault existe toujours pour toute vidéo YouTube (généré
+    // automatiquement) ; maxresdefault n'existe que pour certains uploads et
+    // renvoie un placeholder gris en 200 OK plutôt qu'une vraie erreur HTTP
+    // quand absent — un fallback onerror ne le détecterait donc pas.
+    const id = escExMod(youtubeId);
+    mediaEl.innerHTML = `<a class="exercise-video-thumb" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener noreferrer" aria-label="Voir la démonstration sur YouTube">
+      <img src="https://img.youtube.com/vi/${id}/hqdefault.jpg" alt="Démonstration ${escExMod(name)}" loading="lazy"/>
+      <span class="exercise-video-play">▶</span>
+    </a>`;
     return;
   }
 

@@ -15,11 +15,16 @@ const MESSAGE_EMAIL_COOLDOWN_MS = 15 * 60 * 1000;
 async function notifyNewMessageByEmail(fromId, toId) {
   try {
     const recipientR = await pool.query(
-      "SELECT email, name, notify_email_messages FROM users WHERE id=$1", [toId]
+      "SELECT email, name, role, notify_email_messages FROM users WHERE id=$1", [toId]
     );
     const recipient = recipientR.rows[0];
+    console.log("Destinataire role:", recipient?.role, "email:", recipient?.email);
     if (!recipient) {
       console.log(`Notification email annulée : destinataire ${toId} introuvable en base.`);
+      return;
+    }
+    if (!recipient.email) {
+      console.log(`Notification email annulée : destinataire ${toId} (${recipient.role}) n'a pas d'email en base.`);
       return;
     }
     if (recipient.notify_email_messages === false) {
@@ -45,12 +50,12 @@ async function notifyNewMessageByEmail(fromId, toId) {
     );
     const preview = contentR.rows[0]?.content || "";
 
-    console.log("Envoi notification email à:", recipient.email);
+    console.log("Envoi email notification...");
     const result = await sendMessageNotification(
       recipient.email, recipient.name, senderName, preview,
       `${process.env.APP_URL || "https://gym-ai-coach-1wls.onrender.com"}/messages.html`
     );
-    console.log("Résultat Resend:", result);
+    console.log("Résultat:", JSON.stringify(result));
     if (result?.error) {
       console.error(`Échec envoi notification email à ${recipient.email} :`, result.error);
     }

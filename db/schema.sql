@@ -313,7 +313,22 @@ INSERT INTO exercise_videos (exercise_name, youtube_id, thumbnail_url) VALUES
   ('Hack squat',             'DbFgyvMl-Wg', 'https://img.youtube.com/vi/DbFgyvMl-Wg/mqdefault.jpg'),
   ('Presse à cuisses',       'IZxyjW7MPJQ', 'https://img.youtube.com/vi/IZxyjW7MPJQ/mqdefault.jpg'),
   ('Curl barre EZ',          'av7-8igSXTs', 'https://img.youtube.com/vi/av7-8igSXTs/mqdefault.jpg'),
-  ('Pushdown corde',         'vB5OHsJ3EME', 'https://img.youtube.com/vi/vB5OHsJ3EME/mqdefault.jpg')
+  ('Pushdown corde',         'vB5OHsJ3EME', 'https://img.youtube.com/vi/vB5OHsJ3EME/mqdefault.jpg'),
+  ('Leg curl',               'ZlFnkB_eoXY', 'https://img.youtube.com/vi/ZlFnkB_eoXY/mqdefault.jpg'),
+  ('Leg extension',          'YyvSfVjQeL0', 'https://img.youtube.com/vi/YyvSfVjQeL0/mqdefault.jpg'),
+  ('Élévations latérales',   'FeCthMbwFOA', 'https://img.youtube.com/vi/FeCthMbwFOA/mqdefault.jpg'),
+  ('Curl haltères',          'sAq_ocpS3Io', 'https://img.youtube.com/vi/sAq_ocpS3Io/mqdefault.jpg'),
+  ('Extension triceps corde','vB5OHsJ3EME', 'https://img.youtube.com/vi/vB5OHsJ3EME/mqdefault.jpg'),
+  ('Rowing haltère',         'rT7DgCr-3pg', 'https://img.youtube.com/vi/rT7DgCr-3pg/mqdefault.jpg'),
+  ('Tirage vertical',        'lueqMNHCoBI', 'https://img.youtube.com/vi/lueqMNHCoBI/mqdefault.jpg'),
+  ('Développé incliné',      'DbFgyvMl-Wg', 'https://img.youtube.com/vi/DbFgyvMl-Wg/mqdefault.jpg'),
+  ('Fentes',                 'QOVaHwm-Q6U', 'https://img.youtube.com/vi/QOVaHwm-Q6U/mqdefault.jpg'),
+  ('Hip thrust',             'xM7XM0lCMbd', 'https://img.youtube.com/vi/xM7XM0lCMbd/mqdefault.jpg'),
+  ('Écarté couché',          'dKpn5HvFGFI', 'https://img.youtube.com/vi/dKpn5HvFGFI/mqdefault.jpg'),
+  ('Dips',                   '2z8JmcrW-As', 'https://img.youtube.com/vi/2z8JmcrW-As/mqdefault.jpg'),
+  ('Mollets debout',         'gwLzBJYoWlQ', 'https://img.youtube.com/vi/gwLzBJYoWlQ/mqdefault.jpg'),
+  ('Curl pupitre',           'av7-8igSXTs', 'https://img.youtube.com/vi/av7-8igSXTs/mqdefault.jpg'),
+  ('Face pull',              'rep0guA2D4s', 'https://img.youtube.com/vi/rep0guA2D4s/mqdefault.jpg')
 ON CONFLICT (exercise_name) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS "session" (
