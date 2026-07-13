@@ -17,6 +17,15 @@ function dayStr(d) {
   return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
 }
 
+// Le serveur (Render) tourne en UTC, pas en heure francaise : entre minuit et
+// 1h/2h du matin heure de Paris, dayStr(new Date()) renvoyait encore la
+// veille (cote UTC), cassant le streak pour les seances loguees tard le
+// soir. Calcule le "aujourd'hui" reel cote France, independamment du fuseau
+// du process Node.
+function parisDayStr(d) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}
+
 // ── POST : enregistre une série ───────────────────────────
 router.post("/", async (req, res) => {
   try {
@@ -197,15 +206,21 @@ router.get("/", async (req, res) => {
 router.get("/streak", async (req, res) => {
   try {
     const r = await pool.query(
-      `SELECT performed_at::date AS day FROM logs
+      // performed_at est un TIMESTAMP sans fuseau, stocke en heure UTC (NOW()
+      // sous la session Postgres, elle-meme en UTC) : il faut d'abord le
+      // "re-typer" en UTC (AT TIME ZONE 'UTC' -> timestamptz, l'instant reel)
+      // avant de le convertir en heure de Paris. Un seul AT TIME ZONE
+      // reinterprete la valeur au lieu de la convertir et donne un resultat
+      // faux (decale de 2x le fuseau au lieu d'etre correct).
+      `SELECT (performed_at AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Paris')::date AS day FROM logs
        WHERE user_id=$1 GROUP BY day ORDER BY day DESC`,
       [req.session.userId]
     );
     const days = r.rows.map(x => dayStr(x.day));
     if (!days.length) return res.json({ current: 0, best: 0, totalSessions: 0, trainedToday: false });
 
-    const today = dayStr(new Date());
-    const yesterday = dayStr(new Date(Date.now() - 86400000));
+    const today = parisDayStr(new Date());
+    const yesterday = parisDayStr(new Date(Date.now() - 86400000));
 
     let current = 0;
     let best = 0;
