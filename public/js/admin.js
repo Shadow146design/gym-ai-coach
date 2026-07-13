@@ -51,6 +51,47 @@ async function init() {
   allUsers = usersR.users || [];
   renderUsers(allUsers);
   loadCertifiedList();
+  loadSupportTickets();
+}
+
+const TICKET_TYPE_LABELS = {
+  bug: "Bug technique",
+  program: "Problème avec mon programme",
+  payment: "Problème de paiement",
+  coach: "Problème avec mon coach",
+  suggestion: "Suggestion d'amélioration",
+  other: "Autre",
+};
+
+async function loadSupportTickets() {
+  const container = document.getElementById("support-tickets-list");
+  try {
+    const r = await fetch("/api/support/tickets").then(res => res.json());
+    const tickets = r.tickets || [];
+    const open = tickets.filter(t => t.status === "open");
+    container.innerHTML = open.length
+      ? open.map(t => `
+        <div class="support-ticket-row" id="ticket-${t.id}">
+          <div class="support-ticket-head">
+            <div>
+              <span class="support-ticket-type">${esc(TICKET_TYPE_LABELS[t.type] || t.type)}</span>
+              <span style="margin-left:8px">${esc(t.user_name)} <span class="muted" style="font-size:.8rem">${esc(t.user_email)}</span></span>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="resolveTicket(${t.id})">Marquer résolu</button>
+          </div>
+          <div class="support-ticket-desc">${esc(t.description)}</div>
+          <div class="support-ticket-meta">${esc(t.page_url || "—")} · ${new Date(t.created_at).toLocaleString("fr-FR")}</div>
+        </div>`).join("")
+      : `<p class="muted" style="font-size:.85rem">Aucun ticket ouvert pour l'instant.</p>`;
+  } catch {
+    container.innerHTML = `<p class="muted" style="font-size:.85rem">Impossible de charger les tickets.</p>`;
+  }
+}
+
+async function resolveTicket(id) {
+  const r = await fetch(`/api/support/tickets/${id}/resolve`, { method: "PUT" }).then(r => r.json());
+  if (!r.ticket) return alert(r.error || "Erreur serveur.");
+  document.getElementById(`ticket-${id}`)?.remove();
 }
 
 async function loadCertifiedList() {

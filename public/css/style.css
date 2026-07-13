@@ -1687,6 +1687,14 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
   transition: background .18s var(--ease), color .18s var(--ease);
 }
 .sidebar-logout:hover { background: var(--bg-hover); color: var(--red); }
+.sidebar-bugreport-btn {
+  color: var(--chalk-dim); font-size: 1.02rem; flex-shrink: 0;
+  width: 30px; height: 30px; border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; cursor: pointer;
+  transition: background .18s var(--ease), color .18s var(--ease);
+}
+.sidebar-bugreport-btn:hover { background: var(--bg-hover); color: var(--chalk); }
 
 /* Layout principal avec sidebar */
 .page-wrapper {
@@ -2204,6 +2212,102 @@ body.landing { overflow-x: hidden; }
   margin-bottom: 10px;
 }
 .modal-card p { font-size: .9rem; }
+
+/* =========================================================
+   SIGNALEMENT DE BUG / SUPPORT
+   ========================================================= */
+.bug-report-fab {
+  position: fixed; right: 20px; bottom: 20px; z-index: 400;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--bg-card-solid); border: 1px solid var(--border-strong);
+  color: var(--chalk-dim); font-size: 1.15rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; opacity: .55;
+  box-shadow: var(--shadow-card);
+  transition: opacity .18s var(--ease), transform .18s var(--ease), box-shadow .18s var(--ease);
+}
+.bug-report-fab:hover { opacity: 1; transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+@media (max-width: 768px) {
+  .bug-report-fab { bottom: 78px; right: 14px; width: 40px; height: 40px; font-size: 1.05rem; }
+}
+
+.bug-report-overlay {
+  position: fixed; inset: 0; z-index: 700;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s var(--ease);
+}
+.bug-report-overlay.open { opacity: 1; pointer-events: auto; }
+.bug-report-modal {
+  position: relative;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  padding: 30px;
+  max-width: 460px; width: 100%;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+.bug-report-close {
+  position: absolute; top: 14px; right: 14px;
+  background: transparent; border: none; color: var(--chalk-dim);
+  font-size: 1.1rem; cursor: pointer; width: 30px; height: 30px;
+  border-radius: 50%; transition: background .18s var(--ease), color .18s var(--ease);
+}
+.bug-report-close:hover { background: var(--bg-hover); color: var(--chalk); }
+.bug-report-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 1.2rem;
+  margin: 0 0 18px;
+}
+.bug-report-label {
+  display: block; font-size: .78rem; font-weight: 600; color: var(--chalk-dim);
+  text-transform: uppercase; letter-spacing: .03em;
+  margin: 14px 0 6px;
+}
+.bug-report-label:first-of-type { margin-top: 0; }
+.bug-report-select, .bug-report-input, .bug-report-textarea {
+  width: 100%; background: var(--bg-hover); border: 1px solid var(--border-strong);
+  color: var(--chalk); border-radius: var(--radius); padding: 9px 12px;
+  font-size: .88rem; font-family: inherit;
+}
+.bug-report-input[readonly] { color: var(--chalk-dim); cursor: default; }
+.bug-report-textarea { resize: vertical; min-height: 90px; }
+.bug-report-checkbox {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 16px; font-size: .85rem; color: var(--chalk-dim); cursor: pointer;
+}
+.bug-report-checkbox input { width: auto; margin: 0; }
+.bug-report-error { color: var(--rust-soft); font-size: .82rem; margin-top: 10px; min-height: 1.2em; }
+.bug-report-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.bug-report-success { font-size: .92rem; line-height: 1.6; color: var(--green); text-align: center; padding: 12px 0; }
+
+/* Badge tickets ouverts (nav Admin, sidebar + drawer mobile) */
+.sidebar-admin-badge, .mobile-more-admin-badge {
+  margin-left: auto;
+  background: var(--grad-rust); color: #fff;
+  font-family: var(--font-mono); font-size: .68rem; font-weight: 600;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.support-ticket-row {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 14px 0; border-top: 1px solid var(--border-soft);
+}
+.support-ticket-row:first-child { border-top: none; }
+.support-ticket-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.support-ticket-type {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  background: var(--rust-bg); color: var(--rust-soft);
+  padding: 2px 8px; border-radius: 4px;
+}
+.support-ticket-meta { font-size: .78rem; color: var(--chalk-dim); }
+.support-ticket-desc { font-size: .85rem; color: var(--chalk); line-height: 1.5; white-space: pre-wrap; }
 
 /* =========================================================
    PREMIUM GATE — sections verrouillees (Fonctionnalite 13)

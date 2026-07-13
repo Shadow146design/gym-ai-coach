@@ -151,6 +151,41 @@ async function sendPremiumConfirmationEmail(to, name) {
   });
 }
 
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "itachiuchiwa335@gmail.com";
+
+const TICKET_TYPE_LABELS = {
+  bug: "Bug technique",
+  program: "Problème avec mon programme",
+  payment: "Problème de paiement",
+  coach: "Problème avec mon coach",
+  suggestion: "Suggestion d'amélioration",
+  other: "Autre",
+};
+
+// Envoyee directement (pas via sendEmail gate par EMAIL_FROM) car le
+// destinataire est l'adresse admin fixe, deja verifiee cote Resend
+// (contrairement aux notifications entre utilisateurs, restreintes en mode
+// sandbox tant qu'aucun domaine perso n'est verifie).
+async function sendSupportTicketEmail(ticket, user) {
+  const typeLabel = TICKET_TYPE_LABELS[ticket.type] || ticket.type;
+  const userLine = user
+    ? `<strong>${escapeHtml(user.name)}</strong> (${escapeHtml(user.email)})`
+    : "Utilisateur (informations non partagées)";
+  return sendEmail({
+    to: SUPPORT_EMAIL,
+    subject: `🐛 [${typeLabel}] — Nouveau ticket de ${user ? user.name : "un utilisateur"}`,
+    html: wrapTemplate(
+      `Nouveau ticket de support #${ticket.id}`,
+      `<p><strong>Type :</strong> ${escapeHtml(typeLabel)}</p>
+       <p><strong>Utilisateur :</strong> ${userLine}</p>
+       <p><strong>Page concernée :</strong> ${escapeHtml(ticket.page_url || "—")}</p>
+       <p><strong>Date :</strong> ${new Date(ticket.created_at).toLocaleString("fr-FR")}</p>
+       <p style="margin-top:12px;padding:14px 16px;background:#1e1e1e;border-left:3px solid #c94d28;border-radius:6px;white-space:pre-wrap">${escapeHtml(ticket.description)}</p>`,
+      "Gérer dans l'admin", `${APP_URL}/admin.html`
+    ),
+  });
+}
+
 module.exports = {
   sendEmail,
   sendWelcomeEmail,
@@ -160,4 +195,5 @@ module.exports = {
   sendPremiumConfirmationEmail,
   sendMessageNotification,
   sendCertificationEmail,
+  sendSupportTicketEmail,
 };

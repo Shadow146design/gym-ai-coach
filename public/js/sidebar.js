@@ -119,6 +119,14 @@ if (_themePref === "system") {
       certified = typeof c?.certified === "boolean" && c.certified;
     } catch {}
 
+    let openTickets = 0;
+    if (role === "admin") {
+      try {
+        const s = await fetch("/api/support/tickets").then(r => r.ok ? r.json() : null);
+        openTickets = (s?.tickets || []).filter(t => t.status === "open").length;
+      } catch {}
+    }
+
     const items = NAV_ITEMS.filter(it => !(it.hideForRoles && it.hideForRoles.includes(role)));
 
     if (role === "coach" || role === "admin") {
@@ -126,7 +134,7 @@ if (_themePref === "system") {
       items.push({ href: "/coach-dashboard.html", icon: "🎛️", labelKey: "nav_coach_clients" });
     }
     if (role === "admin") {
-      items.push({ href: "/admin.html", icon: "🔧", labelKey: "nav_admin" });
+      items.push({ href: "/admin.html", icon: "🔧", labelKey: "nav_admin", adminBadge: true });
     }
 
     // Liens du drawer "Plus" (bottom nav mobile) : memes regles de role que la sidebar desktop.
@@ -135,8 +143,9 @@ if (_themePref === "system") {
       moreItems.push({ href: "/coach-dashboard.html", icon: ICONS.users, labelKey: "nav_coach_clients" });
     }
     if (role === "admin") {
-      moreItems.push({ href: "/admin.html", icon: ICONS.tool, labelKey: "nav_admin" });
+      moreItems.push({ href: "/admin.html", icon: ICONS.tool, labelKey: "nav_admin", adminBadge: true });
     }
+    moreItems.push({ action: "bugreport", icon: "🐛", labelKey: "nav_bug_report", bugreport: true });
     moreItems.push({ action: "logout", icon: ICONS.logout, labelKey: "nav_logout", logout: true });
 
     const navHtml = items.map(it => {
@@ -144,7 +153,9 @@ if (_themePref === "system") {
       const active = path === it.href ? " active" : "";
       const ctaClass = it.cta ? " sidebar-cta" : "";
       const badgeHtml = it.badge && unread > 0
-        ? `<span class="sidebar-msg-badge">${unread > 9 ? "9+" : unread}</span>` : "";
+        ? `<span class="sidebar-msg-badge">${unread > 9 ? "9+" : unread}</span>`
+        : it.adminBadge && openTickets > 0
+        ? `<span class="sidebar-admin-badge">${openTickets > 9 ? "9+" : openTickets}</span>` : "";
       return `<a href="${it.href}" class="sidebar-item${active}${ctaClass}" data-key="${it.labelKey}" title="${esc(t(it.labelKey))}">
         <span class="icon">${it.icon}</span><span class="lbl">${esc(t(it.labelKey))}</span>${badgeHtml}
       </a>`;
@@ -189,6 +200,7 @@ if (_themePref === "system") {
             <div style="font-size:.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(user.name)}${certified ? ` <span title="Athlète Certifié Gym AI Coach">🎓</span>` : ""}</div>
             ${roleBadge}
           </div>
+          <button type="button" class="sidebar-bugreport-btn" id="sidebar-bugreport-btn" title="${esc(t("nav_bug_report"))}">🐛</button>
           <a href="#" class="sidebar-logout" id="sidebar-logout" title="${esc(t("nav_logout"))}">⏻</a>
         </div>
       </aside>`;
@@ -215,9 +227,12 @@ if (_themePref === "system") {
         </div>
         <div class="mobile-more-grid">
           ${moreItems.map(it => {
-            const badgeHtml = it.badge && unread > 0 ? `<span class="mobile-more-badge">${unread > 9 ? "9+" : unread}</span>` : "";
-            const tag = it.logout ? "button" : "a";
-            const attrs = it.logout ? `type="button" id="mobile-more-logout"` : `href="${it.href}"`;
+            const badgeHtml = it.badge && unread > 0 ? `<span class="mobile-more-badge">${unread > 9 ? "9+" : unread}</span>`
+              : it.adminBadge && openTickets > 0 ? `<span class="mobile-more-admin-badge">${openTickets > 9 ? "9+" : openTickets}</span>` : "";
+            const tag = (it.logout || it.bugreport) ? "button" : "a";
+            const attrs = it.logout ? `type="button" id="mobile-more-logout"`
+              : it.bugreport ? `type="button" id="mobile-more-bugreport"`
+              : `href="${it.href}"`;
             return `<${tag} class="mobile-more-item${it.logout ? " logout" : ""}" ${attrs} data-key="${it.labelKey}">
               <span class="mobile-more-icon">${it.icon}</span><span class="lbl">${esc(t(it.labelKey))}</span>${badgeHtml}
             </${tag}>`;
@@ -238,6 +253,7 @@ if (_themePref === "system") {
       await fetch("/api/auth/logout", { method: "POST" });
       window.location.href = "/";
     });
+    document.getElementById("sidebar-bugreport-btn")?.addEventListener("click", () => window.openBugReportModal?.());
 
     const moreBtn = document.getElementById("bottom-nav-more");
     const moreBackdrop = document.getElementById("mobile-more-backdrop");
@@ -257,6 +273,10 @@ if (_themePref === "system") {
     document.getElementById("mobile-more-logout")?.addEventListener("click", async () => {
       await fetch("/api/auth/logout", { method: "POST" });
       window.location.href = "/";
+    });
+    document.getElementById("mobile-more-bugreport")?.addEventListener("click", () => {
+      closeMoreDrawer();
+      window.openBugReportModal?.();
     });
 
     const bellBtn = document.getElementById("sidebar-bell");
@@ -343,6 +363,8 @@ if (_themePref === "system") {
       });
       const logout = document.getElementById("sidebar-logout");
       if (logout) logout.title = t("nav_logout");
+      const bugreportBtn = document.getElementById("sidebar-bugreport-btn");
+      if (bugreportBtn) bugreportBtn.title = t("nav_bug_report");
       const drawerTitle = document.querySelector(".mobile-more-title[data-key]");
       if (drawerTitle) drawerTitle.textContent = t("more_drawer_title");
     }

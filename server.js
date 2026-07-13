@@ -31,6 +31,7 @@ const exercisesRoutes = require("./routes/exercises");
 const injuriesRoutes = require("./routes/injuries");
 const teamsRoutes = require("./routes/teams");
 const affiliationsRoutes = require("./routes/affiliations");
+const supportRoutes = require("./routes/support");
 const { sendReminderEmail, sendWeeklyRecapEmail } = require("./services/email");
 
 const app  = express();
@@ -85,6 +86,7 @@ app.use("/api/exercises", exercisesRoutes);
 app.use("/api/injuries", injuriesRoutes);
 app.use("/api/teams", teamsRoutes);
 app.use("/api/affiliations", affiliationsRoutes);
+app.use("/api/support", supportRoutes);
 app.use("/auth",         oauthRoutes);
 
 // Profil public a URL courte (fonctionnalite 7) : sert la meme page HTML

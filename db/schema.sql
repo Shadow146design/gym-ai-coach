@@ -340,6 +340,18 @@ INSERT INTO exercise_videos (exercise_name, youtube_id, thumbnail_url) VALUES
   ('Développé couché prise serrée', 'b_lB2GlZxpk', 'https://img.youtube.com/vi/b_lB2GlZxpk/mqdefault.jpg')
 ON CONFLICT (exercise_name) DO NOTHING;
 
+CREATE TABLE IF NOT EXISTS support_tickets (
+  id          SERIAL PRIMARY KEY,
+  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type        TEXT NOT NULL,
+  description TEXT NOT NULL,
+  page_url    TEXT,
+  status      TEXT NOT NULL DEFAULT 'open',
+  created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  resolved_at TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS "session" (
   "sid"    varchar NOT NULL COLLATE "default" PRIMARY KEY,
   "sess"   json NOT NULL,
