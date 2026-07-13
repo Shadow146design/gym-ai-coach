@@ -40,7 +40,23 @@ router.get("/debug/test-email", requireRole("admin"), async (req, res) => {
 // a deja ete envoye pour ce couple expediteur/destinataire il y a -15min
 // (evite le spam sur une conversation active). La table rate_limits sert de
 // marqueur "deja envoye", meme pattern que les rappels d'inactivite (server.js).
+// Tant qu'aucun domaine perso n'est configure/verifie sur Resend, l'envoi
+// via le sender de secours "onboarding@resend.dev" est silencieusement
+// rejete par Resend pour tout destinataire autre que le titulaire du compte
+// (restriction "sandbox"). Plutot que de tenter un appel voue a l'echec a
+// chaque message, on le saute purement et simplement : la notification
+// in-app (deja creee plus bas, independamment de l'email) prend le relais.
+// Des que EMAIL_FROM est defini sur Render avec un domaine verifie, l'envoi
+// d'email reprend automatiquement, sans changement de code.
+function isEmailDomainVerified() {
+  return !!process.env.EMAIL_FROM;
+}
+
 async function notifyNewMessageByEmail(fromId, toId) {
+  if (!isEmailDomainVerified()) {
+    console.log("Notification email désactivée : aucun domaine Resend vérifié (EMAIL_FROM absent) — notification in-app utilisée à la place.");
+    return;
+  }
   try {
     const recipientR = await pool.query(
       "SELECT email, name, role, notify_email_messages FROM users WHERE id=$1", [toId]

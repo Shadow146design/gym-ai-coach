@@ -231,21 +231,22 @@ document.getElementById("chat-send-btn").addEventListener("click", () => sendMes
 document.getElementById("chat-input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 
 // textOverride : message a envoyer sans passer par le champ texte (utilise
-// par l'assistant vocal). skipSpeak : n'appelle pas la synthese vocale ici
-// car l'appelant (voice-assistant.js) gere sa propre lecture avec des
-// callbacks de debut/fin pour animer la bulle. Retourne le texte de la
-// reponse (ou null en cas d'erreur/limite) pour que l'appelant puisse la
-// lire a voix haute lui-meme.
-async function sendMessage(textOverride, { skipSpeak = false } = {}) {
+// par l'assistant vocal). silent : n'affiche rien dans le chat texte (la
+// conversation vocale est independante du chat) et ne synthetise rien ici —
+// le chat texte normal est 100% silencieux, et l'assistant vocal gere sa
+// propre lecture (voice-assistant.js) avec des callbacks de debut/fin pour
+// animer la bulle. Retourne le texte de la reponse (ou null en cas
+// d'erreur/limite) pour que l'appelant puisse la lire a voix haute lui-meme.
+async function sendMessage(textOverride, { silent = false } = {}) {
   const input = document.getElementById("chat-input");
   const text = (textOverride != null ? textOverride : input.value).trim();
   if (!text) return null;
 
   if (textOverride == null) input.value = "";
-  appendMsg("user", text);
+  if (!silent) appendMsg("user", text);
   chatHistory.push({ role: "user", content: text });
 
-  const thinking = appendMsg("coach", "…", true);
+  const thinking = silent ? null : appendMsg("coach", "…", true);
 
   try {
     const res = await fetch("/api/chat", {
@@ -255,34 +256,35 @@ async function sendMessage(textOverride, { skipSpeak = false } = {}) {
     });
     const data = await res.json();
     if (!res.ok) {
-      thinking.remove();
+      thinking?.remove();
       if (data.upgrade_url) {
         chatHistory.pop();
-        showPremiumModal(data.error, data.upgrade_url);
-        refreshChatLimitIndicator();
+        if (!silent) {
+          showPremiumModal(data.error, data.upgrade_url);
+          refreshChatLimitIndicator();
+        }
         return null;
       }
       throw new Error(data.error);
     }
 
-    thinking.remove();
+    thinking?.remove();
     const reply = data.reply;
-    appendMsg("coach", reply);
-    if (!skipSpeak) window.speakText?.(reply);
+    if (!silent) appendMsg("coach", reply);
     chatHistory.push({ role: "assistant", content: reply });
 
     if (data.programUpdated) {
       const newExercises = new Set((data.newProgram?.days || []).flatMap(d => (d.exercises || []).map(e => e.name)));
       const changedNames = [...newExercises].filter(n => !lastProgramExercises.has(n));
       await loadProgram();
-      showToast("Programme mis à jour ✓");
+      if (!silent) showToast("Programme mis à jour ✓");
       highlightExercises(changedNames);
     }
-    refreshChatLimitIndicator();
+    if (!silent) refreshChatLimitIndicator();
     return reply;
   } catch (e) {
-    thinking.remove();
-    appendMsg("coach", "Désolé, je n'arrive pas à répondre pour l'instant. Réessaie dans quelques secondes.");
+    thinking?.remove();
+    if (!silent) appendMsg("coach", "Désolé, je n'arrive pas à répondre pour l'instant. Réessaie dans quelques secondes.");
     return null;
   }
 }

@@ -15,6 +15,7 @@ function isIOSDeviceVoiceAssistant() {
 let vaRecognition = null;
 let vaSilenceTimer = null;
 let vaActive = false;
+let vaPaused = false;
 let vaSendFn = null;
 let vaLiveTranscript = "";
 
@@ -26,15 +27,21 @@ vaOverlay.className = "voice-assistant-overlay";
 vaOverlay.innerHTML = `
   <button class="voice-assistant-close" type="button" aria-label="Fermer">✕</button>
   <div class="voice-assistant-text voice-user-text"></div>
-  <div class="voice-bubble voice-bubble-listening"><div class="voice-bubble-core"></div></div>
+  <div class="voice-bubble voice-bubble-listening">
+    <div class="voice-bubble-core"></div>
+    <button class="voice-bubble-pause" type="button" aria-label="Mettre en pause">⏸</button>
+  </div>
   <div class="voice-assistant-status">Je t'écoute…</div>
   <div class="voice-assistant-text voice-reply-text"></div>
 `;
 document.addEventListener("DOMContentLoaded", () => document.body.appendChild(vaOverlay));
 if (document.readyState !== "loading") document.body.appendChild(vaOverlay);
 
+const vaPauseBtn = vaOverlay.querySelector(".voice-bubble-pause");
+
 vaOverlay.querySelector(".voice-assistant-close").addEventListener("click", closeVoiceAssistant);
 vaOverlay.addEventListener("click", e => { if (e.target === vaOverlay) closeVoiceAssistant(); });
+vaPauseBtn.addEventListener("click", e => { e.stopPropagation(); vaTogglePause(); });
 
 function vaSetState(state, statusText) {
   const bubble = vaOverlay.querySelector(".voice-bubble");
@@ -51,10 +58,27 @@ function vaSetReplyText(text) {
 }
 
 function vaStartListening() {
-  if (!vaActive || !vaRecognition) return;
+  if (!vaActive || vaPaused || !vaRecognition) return;
   vaSetState("listening", "Je t'écoute…");
   vaSetUserText("");
   try { vaRecognition.start(); } catch {}
+}
+
+function vaTogglePause() {
+  if (!vaActive) return;
+  vaPaused = !vaPaused;
+  if (vaPaused) {
+    clearTimeout(vaSilenceTimer);
+    try { vaRecognition?.stop(); } catch {}
+    window.speechSynthesis?.cancel();
+    vaPauseBtn.textContent = "▶";
+    vaPauseBtn.setAttribute("aria-label", "Reprendre");
+    vaSetState("paused", "En pause — clique sur ▶ pour reprendre");
+  } else {
+    vaPauseBtn.textContent = "⏸";
+    vaPauseBtn.setAttribute("aria-label", "Mettre en pause");
+    vaStartListening();
+  }
 }
 
 async function vaHandleFinalTranscript(transcript) {
@@ -62,8 +86,8 @@ async function vaHandleFinalTranscript(transcript) {
   vaSetState("thinking", "L'IA réfléchit…");
   vaSetReplyText("");
 
-  const reply = await vaSendFn(transcript, { skipSpeak: true });
-  if (!vaActive) return;
+  const reply = await vaSendFn(transcript, { silent: true });
+  if (!vaActive || vaPaused) return;
 
   if (!reply) {
     vaSetState("listening", "Aucune réponse, réessaie ou ferme la conversation.");
@@ -73,13 +97,16 @@ async function vaHandleFinalTranscript(transcript) {
   vaSetReplyText(reply);
   vaSetState("speaking", "L'IA répond…");
   window.speakText(reply, {
-    onEnd: () => { if (vaActive) vaStartListening(); },
-    onError: () => { if (vaActive) vaStartListening(); },
+    onEnd: () => { if (vaActive && !vaPaused) vaStartListening(); },
+    onError: () => { if (vaActive && !vaPaused) vaStartListening(); },
   });
 }
 
 function closeVoiceAssistant() {
   vaActive = false;
+  vaPaused = false;
+  vaPauseBtn.textContent = "⏸";
+  vaPauseBtn.setAttribute("aria-label", "Mettre en pause");
   clearTimeout(vaSilenceTimer);
   try { vaRecognition?.stop(); } catch {}
   window.speechSynthesis?.cancel();
@@ -98,6 +125,9 @@ function openVoiceAssistant(sendFn) {
 
   vaSendFn = sendFn;
   vaActive = true;
+  vaPaused = false;
+  vaPauseBtn.textContent = "⏸";
+  vaPauseBtn.setAttribute("aria-label", "Mettre en pause");
   vaLiveTranscript = "";
   vaSetUserText("");
   vaSetReplyText("");
@@ -126,7 +156,7 @@ function openVoiceAssistant(sendFn) {
 
     vaRecognition.addEventListener("end", () => {
       clearTimeout(vaSilenceTimer);
-      if (!vaActive) return;
+      if (!vaActive || vaPaused) return;
       const transcript = vaLiveTranscript.trim();
       vaLiveTranscript = "";
       if (transcript) vaHandleFinalTranscript(transcript);
@@ -134,7 +164,7 @@ function openVoiceAssistant(sendFn) {
     });
 
     vaRecognition.addEventListener("error", e => {
-      if (!vaActive || e.error === "aborted") return;
+      if (!vaActive || vaPaused || e.error === "aborted") return;
       clearTimeout(vaSilenceTimer);
       if (e.error === "not-allowed" || e.error === "service-not-allowed") {
         vaSetState("listening", "Accès au micro refusé. Autorise le micro dans les paramètres du navigateur.");

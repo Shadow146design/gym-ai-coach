@@ -228,6 +228,11 @@ if (_themePref === "system") {
     document.body.insertAdjacentHTML("afterbegin", sidebarHtml);
     document.body.insertAdjacentHTML("beforeend", bottomNavHtml);
 
+    const bannerContainer = document.createElement("div");
+    bannerContainer.id = "top-message-banner-container";
+    document.body.appendChild(bannerContainer);
+    refreshMessageBanner(notifUnread);
+
     document.getElementById("sidebar-logout")?.addEventListener("click", async e => {
       e.preventDefault();
       await fetch("/api/auth/logout", { method: "POST" });
@@ -293,7 +298,37 @@ if (_themePref === "system") {
       await fetch("/api/notifications/read-all", { method: "POST" }).catch(() => {});
       bellBtn.querySelector(".sidebar-bell-badge")?.remove();
       document.querySelectorAll(".notif-item.unread").forEach(el => el.classList.remove("unread"));
+      document.getElementById("top-message-banner-container").innerHTML = "";
     });
+
+    // Banniere persistante en haut de l'ecran pour les nouveaux messages
+    // (type 'new_message' de la table notifications) — en plus du badge sur
+    // l'icone Messages, tant qu'elle n'a pas ete lue (au clic, ou en ouvrant
+    // la conversation depuis messages.html). Sert de repli fiable pendant
+    // que les emails de notification sont desactives (domaine Resend non
+    // verifie) — voir routes/messages.js.
+    async function refreshMessageBanner(notifUnreadCount) {
+      const container = document.getElementById("top-message-banner-container");
+      if (!container) return;
+      if (!notifUnreadCount) { container.innerHTML = ""; container.removeAttribute("data-notif-id"); return; }
+      try {
+        const r = await fetch("/api/notifications").then(r => r.json());
+        const unreadMsgNotifs = (r.notifications || []).filter(x => x.type === "new_message" && !x.read_at);
+        if (!unreadMsgNotifs.length) { container.innerHTML = ""; container.removeAttribute("data-notif-id"); return; }
+
+        const latest = unreadMsgNotifs[0];
+        if (container.dataset.notifId === String(latest.id)) return; // deja affichee, evite de repartir l'animation
+        container.dataset.notifId = latest.id;
+        container.innerHTML = `
+          <a href="${esc(latest.link || "/messages.html")}" class="top-message-banner" id="top-message-banner">
+            <span class="top-message-banner-text">${esc(latest.message)}</span>
+            ${unreadMsgNotifs.length > 1 ? `<span class="top-message-banner-count">+${unreadMsgNotifs.length - 1}</span>` : ""}
+          </a>`;
+        document.getElementById("top-message-banner")?.addEventListener("click", () => {
+          fetch(`/api/notifications/${latest.id}/read`, { method: "POST" }).catch(() => {});
+        });
+      } catch {}
+    }
 
     document.querySelectorAll(".sidebar-lang-btn").forEach(btn => {
       btn.addEventListener("click", () => window.i18n?.setLang(btn.dataset.lang));
@@ -356,6 +391,8 @@ if (_themePref === "system") {
         if (msgCount > 0) {
           if (!navDot && moreBtn) { navDot = document.createElement("span"); navDot.className = "nav-dot"; moreBtn.appendChild(navDot); }
         } else if (navDot) navDot.remove();
+
+        await refreshMessageBanner(notifCount);
       } catch {}
     }
 
