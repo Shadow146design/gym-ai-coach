@@ -65,7 +65,7 @@ function vaStartListening() {
 }
 
 function vaTogglePause() {
-  if (!vaActive) return;
+  if (!vaActive || !vaRecognition) return; // rien a mettre en pause si le navigateur ne supporte pas SpeechRecognition
   vaPaused = !vaPaused;
   if (vaPaused) {
     clearTimeout(vaSilenceTimer);
@@ -117,12 +117,11 @@ function openVoiceAssistant(sendFn) {
   console.log("openVoiceAssistant() appelé");
   if (vaActive || typeof sendFn !== "function") return;
 
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    window.showToast?.("Reconnaissance vocale non supportée par ce navigateur.");
-    return;
-  }
-
+  // La bulle doit TOUJOURS s'ouvrir au clic, meme sur un navigateur qui ne
+  // supporte pas SpeechRecognition : avant, on retournait ici avant meme
+  // d'ouvrir l'overlay, donc rien ne s'affichait du tout sur ces navigateurs
+  // (Firefox desktop, Safari macOS non-webkit...) — seul un toast (facultatif
+  // et facile a manquer) tentait de prevenir l'utilisateur.
   vaSendFn = sendFn;
   vaActive = true;
   vaPaused = false;
@@ -132,6 +131,12 @@ function openVoiceAssistant(sendFn) {
   vaSetUserText("");
   vaSetReplyText("");
   vaOverlay.classList.add("open");
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    vaSetState("paused", "Utilise Chrome pour le coach vocal (reconnaissance vocale non supportée par ce navigateur).");
+    return;
+  }
 
   if (isIOSDeviceVoiceAssistant()) {
     vaSetState("listening", "Dictée vocale peu fiable sur iOS. Utilise Chrome sur ordinateur ou Android.");
