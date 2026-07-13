@@ -2,6 +2,30 @@ const pool = require("../db/pool");
 
 const CHAT_DAILY_LIMIT = 10;
 
+// Decalage horaire courant de Paris par rapport a UTC, en minutes (+60 en
+// hiver CET, +120 en ete CEST).
+function parisUtcOffsetMinutes(date) {
+  const part = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Paris", timeZoneName: "shortOffset" })
+    .formatToParts(date).find(p => p.type === "timeZoneName")?.value || "GMT+1";
+  const match = part.match(/GMT([+-]\d+)/);
+  return match ? parseInt(match[1], 10) * 60 : 60;
+}
+
+// Le serveur (Render) tourne en UTC : construire "minuit demain" avec les
+// getters locaux de Date (comme le faisait le code precedent) reinitialisait
+// donc le quota a minuit UTC, pas a minuit heure francaise (jusqu'a 2h de
+// decalage selon l'heure d'ete/hiver). Calcule l'instant UTC exact
+// correspondant au minuit de Paris du jour suivant.
+function nextParisMidnightUTC(from = new Date()) {
+  const parisDateStr = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).format(from);
+  const [y, m, d] = parisDateStr.split("-").map(Number);
+  // Decalage calcule sur "demain midi UTC" (toujours dans la journee de
+  // demain cote Paris quel que soit le decalage) pour eviter une erreur d'1h
+  // le jour precis d'un changement d'heure.
+  const offsetMin = parisUtcOffsetMinutes(new Date(Date.UTC(y, m - 1, d + 1, 12, 0, 0)));
+  return new Date(Date.UTC(y, m - 1, d + 1, 0, 0, 0) - offsetMin * 60000);
+}
+
 // Bloque l'acces aux routes reservees Premium/Coach/Admin.
 async function requirePremium(req, res, next) {
   if (!req.session || !req.session.userId) {
@@ -50,7 +74,7 @@ async function checkChatLimit(req, res, next) {
     const row = r.rows[0];
 
     if (!row || new Date(row.reset_at) <= now) {
-      const resetAt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      const resetAt = nextParisMidnightUTC(now);
       await pool.query(
         `INSERT INTO rate_limits (user_id, action, count, reset_at) VALUES ($1,'chat_message',1,$2)
          ON CONFLICT (user_id, action) DO UPDATE SET count=1, reset_at=$2`,
