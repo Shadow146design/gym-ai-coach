@@ -285,7 +285,7 @@ const FORBIDDEN_REPLACEMENTS = {
   "dips": "Pushdown poulie haute corde",
   "tractions": "Tirage vertical prise large",
 };
-function validateProgram(program, morphology) {
+function applyMorphologySubstitutions(program, morphology) {
   if (morphology?.morphotype !== "Endomorphe marqué" || !program?.days) return program;
 
   program.days.forEach(day => {
@@ -299,6 +299,35 @@ function validateProgram(program, morphology) {
     });
   });
   return program;
+}
+
+// Anti-corruption (incident du 2026-07-11 : une modif chat "ajoute des
+// étirements" a remplacé les objets exercice par de simples chaînes de texte
+// template, silencieusement acceptées et sauvegardées). Rejette tout
+// programme structurellement invalide (leve une exception, ne renvoie
+// jamais un programme partiellement corrompu) et complete les champs
+// optionnels manquants avec des valeurs par defaut sures. A appeler sur
+// TOUT programme avant qu'il ne soit ecrit en base, que ce soit a la
+// generation initiale ou lors d'une modification via le chat.
+function validateProgram(program) {
+  if (!program || !Array.isArray(program.days) || program.days.length === 0) {
+    throw new Error("Programme invalide : pas de jours");
+  }
+  for (const day of program.days) {
+    if (!day.day || !Array.isArray(day.exercises) || day.exercises.length === 0) {
+      throw new Error("Programme invalide : jour incomplet");
+    }
+    for (const ex of day.exercises) {
+      if (!ex || typeof ex !== "object" || Array.isArray(ex) || !ex.name) {
+        throw new Error("Programme invalide : exercice sans nom");
+      }
+      if (!ex.sets || ex.sets < 1) ex.sets = 3; // valeur par défaut
+      if (!ex.reps) ex.reps = "10-12"; // valeur par défaut
+      if (!ex.rest_seconds) ex.rest_seconds = 60;
+      if (!ex.muscle_group) ex.muscle_group = "Autre";
+    }
+  }
+  return program; // retourne le programme corrigé
 }
 
 // Objectif personnel libre, date cible et note de l'utilisateur (depuis son profil)
@@ -407,7 +436,8 @@ Génère maintenant le programme JSON adapté à CE profil spécifique.`;
   catch { throw new Error("JSON invalide, réessaie."); }
   if (!program.days?.length) throw new Error("Programme incomplet, réessaie.");
 
-  return validateProgram(program, morphology);
+  validateProgram(program);
+  return applyMorphologySubstitutions(program, morphology);
 }
 
 // ── Chat coach ─────────────────────────────────────────────
@@ -807,4 +837,4 @@ Génère maintenant le plan alimentaire JSON sur 7 jours adapté à ces objectif
   return plan;
 }
 
-module.exports = { generateProgram, chatWithCoach, debriefSession, dailyTip, analyzePlateau, extractProgramParams, generateNutritionPlan };
+module.exports = { generateProgram, chatWithCoach, debriefSession, dailyTip, analyzePlateau, extractProgramParams, generateNutritionPlan, validateProgram };

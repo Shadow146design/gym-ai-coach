@@ -2,7 +2,7 @@ const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
 const { requirePremium, checkChatLimit, getChatUsage } = require("../middleware/premium");
-const { chatWithCoach, debriefSession, analyzePlateau } = require("../services/aiCoach");
+const { chatWithCoach, debriefSession, analyzePlateau, validateProgram } = require("../services/aiCoach");
 const { flagInjury, detectChatInjuryMention } = require("../services/injuries");
 
 const router = express.Router();
@@ -117,8 +117,21 @@ router.post("/", checkChatLimit, async (req, res) => {
 
     const result = await chatWithCoach(history, context);
 
+    // Anti-corruption (voir services/aiCoach.js validateProgram) : on ne
+    // touche JAMAIS au programme actuel en base tant que le nouveau n'a pas
+    // ete valide structurellement. Si la validation echoue, l'ancien
+    // programme reste intact et l'utilisateur est prevenu.
     if (result.programUpdated && programRow) {
-      await pool.query("UPDATE programs SET content=$1 WHERE id=$2", [JSON.stringify(result.newProgram), programRow.id]);
+      try {
+        validateProgram(result.newProgram);
+        await pool.query("UPDATE programs SET content=$1 WHERE id=$2", [JSON.stringify(result.newProgram), programRow.id]);
+      } catch (validationError) {
+        console.error("Programme invalide refusé (anti-corruption) :", validationError.message);
+        result.programUpdated = false;
+        result.newProgram = null;
+        result.changes = [];
+        result.reply = `${result.reply} ⚠️ La modification n'a pas pu être appliquée en toute sécurité, ton programme actuel n'a pas été changé.`;
+      }
     }
 
     res.json(result);
