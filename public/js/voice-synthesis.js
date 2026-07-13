@@ -4,18 +4,59 @@
 
 // Ordre de preference : les voix "neurales"/premium sonnent nettement moins
 // robotiques que la voix systeme par defaut, quand elles sont disponibles.
+// Les voix "Online (Natural)" de Microsoft (Edge) et les voix Google Chrome
+// sont les plus naturelles ; viennent ensuite les voix locales macOS, puis
+// les voix Microsoft standard (moins bonnes mais toujours mieux que la voix
+// robotique par defaut du systeme).
 const VOICE_NAME_PRIORITY = [
-  "google français", "google francais",
+  "google français (france)", "google français", "google francais",
   "thomas",
   "amelie", "amélie",
-  "microsoft paul", "microsoft julie",
+  "microsoft paul online (natural)",
+  "microsoft julie online (natural)",
+  "microsoft hortense online (natural)",
+  "microsoft paul", "microsoft julie", "microsoft hortense",
 ];
+
+function isIOSDeviceVoiceSynthesis() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+// Classe une voix pour choisir les parametres de lecture (rate/pitch) les
+// plus naturels pour son moteur : les voix neurales tolerent un debit plus
+// rapide sans perdre en clarte, les voix systeme classiques ont besoin d'un
+// debit plus lent et d'un pitch legerement releve pour ne pas sonner plates.
+function classifyVoiceType(voice) {
+  if (!voice) return "standard";
+  const name = voice.name.toLowerCase();
+  if (name.includes("natural") || name.includes("google")) return "neural";
+  if (name.includes("thomas") || name.includes("amelie") || name.includes("amélie") || name.includes("samantha")) return "mac";
+  return "standard";
+}
+
+const VOICE_TYPE_PARAMS = {
+  neural:   { rate: 0.92, pitch: 1.0 },
+  mac:      { rate: 0.88, pitch: 1.05 },
+  standard: { rate: 0.85, pitch: 1.1 },
+};
 
 let cachedFrenchVoice = null;
 
 function pickBestFrenchVoice() {
   const voices = window.speechSynthesis?.getVoices() || [];
   if (!voices.length) return null;
+
+  // iOS : SpeechSynthesis y est peu fiable et les voix "premium" listees
+  // ci-dessus n'y existent pas — Samantha (si presente) ou, a defaut, la
+  // premiere voix francaise du systeme donnent le rendu le moins robotique.
+  if (isIOSDeviceVoiceSynthesis()) {
+    const samantha = voices.find(v => v.name.toLowerCase().includes("samantha"));
+    if (samantha) return samantha;
+    const frVoice = voices.find(v => v.lang?.toLowerCase().startsWith("fr"));
+    return frVoice || voices[0] || null;
+  }
+
   const frVoices = voices.filter(v => v.lang?.toLowerCase().startsWith("fr"));
   const pool = frVoices.length ? frVoices : voices;
 
@@ -56,6 +97,7 @@ function cleanTextForSpeech(text) {
     .replace(/\breps?\b/gi, "répétitions")
     .replace(/(\d)\s*min\b/gi, "$1 minutes")
     .replace(/\bmin\b/gi, "minutes")
+    .replace(/\bRM\b/g, "répétition maximum")
     .replace(/\.\s*/g, ". ")                      // pause naturelle apres un point
     .replace(/,\s*/g, ", ")                       // pause naturelle apres une virgule
     .replace(/\s{2,}/g, " ")
@@ -78,10 +120,17 @@ function speakText(text, { onStart, onEnd, onError, addIntro = true } = {}) {
 
   const utter = new SpeechSynthesisUtterance(finalText);
   utter.lang = "fr-FR";
-  utter.rate = 0.88;
-  utter.pitch = 1.05;
   utter.volume = 1.0;
   if (cachedFrenchVoice) utter.voice = cachedFrenchVoice;
+
+  if (isIOSDeviceVoiceSynthesis()) {
+    utter.rate = 0.9;
+    utter.pitch = 1.05;
+  } else {
+    const params = VOICE_TYPE_PARAMS[classifyVoiceType(cachedFrenchVoice)];
+    utter.rate = params.rate;
+    utter.pitch = params.pitch;
+  }
 
   if (onStart) utter.addEventListener("start", onStart);
   if (onEnd) utter.addEventListener("end", onEnd);
