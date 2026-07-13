@@ -232,10 +232,14 @@ CREATE TABLE IF NOT EXISTS nutrition_plans (
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS exercise_videos (
+-- Cache local des demonstrations d'exercice (image/description/muscles)
+-- recuperees depuis l'API Wger (remplace exercise_videos/YouTube).
+CREATE TABLE IF NOT EXISTS exercise_demos (
   exercise_name TEXT PRIMARY KEY,
-  youtube_id    TEXT NOT NULL,
-  thumbnail_url TEXT
+  image_url     TEXT,
+  description   TEXT,
+  muscles       TEXT[],
+  cached_at     TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS teams (
@@ -302,43 +306,6 @@ CREATE TABLE IF NOT EXISTS injury_flags (
   resolved_at   TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_injury_flags_user ON injury_flags(user_id, resolved_at);
-
-INSERT INTO exercise_videos (exercise_name, youtube_id, thumbnail_url) VALUES
-  ('Développé couché barre', 'dZgVxmf6jkA', 'https://img.youtube.com/vi/dZgVxmf6jkA/mqdefault.jpg'),
-  ('Squat barre',            'ultWZbUMPL8', 'https://img.youtube.com/vi/ultWZbUMPL8/mqdefault.jpg'),
-  ('Soulevé de terre',       'op9kVnSso6Q', 'https://img.youtube.com/vi/op9kVnSso6Q/mqdefault.jpg'),
-  ('Rowing barre',           'FWJR5Ve8bnQ', 'https://img.youtube.com/vi/FWJR5Ve8bnQ/mqdefault.jpg'),
-  ('Développé militaire',    '2yjwXTZQDDI', 'https://img.youtube.com/vi/2yjwXTZQDDI/mqdefault.jpg'),
-  ('Tractions',              'eGo4IYlbE5g', 'https://img.youtube.com/vi/eGo4IYlbE5g/mqdefault.jpg'),
-  ('Hack squat',             'DbFgyvMl-Wg', 'https://img.youtube.com/vi/DbFgyvMl-Wg/mqdefault.jpg'),
-  ('Presse à cuisses',       'IZxyjW7MPJQ', 'https://img.youtube.com/vi/IZxyjW7MPJQ/mqdefault.jpg'),
-  ('Curl barre EZ',          'av7-8igSXTs', 'https://img.youtube.com/vi/av7-8igSXTs/mqdefault.jpg'),
-  ('Pushdown corde',         'vB5OHsJ3EME', 'https://img.youtube.com/vi/vB5OHsJ3EME/mqdefault.jpg'),
-  ('Leg curl',               'ZlFnkB_eoXY', 'https://img.youtube.com/vi/ZlFnkB_eoXY/mqdefault.jpg'),
-  ('Leg extension',          'YyvSfVjQeL0', 'https://img.youtube.com/vi/YyvSfVjQeL0/mqdefault.jpg'),
-  ('Élévations latérales',   'FeCthMbwFOA', 'https://img.youtube.com/vi/FeCthMbwFOA/mqdefault.jpg'),
-  ('Curl haltères',          'sAq_ocpS3Io', 'https://img.youtube.com/vi/sAq_ocpS3Io/mqdefault.jpg'),
-  ('Extension triceps corde','vB5OHsJ3EME', 'https://img.youtube.com/vi/vB5OHsJ3EME/mqdefault.jpg'),
-  ('Rowing haltère',         'rT7DgCr-3pg', 'https://img.youtube.com/vi/rT7DgCr-3pg/mqdefault.jpg'),
-  ('Tirage vertical',        'lueqMNHCoBI', 'https://img.youtube.com/vi/lueqMNHCoBI/mqdefault.jpg'),
-  ('Développé incliné',      'DbFgyvMl-Wg', 'https://img.youtube.com/vi/DbFgyvMl-Wg/mqdefault.jpg'),
-  ('Fentes',                 'QOVaHwm-Q6U', 'https://img.youtube.com/vi/QOVaHwm-Q6U/mqdefault.jpg'),
-  ('Hip thrust',             'xM7XM0lCMbd', 'https://img.youtube.com/vi/xM7XM0lCMbd/mqdefault.jpg'),
-  ('Écarté couché',          'dKpn5HvFGFI', 'https://img.youtube.com/vi/dKpn5HvFGFI/mqdefault.jpg'),
-  ('Dips',                   '2z8JmcrW-As', 'https://img.youtube.com/vi/2z8JmcrW-As/mqdefault.jpg'),
-  ('Mollets debout',         'gwLzBJYoWlQ', 'https://img.youtube.com/vi/gwLzBJYoWlQ/mqdefault.jpg'),
-  ('Curl pupitre',           'av7-8igSXTs', 'https://img.youtube.com/vi/av7-8igSXTs/mqdefault.jpg'),
-  ('Face pull',              'rep0guA2D4s', 'https://img.youtube.com/vi/rep0guA2D4s/mqdefault.jpg'),
-  ('Adducteurs machine',     'MCRFhGHIhhE', 'https://img.youtube.com/vi/MCRFhGHIhhE/mqdefault.jpg'),
-  ('Abducteurs machine',     'MCRFhGHIhhE', 'https://img.youtube.com/vi/MCRFhGHIhhE/mqdefault.jpg'),
-  ('Planche',                'pSHjTRChQZY', 'https://img.youtube.com/vi/pSHjTRChQZY/mqdefault.jpg'),
-  ('Crunch',                 'Xyd_fa5zoEU', 'https://img.youtube.com/vi/Xyd_fa5zoEU/mqdefault.jpg'),
-  ('Pull-over haltère',      'MkK4-GFRfMQ', 'https://img.youtube.com/vi/MkK4-GFRfMQ/mqdefault.jpg'),
-  ('Shrugs barre',           'g6qbq4Lf1FI', 'https://img.youtube.com/vi/g6qbq4Lf1FI/mqdefault.jpg'),
-  ('Skull crusher',          'dKpn5HvFGFI', 'https://img.youtube.com/vi/dKpn5HvFGFI/mqdefault.jpg'),
-  ('Kickback haltère',       'ZWUqPtlMSgY', 'https://img.youtube.com/vi/ZWUqPtlMSgY/mqdefault.jpg'),
-  ('Développé couché prise serrée', 'b_lB2GlZxpk', 'https://img.youtube.com/vi/b_lB2GlZxpk/mqdefault.jpg')
-ON CONFLICT (exercise_name) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS support_tickets (
   id          SERIAL PRIMARY KEY,

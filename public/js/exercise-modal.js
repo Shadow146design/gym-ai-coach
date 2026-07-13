@@ -1,9 +1,9 @@
 // Modal de démonstration visuelle d'un exercice (fonctionnalité 3).
 // Déclenché sur tout clic d'un élément portant [data-ex-name] (session.html,
 // dashboard.html, coach-client.html). Cherche l'exercice dans EXERCISES
-// (exercises-data.js) pour la description/muscles secondaires, tente l'API
-// Wger pour une image/gif de démo, et affiche sinon une silhouette SVG du
-// groupe musculaire ciblé.
+// (exercises-data.js) pour la description/muscles secondaires, tente l'image
+// de démo Wger (via /api/exercises/demo/:name, proxy backend avec cache — pas
+// de vidéo YouTube), et affiche sinon une silhouette SVG du groupe musculaire ciblé.
 
 const MUSCLE_SVG_REGIONS = {
   "poitrine": { view: "front", regions: ["chest"] },
@@ -103,30 +103,15 @@ function bodySilhouetteSvg(view, activeRegions) {
   return `<svg viewBox="0 0 160 320" width="140" height="280" class="exercise-svg-${view}">${parts.join("")}</svg>`;
 }
 
-// Vidéo YouTube de démonstration (fonctionnalité 1, bibliothèque exercise_videos)
-// — priorité sur l'image Wger, elle-même prioritaire sur la silhouette SVG.
-async function fetchExerciseVideoId(name) {
+// Image de démonstration façon "pictogramme machine de salle" — proxy
+// backend vers l'API Wger (gratuite, open source), avec cache en base
+// (routes/exercises.js) : priorité sur la silhouette SVG, qui reste le repli
+// si Wger n'a pas l'exercice ou pas d'image pour ce match.
+async function fetchExerciseDemo(name) {
   try {
-    const res = await fetch(`/api/exercises/video/${encodeURIComponent(name)}`);
+    const res = await fetch(`/api/exercises/demo/${encodeURIComponent(name)}`);
     if (!res.ok) return null;
-    const { video } = await res.json();
-    return video?.youtube_id || null;
-  } catch {
-    return null;
-  }
-}
-
-async function fetchWgerMedia(name) {
-  try {
-    const res = await fetch(`https://wger.de/api/v2/exercise/?format=json&language=2&name=${encodeURIComponent(name)}`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    const match = data.results?.[0];
-    if (!match) return null;
-    const imgRes = await fetch(`https://wger.de/api/v2/exerciseimage/?format=json&exercise=${match.id}`);
-    if (!imgRes.ok) return null;
-    const imgData = await imgRes.json();
-    return imgData.results?.[0]?.image || null;
+    return await res.json();
   } catch {
     return null;
   }
@@ -150,6 +135,12 @@ async function openExerciseModal(name, muscleGroupHint, notesHint) {
   const svgCfg = MUSCLE_SVG_REGIONS[muscleGroup.toLowerCase().trim()] || { view: "front", regions: [] };
   const canAddToSession = typeof window.addExerciseToSession === "function";
 
+  // Badges colorés : muscle principal (accent) + muscles secondaires (neutres).
+  const muscleBadges = [
+    muscleGroup ? `<span class="ex-badge ex-badge-primary">${escExMod(muscleGroup)}</span>` : "",
+    ...secondary.map(m => `<span class="ex-badge ex-badge-secondary">${escExMod(m)}</span>`),
+  ].join("");
+
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
   overlay.id = "exercise-modal-overlay";
@@ -159,8 +150,7 @@ async function openExerciseModal(name, muscleGroupHint, notesHint) {
       <div class="exercise-modal-media" id="exercise-modal-media">${bodySilhouetteSvg(svgCfg.view, svgCfg.regions)}</div>
       <div class="exercise-modal-body">
         <h2>${escExMod(name)}</h2>
-        ${muscleGroup ? `<span class="ex-badge">${escExMod(muscleGroup)}</span>` : ""}
-        ${secondary.length ? `<div class="exercise-secondary">Muscles secondaires : ${secondary.map(escExMod).join(", ")}</div>` : ""}
+        ${muscleBadges ? `<div class="exercise-muscle-badges">${muscleBadges}</div>` : ""}
         ${description ? `<p class="exercise-modal-desc">${escExMod(description)}</p>` : ""}
         ${tip ? `<div class="exercise-tip">💡 ${escExMod(tip)}</div>` : ""}
         ${canAddToSession ? `<button class="btn btn-primary btn-sm" type="button" id="exercise-modal-add-btn" style="margin-top:14px;width:100%">Ajouter à ma séance</button>` : ""}
@@ -178,29 +168,20 @@ async function openExerciseModal(name, muscleGroupHint, notesHint) {
 
   const mediaEl = document.getElementById("exercise-modal-media");
 
-  const youtubeId = await fetchExerciseVideoId(lookupName);
+  const demo = await fetchExerciseDemo(lookupName);
   if (!document.body.contains(overlay)) return; // fermé entre-temps
-  if (youtubeId) {
-    // Thumbnail cliquable plutôt qu'iframe intégrée : les bloqueurs de pub
-    // (uBlock, AdBlock…) bloquent silencieusement l'intégration YouTube
-    // (l'iframe "charge" mais reste vide, sans erreur JS détectable). Une
-    // image + lien externe est fiable sur tous les navigateurs.
-    // hqdefault existe toujours pour toute vidéo YouTube (généré
-    // automatiquement) ; maxresdefault n'existe que pour certains uploads et
-    // renvoie un placeholder gris en 200 OK plutôt qu'une vraie erreur HTTP
-    // quand absent — un fallback onerror ne le détecterait donc pas.
-    const id = escExMod(youtubeId);
-    mediaEl.innerHTML = `<a class="exercise-video-thumb" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener noreferrer" aria-label="Voir la démonstration sur YouTube">
-      <img src="https://img.youtube.com/vi/${id}/hqdefault.jpg" alt="Démonstration ${escExMod(name)}" loading="lazy"/>
-      <span class="exercise-video-play">▶</span>
-    </a>`;
-    return;
+  if (demo?.imageUrl) {
+    mediaEl.innerHTML = `<img class="exercise-demo-img" src="${escExMod(demo.imageUrl)}" alt="Démonstration ${escExMod(name)}" loading="lazy"/>`;
   }
-
-  const gifUrl = await fetchWgerMedia(lookupName);
-  if (!document.body.contains(overlay)) return;
-  if (gifUrl) {
-    mediaEl.innerHTML = `<img src="${escExMod(gifUrl)}" alt="Démonstration ${escExMod(name)}" loading="lazy"/>`;
+  // Si l'exercice n'a pas de description locale (curée en francais), on
+  // utilise en repli celle de Wger (en anglais, mais mieux que rien).
+  if (!description && demo?.description) {
+    const p = document.createElement("p");
+    p.className = "exercise-modal-desc";
+    p.textContent = demo.description;
+    const tipEl = overlay.querySelector(".exercise-tip");
+    if (tipEl) tipEl.before(p);
+    else overlay.querySelector(".exercise-modal-body").appendChild(p);
   }
 }
 
