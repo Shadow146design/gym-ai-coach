@@ -837,4 +837,4 @@ Génère maintenant le plan alimentaire JSON sur 7 jours adapté à ces objectif
   return plan;
 }
 
-module.exports = { generateProgram, chatWithCoach, debriefSession, dailyTip, analyzePlateau, extractProgramParams, generateNutritionPlan, validateProgram };
+module.exports = { generateProgram, chatWithCoach, debriefSession, dailyTip, analyzePlateau, extractProgramParams, generateNutritionPlan, validateProgram, EXERCISE_DATABASE };
