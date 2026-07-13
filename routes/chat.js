@@ -16,7 +16,7 @@ function dayStr(d) {
 // Rassemble le contexte complet (module D.4) : programme, 5 dernieres seances,
 // records, profil physique, streak, plateaux, objectif initial.
 async function buildFullContext(uid, programRow) {
-  const [logsR, profileR] = await Promise.all([
+  const [logsR, profileR, wellnessR] = await Promise.all([
     pool.query(
       `SELECT exercise_name, weight, reps, performed_at::date AS day
        FROM logs WHERE user_id=$1 ORDER BY performed_at DESC LIMIT 200`,
@@ -24,6 +24,10 @@ async function buildFullContext(uid, programRow) {
     ),
     pool.query(
       "SELECT weight_kg, height_cm, age, gender, main_goal FROM users WHERE id=$1",
+      [uid]
+    ),
+    pool.query(
+      "SELECT score FROM daily_wellness WHERE user_id=$1 AND created_at=CURRENT_DATE",
       [uid]
     ),
   ]);
@@ -81,6 +85,7 @@ async function buildFullContext(uid, programRow) {
     streak,
     plateaus,
     initialGoal: profileR.rows[0]?.main_goal || programRow?.questionnaire?.objectif || null,
+    wellnessScore: wellnessR.rows[0]?.score != null ? Number(wellnessR.rows[0].score) : null,
   };
 }
 
