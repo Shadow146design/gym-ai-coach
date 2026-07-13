@@ -40,16 +40,21 @@ router.get("/debug/test-email", requireRole("admin"), async (req, res) => {
 // a deja ete envoye pour ce couple expediteur/destinataire il y a -15min
 // (evite le spam sur une conversation active). La table rate_limits sert de
 // marqueur "deja envoye", meme pattern que les rappels d'inactivite (server.js).
-// Tant qu'aucun domaine perso n'est configure/verifie sur Resend, l'envoi
-// via le sender de secours "onboarding@resend.dev" est silencieusement
-// rejete par Resend pour tout destinataire autre que le titulaire du compte
+// Tant qu'aucun domaine perso n'est verifie sur Resend, l'envoi via le
+// sender de secours "onboarding@resend.dev" est silencieusement rejete par
+// Resend pour tout destinataire autre que le titulaire du compte
 // (restriction "sandbox"). Plutot que de tenter un appel voue a l'echec a
-// chaque message, on le saute purement et simplement : la notification
-// in-app (deja creee plus bas, independamment de l'email) prend le relais.
-// Des que EMAIL_FROM est defini sur Render avec un domaine verifie, l'envoi
-// d'email reprend automatiquement, sans changement de code.
+// chaque message (bruit inutile dans les logs), on le saute purement et
+// simplement ici : la notification in-app (deja creee plus bas,
+// independamment de l'email) prend le relais. sendEmail() (services/email.js)
+// applique le meme garde-fou pour tous les autres emails transactionnels
+// (bienvenue, badges, premium...), sur la seule variable DOMAIN_VERIFIED —
+// la simple presence de EMAIL_FROM ne prouve pas qu'un domaine est
+// effectivement verifie cote Resend. Passer DOMAIN_VERIFIED=true sur Render
+// une fois le domaine achete et verifie reactive l'envoi partout, sans
+// changement de code.
 function isEmailDomainVerified() {
-  return !!process.env.EMAIL_FROM;
+  return process.env.DOMAIN_VERIFIED === "true";
 }
 
 async function notifyNewMessageByEmail(fromId, toId) {

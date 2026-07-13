@@ -10,6 +10,16 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FALLBACK_FROM = "Gym AI Coach <onboarding@resend.dev>";
 const FROM = process.env.EMAIL_FROM || FALLBACK_FROM;
 const APP_URL = process.env.APP_URL || "https://gym-ai-coach-1wls.onrender.com";
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "itachiuchiwa335@gmail.com";
+
+// Tant qu'aucun domaine personnalise n'est verifie sur Resend, le sender de
+// secours "onboarding@resend.dev" est en mode "sandbox" : il ne peut envoyer
+// qu'au titulaire du compte Resend lui-meme (SUPPORT_EMAIL) — tout envoi vers
+// une autre adresse (utilisateur, coach...) est silencieusement rejete cote
+// Resend, ce qui remplissait les logs d'erreurs pour rien. Passer
+// DOMAIN_VERIFIED=true sur Render une fois le domaine personnalise achete et
+// verifie reactive l'envoi vers tout le monde, sans changement de code.
+const DOMAIN_VERIFIED = process.env.DOMAIN_VERIFIED === "true";
 
 let resendClient = null;
 if (RESEND_API_KEY) {
@@ -28,8 +38,13 @@ function escapeHtml(s) {
 async function sendEmail({ to, subject, html }) {
   console.log("RESEND_API_KEY present:", !!process.env.RESEND_API_KEY);
   if (!resendClient) {
-    console.log(`[email désactivé] "${subject}" -> ${to}`);
-    return { skipped: true };
+    console.log(`[email désactivé - clé API absente] "${subject}" -> ${to}`);
+    return { skipped: true, reason: "no_api_key" };
+  }
+  const recipient = (Array.isArray(to) ? to[0] : to || "").toLowerCase();
+  if (!DOMAIN_VERIFIED && recipient !== SUPPORT_EMAIL.toLowerCase()) {
+    console.log(`[email désactivé - domaine non vérifié, envoi évité] "${subject}" -> ${to}`);
+    return { skipped: true, reason: "domain_not_verified" };
   }
   console.log("Sending to:", to, "| from:", FROM);
   try {
@@ -151,8 +166,6 @@ async function sendPremiumConfirmationEmail(to, name) {
   });
 }
 
-const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "itachiuchiwa335@gmail.com";
-
 const TICKET_TYPE_LABELS = {
   bug: "Bug technique",
   program: "Problème avec mon programme",
@@ -162,10 +175,9 @@ const TICKET_TYPE_LABELS = {
   other: "Autre",
 };
 
-// Envoyee directement (pas via sendEmail gate par EMAIL_FROM) car le
-// destinataire est l'adresse admin fixe, deja verifiee cote Resend
-// (contrairement aux notifications entre utilisateurs, restreintes en mode
-// sandbox tant qu'aucun domaine perso n'est verifie).
+// Passe toujours le filtre DOMAIN_VERIFIED de sendEmail() : le destinataire
+// (SUPPORT_EMAIL) est l'adresse admin fixe, celle du titulaire du compte
+// Resend — toujours autorisee meme en mode sandbox.
 async function sendSupportTicketEmail(ticket, user) {
   const typeLabel = TICKET_TYPE_LABELS[ticket.type] || ticket.type;
   const userLine = user

@@ -19,7 +19,12 @@ router.post("/test", requireRole("admin"), async (req, res) => {
     const result = await sendWelcomeEmail(user.email, user.name);
     console.log("Resend response:", JSON.stringify(result));
 
-    if (result.skipped) return res.json({ ok: true, skipped: true, message: "RESEND_API_KEY non configurée : email non envoyé (voir logs serveur)." });
+    if (result.skipped) {
+      const message = result.reason === "domain_not_verified"
+        ? "Domaine non vérifié sur Resend : email non envoyé (DOMAIN_VERIFIED n'est pas à \"true\")."
+        : "RESEND_API_KEY non configurée : email non envoyé (voir logs serveur).";
+      return res.json({ ok: true, skipped: true, message });
+    }
     if (result.error) return res.status(500).json({ error: result.error.message || result.error });
     res.json({ ok: true, sentTo: user.email });
   } catch (err) {
