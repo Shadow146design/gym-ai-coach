@@ -202,7 +202,7 @@ router.get("/streak", async (req, res) => {
       [req.session.userId]
     );
     const days = r.rows.map(x => dayStr(x.day));
-    if (!days.length) return res.json({ current: 0, best: 0, totalSessions: 0 });
+    if (!days.length) return res.json({ current: 0, best: 0, totalSessions: 0, trainedToday: false });
 
     const today = dayStr(new Date());
     const yesterday = dayStr(new Date(Date.now() - 86400000));
@@ -234,7 +234,7 @@ router.get("/streak", async (req, res) => {
     }
     best = Math.max(best, streak, current);
 
-    res.json({ current, best, totalSessions: days.length });
+    res.json({ current, best, totalSessions: days.length, trainedToday: days[0] === today });
   } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
 });
 

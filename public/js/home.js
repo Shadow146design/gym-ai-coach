@@ -209,11 +209,12 @@ function updateStreakRing(streak) {
 // contrairement a Date.getDay() ou 0 = dimanche).
 const WEEKDAYS_FR = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
 
-// Trouve le jour du programme le plus proche dans le futur (aujourd'hui inclus)
-// en se basant sur le vrai jour de la semaine. Retourne null si le programme
-// n'utilise pas de vrais noms de jours (anciens programmes generes avant la
-// mise a jour du prompt IA), pour permettre un repli sur l'ancienne logique.
-function findNextProgramDay(days) {
+// Trouve le jour du programme le plus proche dans le futur (aujourd'hui inclus,
+// sauf si trainedToday) en se basant sur le vrai jour de la semaine. Retourne
+// null si le programme n'utilise pas de vrais noms de jours (anciens
+// programmes generes avant la mise a jour du prompt IA), pour permettre un
+// repli sur l'ancienne logique.
+function findNextProgramDay(days, trainedToday) {
   const withWeekday = days.map(d => {
     const label = (d.day || "").toLowerCase();
     return { ...d, weekdayIdx: WEEKDAYS_FR.findIndex(w => label.includes(w)) };
@@ -224,7 +225,10 @@ function findNextProgramDay(days) {
   const todayIdx = (new Date().getDay() + 6) % 7; // JS: 0=dimanche -> on veut 0=lundi
   let best = null, bestDelta = Infinity;
   known.forEach(d => {
-    const delta = (d.weekdayIdx - todayIdx + 7) % 7;
+    let delta = (d.weekdayIdx - todayIdx + 7) % 7;
+    // La seance du jour a deja ete faite : ne jamais la re-proposer, la
+    // reporter a sa prochaine occurrence (semaine suivante).
+    if (delta === 0 && trainedToday) delta = 7;
     if (delta < bestDelta) { bestDelta = delta; best = d; }
   });
   return best;
@@ -245,9 +249,13 @@ async function loadNextSession() {
     }
     const days = progRes.program.content.days || [];
     // Programmes recents : vrais jours de semaine -> jour le plus proche dans le futur.
-    // Anciens programmes ("Jour 1", "Jour 2"...) : repli sur la rotation par streak.
-    const streak = Number(streakRes.current ?? streakRes.streak) || 0;
-    const next = findNextProgramDay(days) || days[streak % days.length];
+    // Anciens programmes ("Jour 1", "Jour 2"...) : repli sur la rotation par
+    // nombre total de seances (et non le streak courant, qui repart a 0 des
+    // qu'un jour est manque et faisait alors regresser la rotation au lieu
+    // de simplement avancer au jour suivant).
+    const trainedToday = !!streakRes.trainedToday;
+    const totalSessions = Number(streakRes.totalSessions) || 0;
+    const next = findNextProgramDay(days, trainedToday) || days[totalSessions % days.length];
     const exList = (next.exercises || []).slice(0, 4).map(e =>
       `<div class="next-ex-row"><span>${esc(e.name)}</span><span class="mono" style="font-size:.78rem;color:var(--chalk-dim)">${e.sets}×${e.reps}</span></div>`
     ).join("");
