@@ -52,6 +52,27 @@ async function init() {
   renderUsers(allUsers);
   loadCertifiedList();
   loadSupportTickets();
+  loadRecentErrors();
+}
+
+async function loadRecentErrors() {
+  const container = document.getElementById("errors-list");
+  try {
+    const r = await fetch("/api/admin/errors").then(res => res.json());
+    const errors = r.errors || [];
+    container.innerHTML = errors.length
+      ? errors.map(e => `
+        <div class="stat-row" style="align-items:flex-start;flex-direction:column;gap:2px;padding:8px 0">
+          <div style="display:flex;justify-content:space-between;width:100%;gap:10px">
+            <span style="color:var(--rust-soft);font-family:var(--font-mono);font-size:.8rem">${esc(e.method || "")} ${esc(e.path || "")}</span>
+            <span class="muted" style="font-size:.75rem;white-space:nowrap">${new Date(e.created_at).toLocaleString("fr-FR")}</span>
+          </div>
+          <div style="font-size:.82rem">${esc(e.message)}</div>
+        </div>`).join("")
+      : `<p class="muted" style="font-size:.85rem">Aucune erreur récente 🎉</p>`;
+  } catch {
+    container.innerHTML = `<p class="muted" style="font-size:.85rem">Impossible de charger les erreurs.</p>`;
+  }
 }
 
 const TICKET_TYPE_LABELS = {

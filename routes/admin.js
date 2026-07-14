@@ -81,4 +81,13 @@ router.get("/stats", async (req, res) => {
   } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
 });
 
+router.get("/errors", async (req, res) => {
+  try {
+    const r = await pool.query(
+      "SELECT id, message, stack, method, path, user_id, created_at FROM errors ORDER BY created_at DESC LIMIT 20"
+    );
+    res.json({ errors: r.rows });
+  } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
+});
+
 module.exports = router;
