@@ -2,6 +2,7 @@
 let currentUser = null;
 let chatHistory = [];
 let lastProgramExercises = new Set();
+let currentProgram = null;
 
 async function init() {
   const meRes = await fetch("/api/auth/me");
@@ -170,6 +171,8 @@ async function loadProgram() {
   }
 
   empty.classList.add("hidden");
+  currentProgram = program;
+  document.getElementById("export-pdf-btn")?.classList.remove("hidden");
   subtitle.textContent = program.title;
   summary.textContent  = program.content.summary || "";
 
@@ -385,5 +388,107 @@ function esc(str) {
   d.textContent = str;
   return d.innerHTML;
 }
+
+// ── Export PDF du programme (lisible hors-ligne, section 3.10) ────
+async function svgToPngDataUrl(url, size) {
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = url; });
+  const canvas = document.createElement("canvas");
+  canvas.width = size; canvas.height = size;
+  canvas.getContext("2d").drawImage(img, 0, 0, size, size);
+  return canvas.toDataURL("image/png");
+}
+
+async function exportProgramPdf() {
+  if (!currentProgram) return;
+  const btn = document.getElementById("export-pdf-btn");
+  const prevText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Génération…";
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const marginX = 40;
+    const pageBottom = 800;
+    let y = 50;
+
+    try {
+      const logoUrl = await svgToPngDataUrl("/logo.svg", 128);
+      doc.addImage(logoUrl, "PNG", marginX, y - 22, 26, 26);
+    } catch {}
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(201, 77, 40);
+    doc.text("Gym AI Coach", marginX + 34, y);
+    doc.setTextColor(20, 20, 20);
+    y += 36;
+
+    doc.setFontSize(14);
+    doc.text(currentProgram.title || "Mon programme", marginX, y);
+    y += 20;
+
+    if (currentProgram.content.summary) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(90, 90, 90);
+      const lines = doc.splitTextToSize(currentProgram.content.summary, 515);
+      doc.text(lines, marginX, y);
+      y += lines.length * 12 + 14;
+      doc.setTextColor(20, 20, 20);
+    }
+
+    (currentProgram.content.days || []).forEach(day => {
+      if (y > pageBottom - 40) { doc.addPage(); y = 50; }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text(`${day.day}${day.focus ? " — " + day.focus : ""}`, marginX, y);
+      y += 16;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      (day.exercises || []).forEach(ex => {
+        if (y > pageBottom) { doc.addPage(); y = 50; }
+        doc.text(`• ${ex.name}`, marginX + 10, y);
+        doc.text(`${ex.sets}×${ex.reps}${ex.rest_seconds ? " — " + ex.rest_seconds + "s repos" : ""}`, marginX + 340, y);
+        y += 14;
+      });
+      y += 12;
+    });
+
+    if (currentProgram.content.advice?.length) {
+      if (y > pageBottom - 40) { doc.addPage(); y = 50; }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("Conseils du coach", marginX, y);
+      y += 16;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      currentProgram.content.advice.forEach(a => {
+        const lines = doc.splitTextToSize(`• ${a}`, 500);
+        if (y + lines.length * 12 > pageBottom) { doc.addPage(); y = 50; }
+        doc.text(lines, marginX, y);
+        y += lines.length * 12 + 4;
+      });
+    }
+
+    const fileName = "programme-gym-ai-coach.pdf";
+    if (navigator.canShare) {
+      const blob = doc.output("blob");
+      const file = new File([blob], fileName, { type: "application/pdf" });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Mon programme Gym AI Coach" });
+        return;
+      }
+    }
+    doc.save(fileName);
+  } catch (err) {
+    console.error("Erreur export PDF programme :", err);
+    alert("Impossible de générer le PDF.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = prevText;
+  }
+}
+document.getElementById("export-pdf-btn")?.addEventListener("click", exportProgramPdf);
 
 init();

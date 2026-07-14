@@ -24,6 +24,7 @@
       <a class="btn btn-green" href="/session.html" id="start-session-btn">▶ Commencer la séance</a>
       <button class="btn btn-primary btn-sm" id="modify-ai-btn" type="button">✏️ Modifier avec l'IA</button>
       <a class="btn btn-ghost btn-sm" href="/api/program/calendar.ics" download title="Fichier .ics à importer dans Google Calendar, Apple Calendar ou Outlook">📅 Ajouter à Google Calendar</a>
+      <button class="btn btn-ghost btn-sm hidden" id="export-pdf-btn" type="button">📄 Exporter mon programme</button>
       <a class="btn btn-ghost btn-sm" href="/questionnaire.html">Regénérer le programme</a>
     </div>
   </div>
@@ -94,6 +95,7 @@
 <script src="/js/exercises-data.js"></script>
 <script src="/js/exercise-modal.js"></script>
 <script src="/js/muscle-colors.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <script src="/js/dashboard.js"></script>
 <script src="/js/i18n.js"></script>
 <script src="/js/bug-report.js"></script>
