@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Contact — Gym AI Coach</title>
+<meta name="description" content="Contacte l'équipe Gym AI Coach pour toute question, suggestion ou problème."/>
+<meta property="og:title" content="Contact — Gym AI Coach"/>
+<meta property="og:description" content="Contacte l'équipe Gym AI Coach pour toute question, suggestion ou problème."/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#c94d28"/>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body class="landing">
+<div class="shell" style="max-width:520px;padding-top:40px;padding-bottom:60px">
+  <a href="/" style="display:inline-flex;align-items:center;gap:8px;margin-bottom:32px;text-decoration:none;color:var(--chalk)">
+    <img src="/logo.svg" alt="" width="26" height="26"/>
+    <span style="font-family:var(--font-display);font-weight:700">Gym AI Coach</span>
+  </a>
+
+  <h1 style="font-family:var(--font-display);text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px">Contact</h1>
+  <p class="muted" style="font-size:.9rem;margin-bottom:28px">Une question, un bug, une suggestion ? Écris-nous, on te répond rapidement.</p>
+
+  <form id="contact-form" class="card">
+    <div class="field">
+      <label for="c-name">Nom</label>
+      <input id="c-name" name="name" type="text" maxlength="100" required/>
+    </div>
+    <div class="field">
+      <label for="c-email">Email</label>
+      <input id="c-email" name="email" type="email" maxlength="200" required/>
+    </div>
+    <div class="field">
+      <label for="c-subject">Sujet</label>
+      <input id="c-subject" name="subject" type="text" maxlength="150" required/>
+    </div>
+    <div class="field">
+      <label for="c-message">Message</label>
+      <textarea id="c-message" name="message" maxlength="2000" rows="6" required></textarea>
+    </div>
+    <button class="btn btn-primary btn-block" type="submit" id="contact-submit-btn">Envoyer</button>
+    <div id="contact-status" style="margin-top:12px;font-size:.88rem"></div>
+  </form>
+</div>
+<script src="/js/pwa.js"></script>
+<script>
+document.getElementById("contact-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = document.getElementById("contact-submit-btn");
+  const status = document.getElementById("contact-status");
+  const form = e.target;
+  const payload = {
+    name: form.name.value.trim(),
+    email: form.email.value.trim(),
+    subject: form.subject.value.trim(),
+    message: form.message.value.trim(),
+  };
+
+  btn.disabled = true;
+  status.textContent = "";
+  try {
+    const res = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erreur lors de l'envoi.");
+
+    form.reset();
+    status.style.color = "var(--green)";
+    status.textContent = "✓ Message envoyé, merci ! On te répond au plus vite.";
+  } catch (err) {
+    status.style.color = "var(--red)";
+    status.textContent = err.message;
+  } finally {
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

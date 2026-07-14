@@ -34,6 +34,7 @@ const teamsRoutes = require("./routes/teams");
 const affiliationsRoutes = require("./routes/affiliations");
 const supportRoutes = require("./routes/support");
 const pushRoutes = require("./routes/push");
+const contactRoutes = require("./routes/contact");
 const { sendReminderEmail, sendWeeklyRecapEmail } = require("./services/email");
 const { sendPushToUser } = require("./services/push");
 
@@ -92,6 +93,7 @@ app.use("/api/teams", teamsRoutes);
 app.use("/api/affiliations", affiliationsRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/push", pushRoutes);
+app.use("/api/contact", contactRoutes);
 app.use("/auth",         oauthRoutes);
 
 // Profil public a URL courte (fonctionnalite 7) : sert la meme page HTML
@@ -101,6 +103,15 @@ app.get("/u/:username", (req, res) => res.sendFile(path.join(__dirname, "public"
 
 app.use(express.static(path.join(__dirname, "public")));
 app.get("/healthz", (req, res) => res.json({ ok: true }));
+
+// 404 personnalisee (fonctionnalite 5.4) : toute route non matchee par les
+// routes API/OAuth ci-dessus ni par un fichier statique existant. Les routes
+// /api/* renvoient du JSON (coherent avec le reste de l'API), le reste sert
+// la page 404 HTML.
+app.use((req, res) => {
+  if (req.path.startsWith("/api/")) return res.status(404).json({ error: "Route introuvable." });
+  res.status(404).sendFile(path.join(__dirname, "public", "404.html"));
+});
 
 // Filet de securite : capture toute erreur non geree par une route (les routes
 // gerent deja leurs propres try/catch, ceci couvre le reste : middleware, JSON

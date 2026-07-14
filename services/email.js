@@ -198,6 +198,22 @@ async function sendSupportTicketEmail(ticket, user) {
   });
 }
 
+// Formulaire de contact public (fonctionnalite 5.3) — envoie toujours vers
+// SUPPORT_EMAIL (destinataire fixe autorise meme en mode sandbox Resend).
+async function sendContactFormEmail({ name, email, subject, message }) {
+  return sendEmail({
+    to: SUPPORT_EMAIL,
+    subject: `📩 [Contact] ${subject}`,
+    html: wrapTemplate(
+      `Nouveau message de contact`,
+      `<p><strong>De :</strong> ${escapeHtml(name)} (${escapeHtml(email)})</p>
+       <p><strong>Sujet :</strong> ${escapeHtml(subject)}</p>
+       <p style="margin-top:12px;padding:14px 16px;background:#1e1e1e;border-left:3px solid #c94d28;border-radius:6px;white-space:pre-wrap">${escapeHtml(message)}</p>`,
+      null, null
+    ),
+  });
+}
+
 module.exports = {
   sendEmail,
   sendWelcomeEmail,
@@ -208,4 +224,5 @@ module.exports = {
   sendMessageNotification,
   sendCertificationEmail,
   sendSupportTicketEmail,
+  sendContactFormEmail,
 };
