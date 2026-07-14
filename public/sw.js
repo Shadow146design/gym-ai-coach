@@ -1,4 +1,4 @@
-const CACHE_NAME = "gym-ai-coach-v21";
+const CACHE_NAME = "gym-ai-coach-v22";
 const STATIC_ASSETS = [
   "/css/style.css",
   "/js/sidebar.js",
@@ -51,4 +51,32 @@ self.addEventListener("fetch", event => {
       )
     );
   }
+});
+
+// ── Notifications push (fonctionnalite 3.2) ────────────────
+self.addEventListener("push", event => {
+  let data = { title: "Gym AI Coach", body: "", url: "/" };
+  try { data = { ...data, ...event.data.json() }; } catch {}
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: "/favicon.svg",
+      badge: "/favicon.svg",
+      data: { url: data.url || "/" },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(clients => {
+      for (const client of clients) {
+        if (client.url.includes(url) && "focus" in client) return client.focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(url);
+    })
+  );
 });

@@ -2,6 +2,7 @@ const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth, requireRole } = require("../middleware/auth");
 const { sendMessageNotification } = require("../services/email");
+const { sendPushToUser } = require("../services/push");
 const router = express.Router();
 router.use(requireAuth);
 
@@ -164,13 +165,15 @@ router.post("/:toId", async (req, res) => {
       "INSERT INTO messages (from_id,to_id,content) VALUES ($1,$2,$3) RETURNING *",
       [req.session.userId, req.params.toId, content.trim()]);
 
-    pool.query("SELECT name, role FROM users WHERE id=$1", [req.session.userId]).then(senderRes => {
+    pool.query("SELECT name, role FROM users WHERE id=$1", [req.session.userId]).then(async senderRes => {
       const sender = senderRes.rows[0];
       const label = sender?.role === "coach" ? "Ton coach" : sender?.name || "Quelqu'un";
-      return pool.query(
+      const text = `💬 ${label} t'a envoyé un message.`;
+      await pool.query(
         `INSERT INTO notifications (user_id, type, message, link) VALUES ($1,'new_message',$2,'/messages.html')`,
-        [req.params.toId, `💬 ${label} t'a envoyé un message.`]
+        [req.params.toId, text]
       );
+      sendPushToUser(req.params.toId, { title: "Nouveau message", body: text, url: `/messages.html?with=${req.session.userId}` });
     }).catch(e => console.error("Erreur notif message :", e));
 
     notifyNewMessageByEmail(req.session.userId, parseInt(req.params.toId, 10));

@@ -2,6 +2,7 @@ const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
 const { dailyTip, analyzeFatigue } = require("../services/aiCoach");
+const { sendPushToUser } = require("../services/push");
 const { checkAndUnlockBadges } = require("./badges");
 const { flagInjury } = require("../services/injuries");
 const { requirePremium } = require("../middleware/premium");
@@ -47,10 +48,12 @@ router.post("/", async (req, res) => {
     );
 
     if (previousMax !== null && Number(weight) > previousMax) {
+      const recordMsg = `🏆 Nouveau record : ${exercise_name.trim()} à ${weight}kg !`;
       pool.query(
         `INSERT INTO notifications (user_id, type, message, link) VALUES ($1,'new_record',$2,'/stats.html')`,
-        [uid, `🏆 Nouveau record : ${exercise_name.trim()} à ${weight}kg !`]
+        [uid, recordMsg]
       ).catch(e => console.error("Erreur notif nouveau record :", e));
+      sendPushToUser(uid, { title: "Nouveau record !", body: recordMsg, url: "/stats.html" });
     }
 
     checkAndUnlockBadges(uid).catch(e => console.error("Erreur verification badges :", e));

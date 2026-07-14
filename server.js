@@ -32,7 +32,9 @@ const injuriesRoutes = require("./routes/injuries");
 const teamsRoutes = require("./routes/teams");
 const affiliationsRoutes = require("./routes/affiliations");
 const supportRoutes = require("./routes/support");
+const pushRoutes = require("./routes/push");
 const { sendReminderEmail, sendWeeklyRecapEmail } = require("./services/email");
+const { sendPushToUser } = require("./services/push");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -87,6 +89,7 @@ app.use("/api/injuries", injuriesRoutes);
 app.use("/api/teams", teamsRoutes);
 app.use("/api/affiliations", affiliationsRoutes);
 app.use("/api/support", supportRoutes);
+app.use("/api/push", pushRoutes);
 app.use("/auth",         oauthRoutes);
 
 // Profil public a URL courte (fonctionnalite 7) : sert la meme page HTML
@@ -175,5 +178,84 @@ async function runEmailAutomations() {
 }
 setInterval(runEmailAutomations, 60 * 60 * 1000);
 runEmailAutomations();
+
+// Heure locale a Paris (0-23), pour declencher les rappels push au bon moment
+// de la journee independamment du fuseau UTC du serveur (Render).
+function parisHour(date = new Date()) {
+  return parseInt(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", hour: "2-digit", hour12: false }).format(date), 10);
+}
+
+// Notifications push automatiques (fonctionnalite 3.2) : streak en danger le
+// soir, seance du jour prevue le matin. Meme mecanisme anti-spam que les
+// emails (table rate_limits comme marqueur "deja envoye aujourd'hui").
+async function runPushAutomations() {
+  try {
+    const now = new Date();
+    const hour = parisHour(now);
+    const tomorrow = new Date(now.getTime() + 20 * 60 * 60 * 1000); // marge large avant le prochain declenchement
+
+    // ── Streak en danger (vers 19h-20h Paris) ─────────────────
+    if (hour === 19) {
+      const r = await pool.query(`
+        SELECT DISTINCT ON (user_id) user_id, performed_at::date AS day
+        FROM logs ORDER BY user_id, performed_at DESC
+      `);
+      for (const row of r.rows) {
+        const lastDay = dayStrUTC(row.day);
+        const today = dayStrUTC(now);
+        const yesterday = dayStrUTC(new Date(now.getTime() - 86400000));
+        if (lastDay === today || lastDay !== yesterday) continue; // deja entraine aujourd'hui, ou streak deja rompu
+
+        const rl = await pool.query("SELECT reset_at FROM rate_limits WHERE user_id=$1 AND action='streak_reminder'", [row.user_id]);
+        if (rl.rows[0] && new Date(rl.rows[0].reset_at) > now) continue;
+
+        await sendPushToUser(row.user_id, {
+          title: "🔥 Ton streak est en danger !",
+          body: "Tu n'as pas encore fait ta séance aujourd'hui.",
+          url: "/session.html",
+        });
+        await pool.query(
+          `INSERT INTO rate_limits (user_id, action, count, reset_at) VALUES ($1,'streak_reminder',1,$2)
+           ON CONFLICT (user_id, action) DO UPDATE SET count=1, reset_at=$2`,
+          [row.user_id, tomorrow]
+        );
+      }
+    }
+
+    // ── Seance du jour prevue (vers 8h-9h Paris) ──────────────
+    if (hour === 8) {
+      const WEEKDAYS = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+      const todayName = WEEKDAYS[now.getDay()];
+      const progR = await pool.query("SELECT user_id, content FROM programs WHERE is_active=TRUE");
+      for (const prog of progR.rows) {
+        const days = prog.content?.days || [];
+        const todayDay = days.find(d => String(d.day || "").toLowerCase().includes(todayName));
+        if (!todayDay) continue;
+
+        const rl = await pool.query("SELECT reset_at FROM rate_limits WHERE user_id=$1 AND action='session_today_reminder'", [prog.user_id]);
+        if (rl.rows[0] && new Date(rl.rows[0].reset_at) > now) continue;
+
+        await sendPushToUser(prog.user_id, {
+          title: "📅 Séance du jour",
+          body: `Ta séance de ${todayDay.focus || todayDay.day} est prévue aujourd'hui.`,
+          url: "/session.html",
+        });
+        await pool.query(
+          `INSERT INTO rate_limits (user_id, action, count, reset_at) VALUES ($1,'session_today_reminder',1,$2)
+           ON CONFLICT (user_id, action) DO UPDATE SET count=1, reset_at=$2`,
+          [prog.user_id, tomorrow]
+        );
+      }
+    }
+  } catch (e) { console.error("Erreur automatisations push :", e); }
+}
+
+function dayStrUTC(d) {
+  const dt = new Date(d);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+}
+
+setInterval(runPushAutomations, 60 * 60 * 1000);
+runPushAutomations();
 
 app.listen(PORT, () => console.log(`Gym AI Coach v4 — port ${PORT}`));

@@ -307,6 +307,15 @@ CREATE TABLE IF NOT EXISTS injury_flags (
 );
 CREATE INDEX IF NOT EXISTS idx_injury_flags_user ON injury_flags(user_id, resolved_at);
 
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id           SERIAL PRIMARY KEY,
+  user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  endpoint     TEXT NOT NULL UNIQUE,
+  subscription JSONB NOT NULL,
+  created_at   TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(user_id);
+
 CREATE TABLE IF NOT EXISTS support_tickets (
   id          SERIAL PRIMARY KEY,
   user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
