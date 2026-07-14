@@ -69,10 +69,15 @@
       <div><h1>Récap de la séance 🏆</h1></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn btn-ghost btn-sm" id="share-session-btn" type="button">📱 Partager ma séance</button>
+        <button class="btn btn-ghost btn-sm hidden" id="share-coach-btn" type="button">🤝 Partager avec mon coach</button>
         <a class="btn btn-ghost" href="/home.html">Retour à l'accueil</a>
       </div>
     </div>
     <div id="recap-stats" class="kpi-grid" style="margin-bottom:20px"></div>
+    <div id="recap-muscle-radar" class="chart-wrap hidden" style="margin-bottom:20px">
+      <div class="card-title">Muscles travaillés</div>
+      <canvas id="session-muscle-radar" height="180"></canvas>
+    </div>
     <div id="recap-exercises" style="margin-bottom:20px"></div>
 
     <!-- Debrief IA -->

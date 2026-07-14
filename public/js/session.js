@@ -462,11 +462,22 @@ async function showRecap() {
   const mins = Math.round(secondsElapsed / 60);
   lastRecapData = { totalVolume, prs, mins };
 
+  // Comparaison au volume de la seance precedente (avant-dernier jour de la courbe)
+  const prevDayVolume = volume.length >= 2 ? Number(volume[volume.length - 2].volume) : null;
+  const volDeltaPct = prevDayVolume ? Math.round(((totalVolume - prevDayVolume) / prevDayVolume) * 100) : null;
+  const volDeltaHtml = volDeltaPct === null ? ""
+    : `<div class="kpi-sub" style="color:${volDeltaPct >= 0 ? "var(--green)" : "var(--rust-soft)"}">${volDeltaPct >= 0 ? "▲ +" : "▼ "}${volDeltaPct}% vs dernière séance</div>`;
+  const intensity = mins > 0 ? Math.round(totalVolume / mins) : 0;
+
   document.getElementById("recap-stats").innerHTML = `
     <div class="kpi-tile"><div class="kpi-label">Séries</div><div class="kpi-value">${sessionLogs.length}</div></div>
-    <div class="kpi-tile"><div class="kpi-label">Volume</div><div class="kpi-value">${Math.round(totalVolume)}<span style="font-size:.9rem"> kg</span></div></div>
+    <div class="kpi-tile"><div class="kpi-label">Volume</div><div class="kpi-value">${Math.round(totalVolume)}<span style="font-size:.9rem"> kg</span></div>${volDeltaHtml}</div>
     <div class="kpi-tile"><div class="kpi-label">Records 🏆</div><div class="kpi-value" style="color:var(--gold)">${prs}</div></div>
-    <div class="kpi-tile"><div class="kpi-label">Durée</div><div class="kpi-value">${mins}<span style="font-size:.9rem"> min</span></div></div>`;
+    <div class="kpi-tile"><div class="kpi-label">Durée</div><div class="kpi-value">${mins}<span style="font-size:.9rem"> min</span></div><div class="kpi-sub">${intensity} kg/min</div></div>`;
+
+  if (prs > 0) launchConfetti();
+  renderSessionMuscleRadar();
+  setupCoachShareButton();
 
   // Détail exercices
   const byEx = {};
@@ -503,6 +514,94 @@ async function showRecap() {
   await triggerDebrief(totalVolume, prs, mins);
 
   renderVolumeChart(volume);
+}
+
+// ── Confetti quand des records sont battus (fonctionnalité 3.9) ──
+function launchConfetti() {
+  const colors = ["#c94d28", "#e8b33d", "#3da874", "#7aa8b8"];
+  const container = document.createElement("div");
+  container.className = "confetti-container";
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement("span");
+    piece.className = "confetti-piece";
+    piece.style.left = `${Math.random() * 100}%`;
+    piece.style.background = colors[i % colors.length];
+    piece.style.animationDelay = `${Math.random() * 0.4}s`;
+    piece.style.animationDuration = `${1.8 + Math.random() * 1.2}s`;
+    container.appendChild(piece);
+  }
+  document.body.appendChild(container);
+  setTimeout(() => container.remove(), 3200);
+}
+
+// ── Radar des muscles travaillés pendant la séance ────────
+let sessionRadarInstance = null;
+function renderSessionMuscleRadar() {
+  const box = document.getElementById("recap-muscle-radar");
+  const canvas = document.getElementById("session-muscle-radar");
+  if (typeof Chart === "undefined" || !box || !canvas) return;
+
+  const volByGroup = {};
+  sessionLogs.forEach(l => {
+    const g = l.muscle_group || "Autre";
+    volByGroup[g] = (volByGroup[g] || 0) + l.weight * l.reps;
+  });
+  const groups = Object.keys(volByGroup);
+  if (groups.length < 3) { box.classList.add("hidden"); return; }
+
+  box.classList.remove("hidden");
+  if (sessionRadarInstance) sessionRadarInstance.destroy();
+  sessionRadarInstance = new Chart(canvas, {
+    type: "radar",
+    data: {
+      labels: groups,
+      datasets: [{
+        label: "Volume séance (kg)",
+        data: groups.map(g => volByGroup[g]),
+        borderColor: "#3da874",
+        backgroundColor: "rgba(61,168,116,.18)",
+        pointBackgroundColor: "#e8b33d",
+        pointBorderColor: "#e8b33d",
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: "#8f8b84", font: { family: "Inter", size: 11 } } } },
+      scales: {
+        r: {
+          angleLines: { color: "rgba(255,255,255,.08)" },
+          grid: { color: "rgba(255,255,255,.08)" },
+          pointLabels: { color: "#c9c6c1", font: { size: 11 } },
+          ticks: { display: false },
+        },
+      },
+    },
+  });
+}
+
+// ── Partage de la séance avec le coach assigné ────────────
+async function setupCoachShareButton() {
+  const btn = document.getElementById("share-coach-btn");
+  if (!btn) return;
+  try {
+    const mine = await fetch("/api/coaches/mine").then(r => r.json());
+    const assignment = mine.assignment;
+    if (!assignment || assignment.status !== "active") return;
+    btn.classList.remove("hidden");
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      const d = lastRecapData;
+      const content = `📋 Récap de ma séance : ${sessionLogs.length} séries, ${Math.round(d.totalVolume)} kg de volume, ${d.prs} record${d.prs > 1 ? "s" : ""} battu${d.prs > 1 ? "s" : ""}, ${d.mins} min.`;
+      try {
+        await fetch(`/api/messages/${assignment.coach_id}`, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content }),
+        });
+        btn.textContent = "✓ Partagé au coach";
+      } catch {
+        btn.disabled = false;
+      }
+    }, { once: true });
+  } catch {}
 }
 
 // ── Debrief IA ────────────────────────────────────────────
