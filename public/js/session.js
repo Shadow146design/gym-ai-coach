@@ -232,6 +232,8 @@ function startSession() {
     btn.addEventListener("click", () => completeSet(btn));
   });
 
+  updateSessionProgress();
+
   // Timer séance
   secondsElapsed = 0;
   timerInterval = setInterval(() => {
@@ -263,7 +265,34 @@ window.addExerciseToSession = function (name, muscleGroup) {
   container.appendChild(card);
   card.querySelectorAll(".done-btn").forEach(btn => btn.addEventListener("click", () => completeSet(btn)));
   card.scrollIntoView({ behavior: "smooth", block: "center" });
+  updateSessionProgress();
 };
+
+// Met en avant le premier exercice non termine et affiche X/Y complets
+function updateSessionProgress() {
+  const cards = [...document.querySelectorAll(".session-exercise-card")];
+  if (!cards.length) return;
+
+  let doneCount = 0;
+  let activeAssigned = false;
+  cards.forEach(card => {
+    const rows = card.querySelectorAll(".set-row");
+    const isDone = rows.length > 0 && [...rows].every(r => r.classList.contains("completed"));
+    card.classList.toggle("exercise-done", isDone);
+    if (isDone) doneCount++;
+    if (!isDone && !activeAssigned) {
+      card.classList.add("active-exercise");
+      activeAssigned = true;
+    } else {
+      card.classList.remove("active-exercise");
+    }
+  });
+
+  const label = document.getElementById("session-progress-label");
+  const fill = document.getElementById("session-progress-fill");
+  if (label) label.textContent = `${doneCount}/${cards.length} exercices complétés`;
+  if (fill) fill.style.width = `${cards.length ? (doneCount / cards.length) * 100 : 0}%`;
+}
 
 function completeSet(btn) {
   const row = btn.closest(".set-row");
@@ -274,15 +303,18 @@ function completeSet(btn) {
   if (isNaN(weight) || weight < 0) { row.querySelector(".weight-input").focus(); return; }
   if (!reps || reps < 1)           { row.querySelector(".reps-input").focus(); return; }
 
-  btn.classList.add("checked");
+  btn.classList.add("checked", "just-checked");
   btn.disabled = true;
   row.classList.add("completed");
+  setTimeout(() => btn.classList.remove("just-checked"), 500);
 
   sessionLogs.push({
     exercise_name: card.dataset.exercise,
     muscle_group:  card.dataset.muscleGroup || null,
     weight, reps, sets: 1,
   });
+
+  updateSessionProgress();
 
   // Lance le minuteur de repos
   const restSeconds = parseInt(btn.dataset.rest) || 90;

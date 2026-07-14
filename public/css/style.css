@@ -405,6 +405,27 @@ select option { background: var(--bg-card-solid); }
 .set-row .done-btn:hover { transform: scale(1.08); border-color: var(--chalk-dim); }
 .set-row .done-btn.checked { background: var(--green); border-color: var(--green); box-shadow: var(--glow-green); }
 .set-row.completed { background: var(--green-bg); }
+.set-row .done-btn.just-checked { animation: done-pop .45s var(--ease-snap); }
+@keyframes done-pop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.35); box-shadow: 0 0 0 8px rgba(61,168,116,.25), var(--glow-green); }
+  100% { transform: scale(1); }
+}
+
+/* Exercice actif mis en avant pendant la seance */
+.session-exercise-card.active-exercise {
+  border-color: var(--rust); box-shadow: var(--shadow-lg), var(--glow-rust);
+  transform: scale(1.015);
+}
+.session-exercise-card.active-exercise .session-exercise-header { background: var(--rust-bg); }
+.session-exercise-card.exercise-done { opacity: .55; }
+.session-exercise-card.exercise-done .session-exercise-header { background: var(--green-bg); }
+.session-exercise-card { transition: opacity .25s var(--ease), transform .25s var(--ease), box-shadow .25s var(--ease); }
+
+.session-progress-wrap { margin-bottom: 18px; }
+.session-progress-bar { height: 8px; border-radius: 20px; background: var(--bg-hover); overflow: hidden; }
+.session-progress-fill { height: 100%; background: var(--grad-rust); border-radius: 20px; transition: width .3s var(--ease); width: 0; }
+.session-progress-label { font-size: .75rem; color: var(--chalk-dim); margin-top: 6px; text-align: right; }
 
 .delta-badge {
   display: inline-flex; align-items: center; gap: 4px;
