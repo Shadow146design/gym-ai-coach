@@ -57,8 +57,11 @@ async function resolveInjury(id, action) {
     });
     const data = await res.json();
     if (card) {
-      card.innerHTML = `<p style="font-size:.88rem;color:var(--green)">${data.adapted ? "Programme adapté ✓" : "Ok, note bien enregistrée."}</p>`;
-      setTimeout(() => card.remove(), 2500);
+      const adaptMsg = data.replacement
+        ? `Programme adapté ✓ — remplacé par ${esc(data.replacement)} (reprise à ~50% de charge conseillée).`
+        : "Programme adapté ✓";
+      card.innerHTML = `<p style="font-size:.88rem;color:var(--green)">${data.adapted ? adaptMsg : "Ok, note bien enregistrée."}</p>`;
+      setTimeout(() => card.remove(), 4000);
     }
     if (data.adapted) await loadProgram();
   } catch {
