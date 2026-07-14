@@ -1013,6 +1013,38 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
 .rest-timer-overlay.done .rest-count { color: var(--green); }
 
 /* =========================================================
+   MODE FOCUS séance (fonctionnalité 3.8)
+   ========================================================= */
+.focus-exit-btn {
+  position: fixed; top: 14px; right: 14px; z-index: 400;
+  background: var(--bg-card-solid); border: 1px solid var(--border-strong); color: var(--chalk);
+  padding: 8px 16px; border-radius: 20px; font-size: .78rem; cursor: pointer;
+  box-shadow: var(--shadow-lg);
+}
+body.focus-mode .sidebar, body.focus-mode .bottom-nav, body.focus-mode footer,
+body.focus-mode .page-wrapper > .shell > footer, body.focus-mode .session-progress-wrap {
+  display: none !important;
+}
+body.focus-mode .page-wrapper { margin-left: 0 !important; padding-bottom: 0 !important; }
+body.focus-mode .page-head { display: none; }
+body.focus-mode .session-exercise-card:not(.active-exercise) { display: none; }
+body.focus-mode .session-exercise-card.active-exercise {
+  max-width: 560px; margin: 8vh auto; transform: scale(1);
+}
+body.focus-mode .session-exercise-header h3 { font-size: 1.4rem; }
+body.focus-mode .set-row .done-btn { width: 44px; height: 44px; font-size: 1.3rem; }
+body.focus-mode #finish-btn, body.focus-mode #step-session > div[style*="margin-top:24px"] { display: none; }
+
+body.focus-mode .rest-timer-overlay {
+  position: fixed; inset: 0; width: 100%; height: 100%; border-radius: 0;
+  flex-direction: column; justify-content: center; gap: 24px; z-index: 500;
+  background: var(--bg);
+}
+body.focus-mode .rest-timer-overlay .rest-count { font-size: 6rem; min-width: auto; }
+body.focus-mode .rest-timer-overlay .rest-label { font-size: 1.1rem; }
+body.focus-mode .rest-timer-overlay .rest-skip { font-size: 1rem; margin-top: 10px; }
+
+/* =========================================================
    1RM display in recap
    ========================================================= */
 .orm-row {

@@ -294,6 +294,28 @@ function updateSessionProgress() {
   if (fill) fill.style.width = `${cards.length ? (doneCount / cards.length) * 100 : 0}%`;
 }
 
+// ── Mode Focus (fonctionnalité 3.8) ───────────────────────
+function enterFocusMode() {
+  document.body.classList.add("focus-mode");
+  document.getElementById("focus-exit-btn").classList.remove("hidden");
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+}
+
+function exitFocusMode() {
+  document.body.classList.remove("focus-mode");
+  document.getElementById("focus-exit-btn").classList.add("hidden");
+  if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+}
+
+document.getElementById("focus-mode-btn")?.addEventListener("click", enterFocusMode);
+document.getElementById("focus-exit-btn")?.addEventListener("click", exitFocusMode);
+document.addEventListener("fullscreenchange", () => {
+  if (document.fullscreenElement) return;
+  document.body.classList.remove("focus-mode");
+  document.getElementById("focus-exit-btn")?.classList.add("hidden");
+});
+
 function completeSet(btn) {
   const row = btn.closest(".set-row");
   const card = btn.closest(".session-exercise-card");

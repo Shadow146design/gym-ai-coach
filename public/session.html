@@ -47,8 +47,12 @@
         <h1 id="session-day-title">Séance</h1>
         <p class="sub muted" id="session-day-focus"></p>
       </div>
-      <div id="session-timer" class="mono" style="font-size:1.5rem;color:var(--rust-soft)">00:00</div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <button class="btn btn-ghost btn-sm" id="focus-mode-btn" type="button">🎯 Mode Focus</button>
+        <div id="session-timer" class="mono" style="font-size:1.5rem;color:var(--rust-soft)">00:00</div>
+      </div>
     </div>
+    <button id="focus-exit-btn" class="focus-exit-btn hidden" type="button">✕ Quitter le mode focus</button>
     <div class="session-progress-wrap">
       <div class="session-progress-bar"><div class="session-progress-fill" id="session-progress-fill"></div></div>
       <div class="session-progress-label" id="session-progress-label">0/0 exercices complétés</div>
