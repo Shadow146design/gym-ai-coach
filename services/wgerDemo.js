@@ -66,7 +66,7 @@ const EXERCISE_TRANSLATIONS = {
   "développé militaire": ["Shoulder Press, Barbell", "Overhead Press"],
   "développé militaire barre": ["Shoulder Press, Barbell", "Overhead Barbell Press"],
   "développé militaire haltères": ["Shoulder Press, Dumbbells", "Dumbbell Shoulder Press"],
-  "développé haltères assis": ["Shoulder Press, Dumbbells", "Single-arm dumbbell shoulder press"],
+  "développé haltères assis": ["Single-arm dumbbell shoulder press", "Shoulder Press, Dumbbells"],
   "élévations latérales": ["Lateral Raises", "Side Lateral Raise"],
   "élévations latérales haltères": ["Lateral Raises", "Side Lateral Raise"],
   "élévations latérales poulie basse": ["Cable Lateral Raises (Single Arm)", "Machine Lateral Raise"],
