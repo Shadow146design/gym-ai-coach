@@ -709,6 +709,39 @@ async function analyzePlateau(plateaus) {
   return data.choices?.[0]?.message?.content || "Impossible de générer des conseils pour le moment.";
 }
 
+// ── Analyse de fatigue (fonctionnalité 3.3) ─────────────────
+const FATIGUE_SYSTEM = `Tu es un coach sportif expert en gestion de la charge d'entrainement et de la recuperation.
+Les donnees montrent des signes de fatigue accumulee chez l'utilisateur (volume en baisse et/ou seances sautees
+sur les 2 dernieres semaines). Explique brievement pourquoi ca peut arriver et recommande concretement une
+semaine de decharge (deload) : reduire le volume d'environ 40-50% et/ou l'intensite de 10-20%, en gardant la
+frequence d'entrainement si possible. Sois rassurant, ce n'est pas un echec mais une strategie normale de
+progression. Reponds en francais, de maniere concise et actionnable (4-6 phrases max), sans markdown.`;
+
+async function analyzeFatigue(stats) {
+  if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY manquante.");
+
+  const userPrompt = `Volume semaine precedente : ${Math.round(stats.previousWeekVolume)}kg sur ${stats.previousWeekSessions} seance(s).
+Volume cette semaine : ${Math.round(stats.currentWeekVolume)}kg sur ${stats.currentWeekSessions} seance(s).
+Variation de volume : ${stats.volumeChangePct}%.
+Genere une recommandation de decharge adaptee a cette situation.`;
+
+  const response = await fetch(GROQ_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: MODEL(), temperature: 0.6, max_tokens: 300,
+      messages: [
+        { role: "system", content: FATIGUE_SYSTEM },
+        { role: "user", content: userPrompt },
+      ],
+    }),
+  });
+
+  if (!response.ok) throw new Error(`Erreur Groq fatigue (${response.status})`);
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "Une semaine plus légère (moins de volume, même fréquence) pourrait t'aider à mieux récupérer.";
+}
+
 // ── Questionnaire conversationnel (module E) ────────────────
 const VALID_OBJECTIFS = Object.keys(PROGRAM_RULES);
 const VALID_NIVEAUX = ["debutant", "intermediaire", "avance"];
@@ -853,4 +886,4 @@ Génère maintenant le plan alimentaire JSON sur 7 jours adapté à ces objectif
   return plan;
 }
 
-module.exports = { generateProgram, chatWithCoach, debriefSession, dailyTip, analyzePlateau, extractProgramParams, generateNutritionPlan, validateProgram, EXERCISE_DATABASE };
+module.exports = { generateProgram, chatWithCoach, debriefSession, dailyTip, analyzePlateau, analyzeFatigue, extractProgramParams, generateNutritionPlan, validateProgram, EXERCISE_DATABASE };

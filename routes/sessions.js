@@ -1,7 +1,7 @@
 const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
-const { dailyTip } = require("../services/aiCoach");
+const { dailyTip, analyzeFatigue } = require("../services/aiCoach");
 const { checkAndUnlockBadges } = require("./badges");
 const { flagInjury } = require("../services/injuries");
 const { requirePremium } = require("../middleware/premium");
@@ -510,6 +510,52 @@ router.get("/plateau", requirePremium, async (req, res) => {
     res.json({ plateaus });
   } catch (err) {
     console.error("Erreur GET /logs/plateau :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+// ── GET /fatigue (analyse de fatigue sur 2 semaines, fonctionnalité 3.3) ──
+router.get("/fatigue", async (req, res) => {
+  try {
+    const uid = req.session.userId;
+    const r = await pool.query(
+      `SELECT weight, reps, sets, performed_at::date AS day
+       FROM logs WHERE user_id=$1 AND performed_at >= NOW() - INTERVAL '14 days'`,
+      [uid]
+    );
+
+    const today = new Date(); today.setHours(0,0,0,0);
+    const weekAgo = new Date(today); weekAgo.setDate(today.getDate() - 7);
+
+    let currentWeekVolume = 0, previousWeekVolume = 0;
+    const currentWeekDays = new Set(), previousWeekDays = new Set();
+    r.rows.forEach(row => {
+      const day = dayStr(row.day);
+      const vol = Number(row.weight) * Number(row.reps) * Number(row.sets);
+      if (new Date(day) >= weekAgo) { currentWeekVolume += vol; currentWeekDays.add(day); }
+      else { previousWeekVolume += vol; previousWeekDays.add(day); }
+    });
+
+    const currentWeekSessions = currentWeekDays.size;
+    const previousWeekSessions = previousWeekDays.size;
+
+    // Pas assez de recul (mois d'un debut de 2e semaine) : rien a analyser.
+    if (previousWeekSessions === 0) return res.json({ fatigued: false });
+
+    const volumeChangePct = Math.round(((currentWeekVolume - previousWeekVolume) / previousWeekVolume) * 100);
+    const volumeDropping = volumeChangePct <= -20;
+    const skippingMore = previousWeekSessions >= 2 && currentWeekSessions <= previousWeekSessions - 2;
+    const fatigued = volumeDropping || skippingMore;
+
+    if (!fatigued) return res.json({ fatigued: false });
+
+    const stats = { currentWeekVolume, previousWeekVolume, currentWeekSessions, previousWeekSessions, volumeChangePct };
+    let suggestion = "Une semaine plus légère (moins de volume, même fréquence) pourrait t'aider à mieux récupérer.";
+    try { suggestion = await analyzeFatigue(stats); } catch {}
+
+    res.json({ fatigued: true, ...stats, suggestion });
+  } catch (err) {
+    console.error("Erreur GET /logs/fatigue :", err);
     res.status(500).json({ error: "Erreur serveur." });
   }
 });

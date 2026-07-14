@@ -12,7 +12,7 @@ async function init() {
 
   await Promise.all([
     loadKPIs(), loadNextSession(), loadCalendar(), loadRecords(),
-    loadLastAndTodayRecord(), loadDailyTip(), loadPlateauAlert(), loadFormScore(),
+    loadLastAndTodayRecord(), loadDailyTip(), loadPlateauAlert(), loadFatigueAlert(), loadFormScore(),
   ]);
 
   maybeStartTour();
@@ -104,6 +104,18 @@ async function loadPlateauAlert() {
     document.getElementById("plateau-alert-btn").href = `/dashboard.html?plateau=1`;
 
     document.getElementById("plateau-alert").classList.remove("hidden");
+  } catch {}
+}
+
+// ── Alerte fatigue (fonctionnalité 3.3) ───────────────────────
+async function loadFatigueAlert() {
+  try {
+    const r = await fetch("/api/logs/fatigue").then(r => r.json());
+    if (!r.fatigued) return;
+
+    document.getElementById("fatigue-alert-text").textContent =
+      r.suggestion || "⚠️ Tu sembles fatigué ces derniers temps. Une semaine de décharge pourrait être bénéfique.";
+    document.getElementById("fatigue-alert").classList.remove("hidden");
   } catch {}
 }
 
