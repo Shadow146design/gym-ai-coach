@@ -48,7 +48,7 @@ function renderConversations() {
 
   list.innerHTML = filtered.map(c => `
     <div class="conv-item ${currentWith===c.other_id?'active':''}" onclick="openConversation(${c.other_id})" id="conv-${c.other_id}">
-      <div class="conv-avatar">${c.other_avatar ? `<img src="${esc(c.other_avatar)}"/>` : "👤"}</div>
+      <div class="conv-avatar">${c.other_avatar ? `<img src="${esc(c.other_avatar)}" loading="lazy"/>` : "👤"}</div>
       <div class="conv-meta">
         <div class="conv-name-row">
           <span class="conv-name">${esc(c.other_name)}</span>

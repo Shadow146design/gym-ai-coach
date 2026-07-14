@@ -58,7 +58,7 @@ async function loadClients() {
       <div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:14px 18px">
         <div style="display:flex;align-items:center;gap:10px">
           <div style="width:36px;height:36px;border-radius:50%;background:var(--rust-bg);display:flex;align-items:center;justify-content:center;overflow:hidden">
-            ${c.avatar_url?`<img src="${esc(c.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`:"👤"}
+            ${c.avatar_url?`<img src="${esc(c.avatar_url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>`:"👤"}
           </div>
           <div><div style="font-weight:600">${esc(c.name)}</div><div style="font-size:.75rem;color:var(--chalk-dim)">${esc(c.email)}</div></div>
         </div>
@@ -78,7 +78,7 @@ async function loadClients() {
     <div class="card" style="cursor:pointer" onclick="openClient(${c.id})">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
         <div style="width:40px;height:40px;border-radius:50%;background:var(--rust-bg);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
-          ${c.avatar_url?`<img src="${esc(c.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`:"👤"}
+          ${c.avatar_url?`<img src="${esc(c.avatar_url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>`:"👤"}
         </div>
         <div>
           <div style="font-weight:600">${esc(c.name)}</div>

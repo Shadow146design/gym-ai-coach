@@ -5,6 +5,7 @@ const session   = require("express-session");
 const pgSession = require("connect-pg-simple")(session);
 const helmet    = require("helmet");
 const morgan    = require("morgan");
+const compression = require("compression");
 
 const pool           = require("./db/pool");
 const authRoutes     = require("./routes/auth");
@@ -45,6 +46,7 @@ app.set("trust proxy", 1);
 // sur le CDN Chart.js, incompatibles avec la CSP stricte par defaut de Helmet.
 // Les autres en-tetes (HSTS, X-Frame-Options, X-Content-Type-Options...) restent actifs.
 app.use(helmet({ contentSecurityPolicy: false }));
+app.use(compression());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 // Webhook Stripe : body brut (Buffer) requis pour verifier la signature,

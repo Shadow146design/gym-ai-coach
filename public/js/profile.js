@@ -409,7 +409,7 @@ async function refreshPhotosGrid() {
     grid.innerHTML = r.photos.length
       ? r.photos.map(p => `
         <div class="photo-tile">
-          <img src="${p.photo_data}" alt="${esc(p.caption || "")}"/>
+          <img src="${p.photo_data}" alt="${esc(p.caption || "")}" loading="lazy"/>
           <div class="photo-tile-meta">
             <span>${new Date(p.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}</span>
             <button type="button" class="photo-tile-delete" data-id="${p.id}" title="Supprimer">✕</button>

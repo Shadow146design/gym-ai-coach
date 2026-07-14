@@ -192,14 +192,23 @@ router.get("/volume", async (req, res) => {
   } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
 });
 
-// ── GET / (historique par exercice) ──────────────────────
+// ── GET / (historique par exercice, paginable) ────────────
 router.get("/", async (req, res) => {
   try {
-    const { exercise } = req.query;
+    const { exercise, limit, offset } = req.query;
     let q = "SELECT * FROM logs WHERE user_id=$1";
     const p = [req.session.userId];
     if (exercise) { q += " AND exercise_name=$2"; p.push(exercise); }
     q += " ORDER BY performed_at ASC";
+
+    // Pagination optionnelle (?limit=&offset=) : sans filtre exercice explicite,
+    // on plafonne quand meme a 1000 lignes par defaut pour eviter une requete
+    // non bornee sur un compte avec plusieurs annees d'historique.
+    const lim = Math.min(parseInt(limit, 10) || (exercise ? Infinity : 1000), 1000);
+    if (Number.isFinite(lim)) { q += ` LIMIT $${p.length + 1}`; p.push(lim); }
+    const off = parseInt(offset, 10);
+    if (off > 0) { q += ` OFFSET $${p.length + 1}`; p.push(off); }
+
     const r = await pool.query(q, p);
     res.json({ logs: r.rows });
   } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }

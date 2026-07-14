@@ -51,7 +51,7 @@ function renderLeaderboard(data) {
   box.innerHTML = top10.map(entry => `
     <div class="comp-row${entry.rank <= 3 ? " top3" : ""}">
       <div class="comp-rank">${medals[entry.rank - 1] || `#${entry.rank}`}</div>
-      <div class="comp-avatar">${entry.avatar_url ? `<img src="${esc(entry.avatar_url)}" alt=""/>` : initials(entry.name)}</div>
+      <div class="comp-avatar">${entry.avatar_url ? `<img src="${esc(entry.avatar_url)}" alt="" loading="lazy"/>` : initials(entry.name)}</div>
       <div class="comp-info">
         <div class="comp-name">${esc(entry.name)}</div>
         <div class="comp-meta muted">${entry.sessions} séance${entry.sessions > 1 ? "s" : ""}</div>

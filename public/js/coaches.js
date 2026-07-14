@@ -72,7 +72,7 @@ async function init() {
     card.innerHTML = `
       <div style="display:flex;align-items:center;gap:12px">
         <div style="width:48px;height:48px;border-radius:50%;background:var(--rust-bg);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;overflow:hidden">
-          ${coach.avatar_url ? `<img src="${esc(coach.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>` : "🏋️"}
+          ${coach.avatar_url ? `<img src="${esc(coach.avatar_url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>` : "🏋️"}
         </div>
         <div>
           <div style="font-weight:600">${esc(coach.name)}</div>

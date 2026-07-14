@@ -117,10 +117,12 @@ DO $$ BEGIN
     THEN ALTER TABLE logs ADD COLUMN muscle_group TEXT; END IF;
 END $$;
 
-CREATE INDEX IF NOT EXISTS idx_programs_user ON programs(user_id);
-CREATE INDEX IF NOT EXISTS idx_logs_user     ON logs(user_id);
-CREATE INDEX IF NOT EXISTS idx_logs_exercise ON logs(user_id, exercise_name);
-CREATE INDEX IF NOT EXISTS idx_logs_day      ON logs(user_id, (performed_at::date));
+CREATE INDEX IF NOT EXISTS idx_programs_user   ON programs(user_id);
+CREATE INDEX IF NOT EXISTS idx_programs_active ON programs(user_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_logs_user       ON logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_logs_exercise   ON logs(user_id, exercise_name);
+CREATE INDEX IF NOT EXISTS idx_logs_day        ON logs(user_id, (performed_at::date));
+CREATE INDEX IF NOT EXISTS idx_logs_user_date  ON logs(user_id, performed_at);
 
 CREATE TABLE IF NOT EXISTS subscriptions (
   id                     SERIAL PRIMARY KEY,

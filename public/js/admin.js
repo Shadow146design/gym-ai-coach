@@ -121,7 +121,7 @@ function renderUsers(users) {
       <td style="padding:10px 8px">
         <div style="display:flex;align-items:center;gap:8px">
           <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;background:var(--bg-hover);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.8rem">
-            ${u.avatar_url ? `<img src="${esc(u.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>` : "👤"}
+            ${u.avatar_url ? `<img src="${esc(u.avatar_url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>` : "👤"}
           </div>
           ${esc(u.name)}
         </div>
