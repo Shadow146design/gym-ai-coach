@@ -107,6 +107,10 @@ app.get("/healthz", (req, res) => res.json({ ok: true }));
 // invalide, etc.) pour ne jamais renvoyer une stack trace au client.
 app.use((err, req, res, next) => {
   console.error(`[${new Date().toISOString()}] Erreur non geree sur ${req.method} ${req.originalUrl} :`, err);
+  pool.query(
+    "INSERT INTO errors (message, stack, method, path, user_id) VALUES ($1,$2,$3,$4,$5)",
+    [err.message || String(err), err.stack || null, req.method, req.originalUrl, req.session?.userId || null]
+  ).catch(() => {});
   if (res.headersSent) return next(err);
   res.status(500).json({ error: "Erreur serveur." });
 });

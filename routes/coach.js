@@ -2,6 +2,7 @@ const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth, requireRole } = require("../middleware/auth");
 const { generateProgram } = require("../services/aiCoach");
+const { stripHtml } = require("../middleware/sanitize");
 const router = express.Router();
 
 // ── Coaches publics ────────────────────────────────────────
@@ -63,7 +64,7 @@ router.post("/:id/review", requireAuth, async (req, res) => {
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       return res.status(400).json({ error: "La note doit être un entier entre 1 et 5." });
     }
-    const comment = (req.body.comment || "").toString().trim().slice(0, 500) || null;
+    const comment = stripHtml((req.body.comment || "").toString()).slice(0, 500) || null;
 
     const assignR = await pool.query(
       "SELECT id FROM coach_assignments WHERE coach_id=$1 AND client_id=$2 AND status IN ('active','ended')",
@@ -234,7 +235,7 @@ router.put("/profile", requireRole("coach","admin"), async (req, res) => {
     await pool.query(`
       INSERT INTO coach_profiles (user_id,bio,specialties,price_monthly,available) VALUES ($1,$2,$3,$4,$5)
       ON CONFLICT (user_id) DO UPDATE SET bio=$2,specialties=$3,price_monthly=$4,available=$5`,
-      [req.session.userId, bio, specialties||[], price_monthly||0, available!==false]);
+      [req.session.userId, stripHtml(bio), specialties||[], price_monthly||0, available!==false]);
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
 });

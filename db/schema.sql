@@ -340,6 +340,17 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
 );
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(user_id);
 
+CREATE TABLE IF NOT EXISTS errors (
+  id         SERIAL PRIMARY KEY,
+  message    TEXT NOT NULL,
+  stack      TEXT,
+  method     TEXT,
+  path       TEXT,
+  user_id    INTEGER,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_errors_created ON errors(created_at DESC);
+
 CREATE TABLE IF NOT EXISTS support_tickets (
   id          SERIAL PRIMARY KEY,
   user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

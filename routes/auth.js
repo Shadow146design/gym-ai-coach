@@ -19,6 +19,17 @@ const authLimiter = rateLimit({
   message: { error: "Trop de tentatives. Réessaie dans une minute." },
 });
 
+// Limite plus stricte specifiquement sur la connexion (brute force sur mot
+// de passe) : 5 tentatives/minute par IP au lieu des 10 partagees avec
+// inscription/autres routes sensibles.
+const loginLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Trop de tentatives de connexion. Réessaie dans une minute." },
+});
+
 router.post("/register", authLimiter, async (req, res) => {
   try {
     const { email, password, name, ref, aff } = req.body;
@@ -81,7 +92,7 @@ router.post("/register", authLimiter, async (req, res) => {
   }
 });
 
-router.post("/login", authLimiter, async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
