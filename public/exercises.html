@@ -19,8 +19,15 @@
     </div>
   </div>
 
+  <div class="exercise-search-row">
+    <input id="exercise-search" type="text" list="exercise-search-list" placeholder="🔍 Rechercher un exercice…" autocomplete="off"/>
+    <datalist id="exercise-search-list"></datalist>
+    <select id="level-filter"><option value="Tous">Tous niveaux</option></select>
+    <select id="equipment-filter"><option value="Tous">Tout équipement</option></select>
+  </div>
   <div id="filter-bar" class="exercise-filters"></div>
   <div id="exercises-grid" class="exercises-grid"></div>
+  <p id="exercises-empty" class="muted hidden" style="text-align:center;padding:30px">Aucun exercice ne correspond à ces filtres.</p>
 </div>
 
 <footer>Gym AI Coach</footer>
