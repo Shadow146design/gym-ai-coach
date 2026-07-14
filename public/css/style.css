@@ -348,7 +348,13 @@ select option { background: var(--bg-card-solid); }
 .exercise-muscle-badges .ex-badge-primary { background: var(--rust-bg); color: var(--rust-soft); font-weight: 600; }
 .exercise-muscle-badges .ex-badge-secondary { background: var(--bg-hover); color: var(--chalk-dim); }
 .exercise-row .ex-badge { display: inline-block; font-size: .72rem; background: var(--rust-bg); color: var(--rust-soft); border-radius: 4px; padding: 2px 8px; margin-top: 3px; }
-.exercise-row .ex-meta { font-family: var(--font-mono); color: var(--steel-soft); font-size: .82rem; text-align: right; white-space: nowrap; }
+.exercise-row .ex-meta {
+  font-family: var(--font-mono); font-size: .78rem; text-align: center; white-space: nowrap;
+  color: var(--steel-soft); background: rgba(79,122,138,.14); border-radius: 20px; padding: 4px 10px;
+  align-self: center; font-weight: 600;
+}
+.exercise-row .ex-meta span { display: block; font-size: .65rem; color: var(--chalk-dim); font-weight: 400; margin-top: 1px; }
+.day-card summary .day-label { display: inline-flex; align-items: center; gap: 6px; }
 .exercise-row .ex-notes { grid-column: 1 / -1; color: var(--chalk-dim); font-size: .8rem; margin-top: -2px; }
 .exercise-row.just-updated { background: rgba(61,168,116,.14); transition: background 3s ease; }
 
@@ -539,6 +545,8 @@ select option { background: var(--bg-card-solid); }
   background: rgba(0,0,0,.14);
 }
 .chat-input-row input { font-size: .9rem; }
+.chat-input-row-lg { padding: 16px; }
+.chat-input-row-lg input { font-size: 1rem; padding: 13px 16px; }
 /* Toast de notification (ex: programme mis a jour par le chat) */
 .app-toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);

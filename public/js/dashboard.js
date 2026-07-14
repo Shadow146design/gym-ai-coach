@@ -156,7 +156,7 @@ async function loadProgram() {
             ${e.muscle_group ? `<span class="ex-badge">${esc(e.muscle_group)}</span>` : ""}
             ${e.notes ? `<div class="ex-notes">${esc(e.notes)}</div>` : ""}
           </div>
-          <div class="ex-meta">${esc(String(e.sets))}×${esc(String(e.reps))}<br><span style="font-size:.72rem;color:var(--chalk-dim)">${esc(String(e.rest_seconds||"—"))}s repos</span></div>
+          <div class="ex-meta">${esc(String(e.sets))}×${esc(String(e.reps))}<span>${esc(String(e.rest_seconds||"—"))}s repos</span></div>
         </div>`;
 
       if (!ex.superset_group) { rendered.add(idx); return exRow(ex); }
@@ -174,7 +174,7 @@ async function loadProgram() {
 
     details.innerHTML = `
       <summary>
-        <span class="day-label">${esc(day.day)}</span>
+        <span class="day-label"><span aria-hidden="true">${getMuscleStyle(day.focus).icon}</span> ${esc(day.day)}</span>
         <span style="display:flex;align-items:center;gap:10px">
           <span class="focus">${esc(day.focus || "")}</span>
           <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
