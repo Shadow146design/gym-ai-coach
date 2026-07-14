@@ -673,6 +673,37 @@ Genere la phrase du jour adaptee a cette situation (encourage le streak, relance
   return (data.choices?.[0]?.message?.content || "").trim().replace(/^["']|["']$/g, "");
 }
 
+// ── Conseil nutrition du jour (fonctionnalité 3.6) ──────────
+const NUTRITION_TIP_SYSTEM = `Tu es un coach sportif specialise en nutrition. Genere UN SEUL conseil
+nutritionnel court (25 mots max), en francais, concret et actionnable, adapte a l'objectif de
+l'utilisateur et a son entrainement du jour (aliments precis, timing des repas). Pas de guillemets,
+pas de markdown. Juste la phrase.`;
+
+async function nutritionDailyTip({ objectif, muscleFocus }) {
+  if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY manquante.");
+
+  const userPrompt = `Objectif de l'utilisateur : ${objectif || "non précisé"}.
+Groupe(s) musculaire(s) travaillé(s) aujourd'hui : ${muscleFocus || "pas de séance prévue aujourd'hui"}.
+
+Genere le conseil nutrition du jour adapte a cette situation.`;
+
+  const response = await fetch(GROQ_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: MODEL(), temperature: 0.8, max_tokens: 70,
+      messages: [
+        { role: "system", content: NUTRITION_TIP_SYSTEM },
+        { role: "user", content: userPrompt },
+      ],
+    }),
+  });
+
+  if (!response.ok) throw new Error(`Erreur Groq nutrition-tip (${response.status})`);
+  const data = await response.json();
+  return (data.choices?.[0]?.message?.content || "").trim().replace(/^["']|["']$/g, "");
+}
+
 // ── Analyse de plateau ──────────────────────────────────────
 const PLATEAU_SYSTEM = `Tu es un coach sportif expert en periodisation et progression de charges.
 L'utilisateur stagne sur un ou plusieurs exercices (poids max non batu depuis 3 seances ou plus).
@@ -886,4 +917,4 @@ Génère maintenant le plan alimentaire JSON sur 7 jours adapté à ces objectif
   return plan;
 }
 
-module.exports = { generateProgram, chatWithCoach, debriefSession, dailyTip, analyzePlateau, analyzeFatigue, extractProgramParams, generateNutritionPlan, validateProgram, EXERCISE_DATABASE };
+module.exports = { generateProgram, chatWithCoach, debriefSession, dailyTip, nutritionDailyTip, analyzePlateau, analyzeFatigue, extractProgramParams, generateNutritionPlan, validateProgram, EXERCISE_DATABASE };

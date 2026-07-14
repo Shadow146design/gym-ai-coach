@@ -12,7 +12,7 @@ async function init() {
 
   await Promise.all([
     loadKPIs(), loadNextSession(), loadCalendar(), loadRecords(),
-    loadLastAndTodayRecord(), loadDailyTip(), loadPlateauAlert(), loadFatigueAlert(), loadFormScore(),
+    loadLastAndTodayRecord(), loadDailyTip(), loadNutritionTip(), loadPlateauAlert(), loadFatigueAlert(), loadFormScore(),
   ]);
 
   maybeStartTour();
@@ -158,6 +158,17 @@ async function loadDailyTip() {
     el.textContent = r.tip || "Chaque séance compte : reste régulier, les résultats suivent.";
   } catch {
     el.textContent = "Chaque séance compte : reste régulier, les résultats suivent.";
+  }
+}
+
+async function loadNutritionTip() {
+  const el = document.getElementById("nutrition-tip-text");
+  const FALLBACK = "Priorise les protéines à chaque repas et reste hydraté tout au long de la journée.";
+  try {
+    const r = await fetch("/api/nutrition/daily-tip").then(r => r.json());
+    el.textContent = r.tip || FALLBACK;
+  } catch {
+    el.textContent = FALLBACK;
   }
 }
 

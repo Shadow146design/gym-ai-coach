@@ -3,7 +3,7 @@ const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
 const { requirePremium } = require("../middleware/premium");
 const { computeNutritionGoals } = require("../services/nutrition");
-const { generateNutritionPlan } = require("../services/aiCoach");
+const { generateNutritionPlan, nutritionDailyTip } = require("../services/aiCoach");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -136,6 +136,32 @@ router.post("/plan", requirePremium, async (req, res) => {
   } catch (err) {
     console.error("Erreur POST /nutrition/plan :", err);
     res.status(500).json({ error: err.message || "Erreur serveur." });
+  }
+});
+
+// Conseil nutrition du jour, adapte a l'objectif + a la seance du jour (fonctionnalité 3.6)
+router.get("/daily-tip", async (req, res) => {
+  const FALLBACK = "Priorise les protéines à chaque repas et reste hydraté tout au long de la journée.";
+  try {
+    const uid = req.session.userId;
+    const programR = await pool.query(
+      "SELECT content, questionnaire FROM programs WHERE user_id=$1 AND is_active=TRUE ORDER BY created_at DESC LIMIT 1",
+      [uid]
+    );
+    const program = programR.rows[0];
+    const objectif = program?.questionnaire?.objectif || null;
+
+    const WEEKDAYS = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+    const todayName = WEEKDAYS[new Date().getDay()];
+    const days = program?.content?.days || [];
+    const todayDay = days.find(d => String(d.day || "").toLowerCase().includes(todayName));
+    const muscleFocus = todayDay?.focus || null;
+
+    const tip = await nutritionDailyTip({ objectif, muscleFocus });
+    res.json({ tip: tip || FALLBACK });
+  } catch (err) {
+    console.error("Erreur GET /nutrition/daily-tip :", err);
+    res.json({ tip: FALLBACK });
   }
 });
 
