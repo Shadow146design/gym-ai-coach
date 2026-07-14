@@ -5,316 +5,319 @@
 //
 // Chaque entrée de EXERCISE_ANIMATIONS est un SVG autonome (style CSS +
 // keyframes inclus) : le corps statique est en var(--chalk), le ou les
-// segments qui bougent sont en var(--rust) via la classe .move.
+// segments qui bougent sont en var(--rust) via la classe .move. Géométrie
+// volontairement large et espacée (peu d'éléments qui se chevauchent) pour
+// que le mouvement reste lisible à la taille d'un pictogramme.
 
 const STICK_STYLE = `
-  .stick { stroke: var(--chalk, #f2f1ee); fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+  .stick { stroke: var(--chalk, #f2f1ee); fill: none; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
   .joint { fill: var(--chalk, #f2f1ee); }
   .move { stroke: var(--rust, #c94d28); }
-  .equip { stroke: var(--chalk-dim, #8f8d89); stroke-width: 3; fill: none; stroke-linecap: round; }
-  .bench { fill: var(--bg-hover, rgba(255,255,255,.06)); stroke: var(--chalk-dim, #8f8d89); stroke-width: 2; }
-  .ground { stroke: var(--chalk-dim, #8f8d89); stroke-width: 3; stroke-linecap: round; }
+  .equip { stroke: var(--chalk-dim, #8f8d89); stroke-width: 4; fill: none; stroke-linecap: round; }
+  .bench { fill: var(--bg-hover, rgba(255,255,255,.06)); stroke: var(--chalk-dim, #8f8d89); stroke-width: 3; }
+  .ground { stroke: var(--chalk-dim, #8f8d89); stroke-width: 4; stroke-linecap: round; }
 `;
 
 const EXERCISE_ANIMATIONS = {
 
   "développé couché": `
-    <svg viewBox="0 0 220 140" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+    <svg viewBox="0 0 260 160" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
       <style>${STICK_STYLE}
         .dc-arms { animation: dc-press 2.2s ease-in-out infinite; }
-        @keyframes dc-press { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-32px); } }
+        @keyframes dc-press { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-45px); } }
       </style>
-      <circle class="joint" cx="188" cy="42" r="11"/>
-      <line class="stick" x1="176" y1="45" x2="70" y2="48"/>
-      <rect class="bench" x="40" y="60" width="150" height="9" rx="4"/>
-      <polyline class="stick" points="95,47 78,75 85,105"/>
-      <polyline class="stick" points="75,48 60,75 68,105"/>
+      <circle class="joint" cx="222" cy="55" r="14"/>
+      <line class="stick" x1="208" y1="58" x2="95" y2="60"/>
+      <rect class="bench" x="55" y="78" width="175" height="11" rx="5"/>
+      <polyline class="stick" points="105,60 90,95 100,120"/>
       <g class="dc-arms">
-        <line class="stick move" x1="150" y1="46" x2="150" y2="14"/>
-        <line class="stick move" x1="128" y1="47" x2="128" y2="14"/>
-        <line class="equip" x1="112" y1="14" x2="168" y2="14" stroke-width="6"/>
+        <line class="stick move" x1="165" y1="58" x2="165" y2="15"/>
+        <line class="stick move" x1="140" y1="60" x2="140" y2="15"/>
+        <line class="equip" x1="122" y1="15" x2="183" y2="15" stroke-width="7"/>
       </g>
     </svg>`,
 
   "squat": `
-    <svg viewBox="0 0 160 220" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+    <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
       <style>${STICK_STYLE}
         .sq-up { animation: sq-fade-up 2.4s ease-in-out infinite; }
         .sq-down { animation: sq-fade-down 2.4s ease-in-out infinite; }
         @keyframes sq-fade-up { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         @keyframes sq-fade-down { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
       </style>
-      <line class="ground" x1="35" y1="208" x2="125" y2="208"/>
+      <line class="ground" x1="50" y1="258" x2="150" y2="258"/>
       <g class="sq-up">
-        <circle class="joint" cx="80" cy="25" r="11"/>
-        <line class="stick" x1="80" y1="36" x2="80" y2="95"/>
-        <line class="stick" x1="80" y1="55" x2="60" y2="75"/>
-        <line class="stick" x1="80" y1="55" x2="100" y2="75"/>
-        <polyline class="stick move" points="80,95 65,150 62,205"/>
-        <polyline class="stick move" points="80,95 95,150 98,205"/>
+        <circle class="joint" cx="100" cy="35" r="15"/>
+        <line class="stick" x1="100" y1="54" x2="100" y2="155"/>
+        <line class="stick" x1="100" y1="70" x2="75" y2="95"/>
+        <line class="stick" x1="100" y1="70" x2="125" y2="95"/>
+        <line class="stick move" x1="100" y1="155" x2="70" y2="255"/>
+        <line class="stick move" x1="100" y1="155" x2="130" y2="255"/>
       </g>
       <g class="sq-down">
-        <circle class="joint" cx="80" cy="70" r="11"/>
-        <line class="stick" x1="80" y1="81" x2="80" y2="120"/>
-        <line class="stick" x1="80" y1="95" x2="60" y2="105"/>
-        <line class="stick" x1="80" y1="95" x2="100" y2="105"/>
-        <polyline class="stick move" points="80,120 50,140 60,205"/>
-        <polyline class="stick move" points="80,120 110,140 100,205"/>
+        <circle class="joint" cx="100" cy="95" r="15"/>
+        <line class="stick" x1="100" y1="114" x2="100" y2="180"/>
+        <line class="stick" x1="100" y1="125" x2="70" y2="145"/>
+        <line class="stick" x1="100" y1="125" x2="130" y2="145"/>
+        <polyline class="stick move" points="100,180 55,205 65,255"/>
+        <polyline class="stick move" points="100,180 145,205 135,255"/>
       </g>
     </svg>`,
 
   "rowing barre": `
-    <svg viewBox="0 0 200 170" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+    <svg viewBox="0 0 220 280" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
       <style>${STICK_STYLE}
-        .row-arm { animation: row-pull 2s ease-in-out infinite; transform-origin: 155px 70px; }
-        @keyframes row-pull { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-38deg); } }
+        .row-arm { animation: row-pull 2s ease-in-out infinite; transform-origin: 150px 110px; }
+        @keyframes row-pull { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-55deg); } }
       </style>
-      <circle class="joint" cx="163" cy="58" r="10"/>
-      <line class="stick" x1="110" y1="115" x2="155" y2="70"/>
-      <polyline class="stick" points="110,115 105,140 108,160"/>
-      <polyline class="stick" points="95,113 90,140 93,160"/>
+      <circle class="joint" cx="160" cy="93" r="15"/>
+      <line class="stick" x1="100" y1="190" x2="150" y2="110"/>
+      <line class="stick" x1="100" y1="190" x2="85" y2="255"/>
+      <line class="stick" x1="100" y1="190" x2="115" y2="255"/>
       <g class="row-arm">
-        <line class="stick move" x1="155" y1="70" x2="140" y2="112"/>
-        <line class="equip" x1="128" y1="112" x2="152" y2="112"/>
+        <line class="stick move" x1="150" y1="110" x2="125" y2="175"/>
+        <line class="equip" x1="112" y1="175" x2="138" y2="175"/>
       </g>
     </svg>`,
 
   "tractions": `
-    <svg viewBox="0 0 140 200" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+    <svg viewBox="0 0 200 270" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
       <style>${STICK_STYLE}
-        .tr-down { animation: tr-fade-down 2.2s ease-in-out infinite; }
-        .tr-up { animation: tr-fade-up 2.2s ease-in-out infinite; }
-        @keyframes tr-fade-down { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-        @keyframes tr-fade-up { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+        .tr-low { animation: tr-fade-low 2.2s ease-in-out infinite; }
+        .tr-high { animation: tr-fade-high 2.2s ease-in-out infinite; }
+        @keyframes tr-fade-low { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes tr-fade-high { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
       </style>
-      <line class="equip" x1="25" y1="20" x2="115" y2="20" stroke-width="5"/>
-      <g class="tr-down">
-        <line class="stick move" x1="50" y1="20" x2="58" y2="65"/>
-        <line class="stick move" x1="90" y1="20" x2="82" y2="65"/>
-        <circle class="joint" cx="70" cy="76" r="11"/>
-        <line class="stick" x1="70" y1="87" x2="70" y2="140"/>
-        <polyline class="stick" points="70,140 65,170 68,195"/>
+      <line class="equip" x1="35" y1="20" x2="165" y2="20" stroke-width="7"/>
+      <g class="tr-low">
+        <line class="stick move" x1="70" y1="20" x2="75" y2="70"/>
+        <line class="stick move" x1="130" y1="20" x2="125" y2="70"/>
+        <circle class="joint" cx="100" cy="90" r="15"/>
+        <line class="stick" x1="100" y1="105" x2="100" y2="190"/>
+        <line class="stick" x1="100" y1="190" x2="80" y2="250"/>
+        <line class="stick" x1="100" y1="190" x2="120" y2="250"/>
       </g>
-      <g class="tr-up">
-        <line class="stick move" x1="50" y1="20" x2="55" y2="35"/>
-        <line class="stick move" x1="90" y1="20" x2="85" y2="35"/>
-        <circle class="joint" cx="70" cy="45" r="11"/>
-        <line class="stick" x1="70" y1="56" x2="70" y2="110"/>
-        <polyline class="stick" points="70,110 65,145 68,175"/>
+      <g class="tr-high">
+        <line class="stick move" x1="70" y1="20" x2="78" y2="35"/>
+        <line class="stick move" x1="130" y1="20" x2="122" y2="35"/>
+        <circle class="joint" cx="100" cy="55" r="15"/>
+        <line class="stick" x1="100" y1="70" x2="100" y2="155"/>
+        <line class="stick" x1="100" y1="155" x2="80" y2="215"/>
+        <line class="stick" x1="100" y1="155" x2="120" y2="215"/>
       </g>
     </svg>`,
 
   "développé militaire": `
-    <svg viewBox="0 0 160 220" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+    <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
       <style>${STICK_STYLE}
         .mp-arms { animation: mp-press 2.2s ease-in-out infinite; }
-        @keyframes mp-press { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-55px); } }
+        @keyframes mp-press { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-85px); } }
       </style>
-      <line class="ground" x1="40" y1="208" x2="120" y2="208"/>
-      <circle class="joint" cx="80" cy="30" r="11"/>
-      <line class="stick" x1="80" y1="41" x2="80" y2="110"/>
-      <polyline class="stick" points="80,110 72,160 75,205"/>
-      <polyline class="stick" points="80,110 88,160 85,205"/>
+      <line class="ground" x1="55" y1="258" x2="145" y2="258"/>
+      <circle class="joint" cx="100" cy="35" r="15"/>
+      <line class="stick" x1="100" y1="54" x2="100" y2="155"/>
+      <line class="stick" x1="100" y1="155" x2="75" y2="255"/>
+      <line class="stick" x1="100" y1="155" x2="125" y2="255"/>
       <g class="mp-arms">
-        <line class="stick move" x1="65" y1="95" x2="65" y2="70"/>
-        <line class="stick move" x1="95" y1="95" x2="95" y2="70"/>
-        <line class="equip" x1="55" y1="70" x2="105" y2="70" stroke-width="5"/>
+        <line class="stick move" x1="78" y1="120" x2="78" y2="100"/>
+        <line class="stick move" x1="122" y1="120" x2="122" y2="100"/>
+        <line class="equip" x1="65" y1="100" x2="135" y2="100" stroke-width="7"/>
       </g>
     </svg>`,
 
   "curl barre": `
-    <svg viewBox="0 0 140 220" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+    <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
       <style>${STICK_STYLE}
-        .curl-arms { animation: curl-flex 1.8s ease-in-out infinite; transform-origin: 70px 90px; }
-        @keyframes curl-flex { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-120deg); } }
+        .curl-arms { animation: curl-flex 1.8s ease-in-out infinite; transform-origin: 100px 122px; }
+        @keyframes curl-flex { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-105deg); } }
       </style>
-      <line class="ground" x1="45" y1="208" x2="95" y2="208"/>
-      <circle class="joint" cx="70" cy="28" r="10"/>
-      <line class="stick" x1="70" y1="39" x2="70" y2="105"/>
-      <polyline class="stick" points="70,105 62,155 65,205"/>
-      <polyline class="stick" points="70,105 78,155 75,205"/>
-      <line class="stick" x1="70" y1="55" x2="60" y2="90"/>
-      <line class="stick" x1="70" y1="55" x2="80" y2="90"/>
+      <line class="ground" x1="55" y1="258" x2="145" y2="258"/>
+      <circle class="joint" cx="100" cy="35" r="15"/>
+      <line class="stick" x1="100" y1="54" x2="100" y2="155"/>
+      <line class="stick" x1="100" y1="155" x2="75" y2="255"/>
+      <line class="stick" x1="100" y1="155" x2="125" y2="255"/>
+      <line class="stick" x1="85" y1="65" x2="75" y2="122"/>
+      <line class="stick" x1="115" y1="65" x2="125" y2="122"/>
       <g class="curl-arms">
-        <line class="stick move" x1="60" y1="90" x2="55" y2="128"/>
-        <line class="stick move" x1="80" y1="90" x2="85" y2="128"/>
-        <line class="equip" x1="52" y1="128" x2="88" y2="128" stroke-width="5"/>
+        <line class="stick move" x1="75" y1="122" x2="70" y2="180"/>
+        <line class="stick move" x1="125" y1="122" x2="130" y2="180"/>
+        <line class="equip" x1="62" y1="180" x2="138" y2="180" stroke-width="7"/>
       </g>
     </svg>`,
 
   "extension triceps": `
-    <svg viewBox="0 0 140 220" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+    <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
       <style>${STICK_STYLE}
-        .tri-arm { animation: tri-extend 2s ease-in-out infinite; transform-origin: 70px 25px; }
-        @keyframes tri-extend { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(180deg); } }
+        .tri-arm { animation: tri-extend 2s ease-in-out infinite; transform-origin: 78px 45px; }
+        @keyframes tri-extend { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(150deg); } }
       </style>
-      <line class="ground" x1="45" y1="208" x2="95" y2="208"/>
-      <circle class="joint" cx="70" cy="10" r="10"/>
-      <line class="stick" x1="70" y1="21" x2="70" y2="105"/>
-      <polyline class="stick" points="70,105 62,155 65,205"/>
-      <polyline class="stick" points="70,105 78,155 75,205"/>
-      <line class="stick" x1="70" y1="55" x2="70" y2="25"/>
+      <line class="ground" x1="55" y1="258" x2="145" y2="258"/>
+      <circle class="joint" cx="105" cy="35" r="15"/>
+      <line class="stick" x1="105" y1="54" x2="100" y2="155"/>
+      <line class="stick" x1="100" y1="155" x2="75" y2="255"/>
+      <line class="stick" x1="100" y1="155" x2="125" y2="255"/>
+      <line class="stick" x1="105" y1="65" x2="78" y2="45"/>
       <g class="tri-arm">
-        <line class="stick move" x1="70" y1="25" x2="70" y2="55"/>
-        <line class="equip" x1="60" y1="55" x2="80" y2="55" stroke-width="5"/>
+        <line class="stick move" x1="78" y1="45" x2="95" y2="90"/>
+        <line class="equip" x1="85" y1="90" x2="105" y2="90"/>
       </g>
     </svg>`,
 
   "leg press": `
-    <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+    <svg viewBox="0 0 260 200" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
       <style>${STICK_STYLE}
         .lp-bent { animation: lp-fade-bent 2.2s ease-in-out infinite; }
         .lp-ext { animation: lp-fade-ext 2.2s ease-in-out infinite; }
         @keyframes lp-fade-bent { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         @keyframes lp-fade-ext { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
       </style>
-      <circle class="joint" cx="25" cy="32" r="10"/>
-      <line class="stick" x1="25" y1="42" x2="65" y2="95"/>
-      <rect class="bench" x="10" y="95" width="35" height="8" rx="3"/>
+      <circle class="joint" cx="35" cy="40" r="14"/>
+      <line class="stick" x1="35" y1="53" x2="80" y2="115"/>
+      <rect class="bench" x="15" y="115" width="45" height="10" rx="4"/>
       <g class="lp-bent">
-        <polyline class="stick move" points="65,95 100,80 128,60"/>
-        <line class="equip" x1="128" y1="30" x2="128" y2="80" stroke-width="4"/>
+        <polyline class="stick move" points="80,115 120,98 150,72"/>
+        <line class="equip" x1="150" y1="35" x2="150" y2="95" stroke-width="5"/>
       </g>
       <g class="lp-ext">
-        <polyline class="stick move" points="65,95 140,88 185,75"/>
-        <line class="equip" x1="185" y1="40" x2="185" y2="100" stroke-width="4"/>
+        <polyline class="stick move" points="80,115 165,105 220,90"/>
+        <line class="equip" x1="220" y1="50" x2="220" y2="120" stroke-width="5"/>
       </g>
     </svg>`,
 
   "leg extension": `
-    <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+    <svg viewBox="0 0 240 190" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
       <style>${STICK_STYLE}
-        .le-shin { animation: le-extend 2s ease-in-out infinite; transform-origin: 90px 90px; }
-        @keyframes le-extend { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-100deg); } }
+        .le-shin { animation: le-extend 2s ease-in-out infinite; transform-origin: 105px 105px; }
+        @keyframes le-extend { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-95deg); } }
       </style>
-      <circle class="joint" cx="30" cy="18" r="10"/>
-      <line class="stick" x1="30" y1="28" x2="30" y2="90"/>
-      <rect class="bench" x="15" y="90" width="60" height="10" rx="4"/>
-      <line class="stick" x1="30" y1="90" x2="90" y2="90"/>
+      <circle class="joint" cx="35" cy="25" r="14"/>
+      <line class="stick" x1="35" y1="38" x2="35" y2="105"/>
+      <rect class="bench" x="18" y="105" width="70" height="12" rx="5"/>
+      <line class="stick" x1="35" y1="105" x2="105" y2="105"/>
       <g class="le-shin">
-        <line class="stick move" x1="90" y1="90" x2="85" y2="140"/>
-        <circle class="joint" cx="85" cy="140" r="5"/>
+        <line class="stick move" x1="105" y1="105" x2="100" y2="165"/>
+        <circle class="joint" cx="100" cy="165" r="6"/>
       </g>
     </svg>`,
 
   "leg curl": `
-    <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+    <svg viewBox="0 0 240 140" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
       <style>${STICK_STYLE}
-        .lc-shin { animation: lc-curl 2s ease-in-out infinite; transform-origin: 150px 40px; }
-        @keyframes lc-curl { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-110deg); } }
+        .lc-shin { animation: lc-curl 2s ease-in-out infinite; transform-origin: 175px 45px; }
+        @keyframes lc-curl { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-105deg); } }
       </style>
-      <circle class="joint" cx="25" cy="25" r="10"/>
-      <line class="stick" x1="35" y1="28" x2="110" y2="35"/>
-      <rect class="bench" x="20" y="45" width="120" height="8" rx="3"/>
-      <line class="stick" x1="110" y1="35" x2="150" y2="40"/>
+      <circle class="joint" cx="30" cy="28" r="14"/>
+      <line class="stick" x1="42" y1="32" x2="130" y2="40"/>
+      <rect class="bench" x="22" y="52" width="140" height="10" rx="4"/>
+      <line class="stick" x1="130" y1="40" x2="175" y2="45"/>
       <g class="lc-shin">
-        <line class="stick move" x1="150" y1="40" x2="185" y2="42"/>
-        <circle class="joint" cx="185" cy="42" r="5"/>
+        <line class="stick move" x1="175" y1="45" x2="215" y2="48"/>
+        <circle class="joint" cx="215" cy="48" r="6"/>
       </g>
     </svg>`,
 
   "élévations latérales": `
-    <svg viewBox="0 0 160 220" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+    <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
       <style>${STICK_STYLE}
-        .lat-l { animation: lat-raise-l 2s ease-in-out infinite; transform-origin: 65px 48px; }
-        .lat-r { animation: lat-raise-r 2s ease-in-out infinite; transform-origin: 95px 48px; }
-        @keyframes lat-raise-l { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-95deg); } }
-        @keyframes lat-raise-r { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(95deg); } }
+        .lat-l { animation: lat-raise-l 2s ease-in-out infinite; transform-origin: 78px 65px; }
+        .lat-r { animation: lat-raise-r 2s ease-in-out infinite; transform-origin: 122px 65px; }
+        @keyframes lat-raise-l { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-100deg); } }
+        @keyframes lat-raise-r { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(100deg); } }
       </style>
-      <line class="ground" x1="45" y1="208" x2="115" y2="208"/>
-      <circle class="joint" cx="80" cy="28" r="10"/>
-      <line class="stick" x1="80" y1="39" x2="80" y2="110"/>
-      <line class="stick" x1="65" y1="110" x2="65" y2="205"/>
-      <line class="stick" x1="95" y1="110" x2="95" y2="205"/>
-      <g class="lat-l"><line class="stick move" x1="65" y1="48" x2="60" y2="90"/></g>
-      <g class="lat-r"><line class="stick move" x1="95" y1="48" x2="100" y2="90"/></g>
+      <line class="ground" x1="55" y1="258" x2="145" y2="258"/>
+      <circle class="joint" cx="100" cy="35" r="15"/>
+      <line class="stick" x1="100" y1="54" x2="100" y2="155"/>
+      <line class="stick" x1="100" y1="155" x2="75" y2="255"/>
+      <line class="stick" x1="100" y1="155" x2="125" y2="255"/>
+      <g class="lat-l"><line class="stick move" x1="78" y1="65" x2="70" y2="120"/></g>
+      <g class="lat-r"><line class="stick move" x1="122" y1="65" x2="130" y2="120"/></g>
     </svg>`,
 
   "tirage vertical": `
-    <svg viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+    <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
       <style>${STICK_STYLE}
         .tv-bar { animation: tv-pull 2.2s ease-in-out infinite; }
-        @keyframes tv-pull { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(55px); } }
+        @keyframes tv-pull { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(70px); } }
       </style>
-      <circle class="joint" cx="90" cy="30" r="10"/>
-      <line class="stick" x1="90" y1="41" x2="90" y2="140"/>
-      <polyline class="stick" points="90,140 70,150 70,170"/>
-      <polyline class="stick" points="90,140 110,150 110,170"/>
-      <rect class="bench" x="60" y="140" width="50" height="10" rx="4"/>
+      <circle class="joint" cx="110" cy="35" r="15"/>
+      <line class="stick" x1="110" y1="50" x2="110" y2="165"/>
+      <line class="stick" x1="110" y1="165" x2="90" y2="205"/>
+      <line class="stick" x1="110" y1="165" x2="130" y2="205"/>
+      <rect class="bench" x="80" y="165" width="60" height="11" rx="5"/>
       <g class="tv-bar">
-        <line class="stick move" x1="70" y1="55" x2="55" y2="20"/>
-        <line class="stick move" x1="110" y1="55" x2="125" y2="20"/>
-        <line class="equip" x1="45" y1="20" x2="135" y2="20" stroke-width="5"/>
-        <line class="equip" x1="90" y1="0" x2="90" y2="20"/>
+        <line class="stick move" x1="85" y1="70" x2="65" y2="20"/>
+        <line class="stick move" x1="135" y1="70" x2="155" y2="20"/>
+        <line class="equip" x1="50" y1="20" x2="170" y2="20" stroke-width="7"/>
+        <line class="equip" x1="110" y1="0" x2="110" y2="20"/>
       </g>
     </svg>`,
 
   "hip thrust": `
-    <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+    <svg viewBox="0 0 260 160" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
       <style>${STICK_STYLE}
         .ht-down { animation: ht-fade-down 2.2s ease-in-out infinite; }
         .ht-up { animation: ht-fade-up 2.2s ease-in-out infinite; }
         @keyframes ht-fade-down { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         @keyframes ht-fade-up { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
       </style>
-      <circle class="joint" cx="22" cy="25" r="10"/>
-      <rect class="bench" x="8" y="40" width="40" height="8" rx="3"/>
+      <circle class="joint" cx="30" cy="35" r="14"/>
+      <rect class="bench" x="12" y="55" width="45" height="10" rx="4"/>
       <g class="ht-down">
-        <line class="stick move" x1="30" y1="44" x2="90" y2="78"/>
-        <polyline class="stick" points="90,78 128,62 128,98"/>
+        <line class="stick move" x1="38" y1="58" x2="110" y2="100"/>
+        <polyline class="stick" points="110,100 160,80 160,130"/>
       </g>
       <g class="ht-up">
-        <line class="stick move" x1="30" y1="44" x2="102" y2="52"/>
-        <polyline class="stick" points="102,52 132,55 128,98"/>
+        <line class="stick move" x1="38" y1="58" x2="130" y2="68"/>
+        <polyline class="stick" points="130,68 170,72 160,130"/>
       </g>
     </svg>`,
 
   "dips": `
-    <svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+    <svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
       <style>${STICK_STYLE}
         .dip-high { animation: dip-fade-high 2s ease-in-out infinite; }
         .dip-low { animation: dip-fade-low 2s ease-in-out infinite; }
         @keyframes dip-fade-high { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         @keyframes dip-fade-low { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
       </style>
-      <line class="equip" x1="30" y1="40" x2="30" y2="70" stroke-width="4"/>
-      <line class="equip" x1="110" y1="40" x2="110" y2="70" stroke-width="4"/>
+      <line class="equip" x1="40" y1="50" x2="40" y2="95" stroke-width="6"/>
+      <line class="equip" x1="140" y1="50" x2="140" y2="95" stroke-width="6"/>
       <g class="dip-high">
-        <line class="stick move" x1="45" y1="40" x2="45" y2="55"/>
-        <line class="stick move" x1="95" y1="40" x2="95" y2="55"/>
-        <circle class="joint" cx="70" cy="40" r="10"/>
-        <line class="stick" x1="70" y1="51" x2="70" y2="100"/>
-        <polyline class="stick" points="70,100 75,140 70,170"/>
+        <line class="stick move" x1="55" y1="50" x2="55" y2="70"/>
+        <line class="stick move" x1="125" y1="50" x2="125" y2="70"/>
+        <circle class="joint" cx="90" cy="50" r="15"/>
+        <line class="stick" x1="90" y1="65" x2="90" y2="130"/>
+        <line class="stick" x1="90" y1="130" x2="95" y2="185"/>
       </g>
       <g class="dip-low">
-        <line class="stick move" x1="45" y1="40" x2="45" y2="90"/>
-        <line class="stick move" x1="95" y1="40" x2="95" y2="90"/>
-        <circle class="joint" cx="70" cy="75" r="10"/>
-        <line class="stick" x1="70" y1="86" x2="70" y2="130"/>
-        <polyline class="stick" points="70,130 75,165 70,190"/>
+        <line class="stick move" x1="55" y1="50" x2="55" y2="110"/>
+        <line class="stick move" x1="125" y1="50" x2="125" y2="110"/>
+        <circle class="joint" cx="90" cy="95" r="15"/>
+        <line class="stick" x1="90" y1="110" x2="90" y2="170"/>
+        <line class="stick" x1="90" y1="170" x2="95" y2="215"/>
       </g>
     </svg>`,
 
   "fentes": `
-    <svg viewBox="0 0 180 220" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+    <svg viewBox="0 0 220 280" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
       <style>${STICK_STYLE}
         .lu-up { animation: lu-fade-up 2.4s ease-in-out infinite; }
         .lu-down { animation: lu-fade-down 2.4s ease-in-out infinite; }
         @keyframes lu-fade-up { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         @keyframes lu-fade-down { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
       </style>
-      <line class="ground" x1="35" y1="208" x2="140" y2="208"/>
+      <line class="ground" x1="45" y1="258" x2="175" y2="258"/>
       <g class="lu-up">
-        <circle class="joint" cx="80" cy="25" r="10"/>
-        <line class="stick" x1="80" y1="36" x2="80" y2="110"/>
-        <polyline class="stick move" points="80,110 75,160 78,205"/>
-        <polyline class="stick move" points="80,110 85,160 82,205"/>
+        <circle class="joint" cx="100" cy="35" r="15"/>
+        <line class="stick" x1="100" y1="54" x2="100" y2="155"/>
+        <line class="stick move" x1="100" y1="155" x2="85" y2="255"/>
+        <line class="stick move" x1="100" y1="155" x2="115" y2="255"/>
       </g>
       <g class="lu-down">
-        <circle class="joint" cx="80" cy="42" r="10"/>
-        <line class="stick" x1="80" y1="53" x2="80" y2="120"/>
-        <polyline class="stick move" points="80,120 115,140 115,205"/>
-        <polyline class="stick move" points="80,120 55,160 50,200"/>
+        <circle class="joint" cx="100" cy="55" r="15"/>
+        <line class="stick" x1="100" y1="74" x2="105" y2="150"/>
+        <polyline class="stick move" points="105,150 145,175 150,255"/>
+        <polyline class="stick move" points="105,150 65,190 60,250"/>
       </g>
     </svg>`,
 };
