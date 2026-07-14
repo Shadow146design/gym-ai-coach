@@ -98,8 +98,8 @@ const EXERCISE_TRANSLATIONS = {
   "extension triceps poulie haute": ["Triceps Pushdown", "Tricep Pushdown on Cable"],
   "extension overhead corde poulie haute": ["Overhead Triceps Extension", "High-Cable Cross Tricep Extention - NB"],
   "extension triceps nuque haltère": ["Triceps Overhead (Dumbbell)", "Overhead Triceps Extension"],
-  "kickback haltère": ["Triceps Kickback", "Kickback"],
-  "kick-back haltère": ["Triceps Kickback", "Kickback"],
+  "kickback haltère": ["Triceps Kickback", "Kickback", "Cable Tricep Kickback"],
+  "kick-back haltère": ["Triceps Kickback", "Kickback", "Cable Tricep Kickback"],
 
   // ── Jambes ───────────────────────────────────────────────
   "squat barre": ["Barbell Full Squat", "Squats"],
