@@ -260,10 +260,12 @@ function findNextProgramDay(days, trainedToday) {
 async function loadNextSession() {
   const el = document.getElementById("next-session-card");
   try {
-    const [progRes, streakRes] = await Promise.all([
+    const [progRes, streakRes, wellnessRes] = await Promise.all([
       fetch("/api/program/active").then(r => r.json()),
       fetch("/api/logs/streak").then(r => r.json()),
+      fetch("/api/wellness/today").then(r => r.ok ? r.json() : null).catch(() => null),
     ]);
+    const lowForm = (wellnessRes?.entry?.score ?? 100) < 50;
     if (!progRes.program) {
       el.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
         <p class="muted" style="font-size:.88rem">Aucun programme actif.</p>
@@ -294,7 +296,10 @@ async function loadNextSession() {
           ${exList}
           ${(next.exercises||[]).length > 4 ? `<div style="font-size:.75rem;color:var(--chalk-dim);margin-top:4px">+${(next.exercises.length-4)} autres exercices</div>` : ""}
         </div>
-        <a class="btn btn-primary" href="/session.html">▶ C'est parti !</a>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <a class="btn btn-primary" href="/session.html">▶ C'est parti !</a>
+          ${lowForm ? `<span style="font-size:.72rem;color:var(--gold)">(intensité réduite recommandée)</span>` : ""}
+        </div>
       </div>`;
   } catch { el.innerHTML = `<p class="muted" style="font-size:.88rem">Impossible de charger.</p>`; }
 }
