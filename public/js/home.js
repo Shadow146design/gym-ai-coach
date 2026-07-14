@@ -263,7 +263,10 @@ async function loadNextSession() {
     el.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
         <div>
-          <div style="font-family:var(--font-display);text-transform:uppercase;letter-spacing:.04em;font-size:1rem">${esc(next.day)}</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <div style="font-family:var(--font-display);text-transform:uppercase;letter-spacing:.04em;font-size:1rem">${esc(next.day)}</div>
+            ${muscleBadgeHtml(next.focus)}
+          </div>
           <div style="font-size:.82rem;color:var(--chalk-dim);margin:3px 0 12px">${esc(next.focus||"")}</div>
           ${exList}
           ${(next.exercises||[]).length > 4 ? `<div style="font-size:.75rem;color:var(--chalk-dim);margin-top:4px">+${(next.exercises.length-4)} autres exercices</div>` : ""}

@@ -1077,9 +1077,18 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
   box-shadow: var(--shadow-sm);
 }
 .hstat { text-align: center; flex: 1; }
+.hstat-icon { font-size: 1.15rem; margin-bottom: 4px; line-height: 1; }
 .hstat-val { font-family: var(--font-mono); font-size: 1.5rem; color: var(--chalk); }
 .hstat-lbl { font-size: .7rem; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: .04em; margin-top: 3px; }
 .hstat-sep { width: 1px; height: 36px; background: var(--border); }
+
+/* Badge groupe musculaire (couleur dynamique via --mg-color/--mg-bg inline) */
+.muscle-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: .68rem; font-weight: 600; padding: 3px 9px; border-radius: 20px;
+  color: var(--mg-color, var(--chalk-dim)); background: var(--mg-bg, var(--bg-hover));
+  text-transform: uppercase; letter-spacing: .03em; white-space: nowrap;
+}
 
 /* Home cards */
 .home-card {
