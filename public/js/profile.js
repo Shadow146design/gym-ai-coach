@@ -35,9 +35,9 @@ function renderIdentity() {
   document.getElementById("profile-name-display").textContent = user.name;
   document.getElementById("profile-email-display").textContent = user.email;
 
-  const badge = { premium: ["badge-premium", "Premium"], coach: ["badge-coach", "Coach"], admin: ["badge-admin", "Admin"] }[user.role]
+  const badge = { premium: ["badge-premium", "⭐ Premium"], coach: ["badge-coach", "🎛️ Coach"], admin: ["badge-admin", "🔧 Admin"] }[user.role]
     || ["badge-free", "Gratuit"];
-  document.getElementById("profile-role-badge").innerHTML = `<span class="sidebar-badge ${badge[0]}">${badge[1]}</span>`;
+  document.getElementById("profile-role-badge").innerHTML = `<span class="sidebar-badge role-badge-lg ${badge[0]}">${badge[1]}</span>`;
 
   const since = new Date(user.created_at).toLocaleDateString("fr-FR", { year: "numeric", month: "long", day: "numeric" });
   document.getElementById("profile-since").textContent = `Membre depuis le ${since}`;

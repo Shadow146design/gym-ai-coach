@@ -23,7 +23,10 @@
   <div class="profile-section">
     <div class="profile-section-title">👤 Identité</div>
     <div class="identity-row">
-      <div class="avatar-large" id="profile-avatar">?</div>
+      <div class="avatar-edit-wrap" onclick="toggleIdentityEdit()" tabindex="0" role="button" aria-label="Modifier la photo de profil">
+        <div class="avatar-large" id="profile-avatar">?</div>
+        <div class="avatar-edit-overlay" aria-hidden="true">✏️</div>
+      </div>
       <div class="identity-meta">
         <div class="identity-name" id="profile-name-display">—</div>
         <div class="identity-email" id="profile-email-display">—</div>
@@ -171,11 +174,13 @@
   <!-- Section 5 — Statistiques personnelles -->
   <div class="profile-section">
     <div class="profile-section-title">📊 Statistiques personnelles</div>
-    <div class="stat-row"><span>Membre depuis</span><span class="stat-val" id="stat-member-since">—</span></div>
-    <div class="stat-row"><span>Total séances</span><span class="stat-val" id="stat-total-sessions">—</span></div>
-    <div class="stat-row"><span>Streak actuel</span><span class="stat-val" id="stat-streak">—</span></div>
-    <div class="stat-row"><span>Meilleur streak</span><span class="stat-val" id="stat-best-streak">—</span></div>
-    <div class="stat-row"><span>Programme actif</span><span class="stat-val" id="stat-program">—</span></div>
+    <div class="stats-grid-2x2">
+      <div class="stat-tile"><span class="stat-tile-icon">📅</span><div><div class="stat-tile-val" id="stat-member-since">—</div><div class="stat-tile-lbl">Membre depuis</div></div></div>
+      <div class="stat-tile"><span class="stat-tile-icon">📊</span><div><div class="stat-tile-val" id="stat-total-sessions">—</div><div class="stat-tile-lbl">Total séances</div></div></div>
+      <div class="stat-tile"><span class="stat-tile-icon">🔥</span><div><div class="stat-tile-val" id="stat-streak">—</div><div class="stat-tile-lbl">Streak actuel</div></div></div>
+      <div class="stat-tile"><span class="stat-tile-icon">🏆</span><div><div class="stat-tile-val" id="stat-best-streak">—</div><div class="stat-tile-lbl">Meilleur streak</div></div></div>
+    </div>
+    <div class="stat-row" style="margin-top:4px"><span>Programme actif</span><span class="stat-val" id="stat-program">—</span></div>
   </div>
 
   <!-- Section 6 — Badges -->
