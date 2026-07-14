@@ -294,4 +294,77 @@ router.post("/history/:id/revert", async (req, res) => {
   }
 });
 
+// ── Export calendrier (.ics) du programme actif (fonctionnalite 3.10) ──
+// L'OAuth Google en place ne demande que "openid email profile" (connexion),
+// pas le scope Calendar (qui demanderait d'activer l'API Calendar sur le
+// projet Google Cloud + un nouveau consentement de tous les utilisateurs) :
+// on genere donc un fichier .ics standard, importable en un clic dans Google
+// Calendar (Parametres > Importer), Apple Calendar, Outlook, etc.
+const ICS_WEEKDAY = { dimanche: "SU", lundi: "MO", mardi: "TU", mercredi: "WE", jeudi: "TH", vendredi: "FR", samedi: "SA" };
+const FALLBACK_ORDER = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
+
+function icsEscape(s) {
+  return String(s || "").replace(/[\\;,]/g, m => `\\${m}`).replace(/\n/g, "\\n");
+}
+
+function foldLine(line) {
+  // RFC5545 : les lignes de plus de 75 octets doivent etre repliees.
+  if (line.length <= 75) return line;
+  let out = line.slice(0, 75);
+  for (let i = 75; i < line.length; i += 74) out += `\r\n ${line.slice(i, i + 74)}`;
+  return out;
+}
+
+router.get("/calendar.ics", async (req, res) => {
+  try {
+    const progR = await pool.query(
+      "SELECT title, content FROM programs WHERE user_id=$1 AND is_active=TRUE ORDER BY created_at DESC LIMIT 1",
+      [req.session.userId]
+    );
+    const program = progR.rows[0];
+    if (!program) return res.status(404).send("Aucun programme actif.");
+
+    const days = program.content?.days || [];
+    const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Gym AI Coach//FR", "CALSCALE:GREGORIAN"];
+
+    days.forEach((day, i) => {
+      const match = Object.entries(ICS_WEEKDAY).find(([name]) => String(day.day || "").toLowerCase().includes(name));
+      const byday = match ? match[1] : FALLBACK_ORDER[i % 7]; // repli : jours ouvrés successifs si noms non reconnus
+
+      // Premiere occurrence de ce jour de la semaine a partir d'aujourd'hui, a 18h locales.
+      const targetIdx = FALLBACK_ORDER.indexOf(byday);
+      const start = new Date();
+      start.setHours(18, 0, 0, 0);
+      const todayIdx = (start.getDay() + 6) % 7;
+      start.setDate(start.getDate() + ((targetIdx - todayIdx + 7) % 7));
+      const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+      const fmt = d => `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}T${String(d.getHours()).padStart(2,"0")}${String(d.getMinutes()).padStart(2,"0")}00`;
+      const exList = (day.exercises || []).map(e => `${e.name} (${e.sets}x${e.reps})`).join(", ");
+
+      lines.push(
+        "BEGIN:VEVENT",
+        `UID:gymaicoach-${req.session.userId}-day${i}@gym-ai-coach`,
+        `DTSTAMP:${fmt(new Date())}Z`,
+        `DTSTART:${fmt(start)}`,
+        `DTEND:${fmt(end)}`,
+        `RRULE:FREQ=WEEKLY;BYDAY=${byday}`,
+        foldLine(`SUMMARY:${icsEscape(`💪 Séance ${day.day}${day.focus ? " — " + day.focus : ""}`)}`),
+        foldLine(`DESCRIPTION:${icsEscape(exList || "Voir le programme sur Gym AI Coach")}`),
+        "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:Séance dans 30 minutes", "TRIGGER:-PT30M", "END:VALARM",
+        "END:VEVENT"
+      );
+    });
+
+    lines.push("END:VCALENDAR");
+
+    res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="programme-gym-ai-coach.ics"`);
+    res.send(lines.join("\r\n"));
+  } catch (err) {
+    console.error("Erreur GET /program/calendar.ics :", err);
+    res.status(500).send("Erreur serveur.");
+  }
+});
+
 module.exports = router;
