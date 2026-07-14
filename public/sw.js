@@ -9,6 +9,13 @@ const STATIC_ASSETS = [
   "/favicon.svg",
   "/manifest.json",
   "/offline.html",
+  // Pages coeur de l'app : precachees pour etre accessibles hors ligne des
+  // la premiere visite (surtout utile en pleine seance sans reseau).
+  "/home.html",
+  "/dashboard.html",
+  "/session.html",
+  "/stats.html",
+  "/profile.html",
 ];
 
 self.addEventListener("install", event => {
@@ -43,10 +50,16 @@ self.addEventListener("fetch", event => {
       }).catch(() => cached))
     );
   } else if (request.mode === "navigate") {
-    // Network-first pour les pages, repli sur le cache si deja visitee hors
-    // ligne, puis sur /offline.html si la page n'a jamais ete mise en cache.
+    // Network-first pour les pages : la reponse fraiche est aussi mise en
+    // cache (pas seulement les pages precachees a l'install) pour que toute
+    // page visitee en ligne redevienne accessible hors ligne ensuite. Repli
+    // sur le cache si deja visitee hors ligne, puis sur /offline.html sinon.
     event.respondWith(
-      fetch(request).catch(() =>
+      fetch(request).then(res => {
+        const clone = res.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+        return res;
+      }).catch(() =>
         caches.match(request).then(cached => cached || caches.match("/offline.html"))
       )
     );

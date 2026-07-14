@@ -13,11 +13,18 @@
 <div class="page-wrapper">
 <div class="shell">
   <div class="empty-state" style="margin-top:60px">
-    <h3>📡 Pas de connexion</h3>
+    <div style="font-size:3rem;margin-bottom:6px;opacity:.7">📡</div>
+    <h3>Pas de connexion</h3>
     <p class="muted" style="margin-top:8px">Cette page n'a pas encore été mise en cache et nécessite une connexion internet.</p>
     <p class="muted" style="margin-top:4px;font-size:.85rem">Si tu es en pleine séance, pas de panique : tes séries validées sont sauvegardées sur ton appareil et seront envoyées automatiquement dès que la connexion revient.</p>
-    <button class="btn btn-primary" style="margin-top:18px" onclick="window.location.reload()">Réessayer</button>
+    <button class="btn btn-primary" style="margin-top:18px" onclick="window.location.reload()" id="offline-retry-btn">Réessayer</button>
+    <p class="muted" id="offline-status" style="margin-top:14px;font-size:.78rem"></p>
   </div>
+  <script>
+    window.addEventListener("online", () => window.location.reload());
+    document.getElementById("offline-status").textContent =
+      navigator.onLine ? "" : "En attente de connexion — cette page se rechargera automatiquement.";
+  </script>
 </div>
 </div>
 </body>
