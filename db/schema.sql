@@ -278,6 +278,17 @@ CREATE TABLE IF NOT EXISTS team_challenges (
   UNIQUE(team_id, week_start)
 );
 
+CREATE TABLE IF NOT EXISTS program_history (
+  id                 SERIAL PRIMARY KEY,
+  user_id            INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  program_id         INTEGER NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+  change_type        TEXT NOT NULL,
+  change_description TEXT NOT NULL,
+  previous_content   JSONB NOT NULL,
+  created_at         TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_program_history_user ON program_history(user_id, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS user_challenges (
   id            SERIAL PRIMARY KEY,
   challenger_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

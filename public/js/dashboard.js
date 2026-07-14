@@ -12,6 +12,7 @@ async function init() {
   loadProgram();
   loadCoachMessage();
   checkInjuryFlags();
+  loadProgramHistory();
 
   // Arrivee depuis l'alerte plateau de la page d'accueil : demande directement
   // des conseils IA specifiques et les affiche dans le chat.
@@ -66,6 +67,40 @@ async function resolveInjury(id, action) {
     if (data.adapted) await loadProgram();
   } catch {
     if (card) card.querySelectorAll("button").forEach(b => b.disabled = false);
+  }
+}
+
+// ── Historique des modifications du programme (fonctionnalité 3.7) ──
+async function loadProgramHistory() {
+  try {
+    const r = await fetch("/api/program/history").then(res => res.json());
+    const history = r.history || [];
+    const card = document.getElementById("program-history-card");
+    const list = document.getElementById("program-history-list");
+    if (!history.length) { card.classList.add("hidden"); return; }
+
+    card.classList.remove("hidden");
+    list.innerHTML = history.map(h => `
+      <div class="stat-row" data-history-id="${h.id}">
+        <span>${esc(h.change_description)}<br><span class="muted" style="font-size:.72rem">${new Date(h.created_at).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span></span>
+        <button class="btn btn-ghost btn-sm program-revert-btn" data-id="${h.id}">↩ Revenir à avant</button>
+      </div>`).join("");
+
+    list.querySelectorAll(".program-revert-btn").forEach(btn => {
+      btn.addEventListener("click", () => revertProgramChange(btn.dataset.id));
+    });
+  } catch {}
+}
+
+async function revertProgramChange(id) {
+  if (!confirm("Revenir à la version du programme juste avant cette modification ?")) return;
+  try {
+    const res = await fetch(`/api/program/history/${id}/revert`, { method: "POST" });
+    if (!res.ok) throw new Error();
+    await loadProgram();
+    await loadProgramHistory();
+  } catch {
+    alert("Impossible de revenir en arrière pour le moment.");
   }
 }
 
@@ -280,6 +315,7 @@ async function sendMessage(textOverride, { silent = false } = {}) {
       const newExercises = new Set((data.newProgram?.days || []).flatMap(d => (d.exercises || []).map(e => e.name)));
       const changedNames = [...newExercises].filter(n => !lastProgramExercises.has(n));
       await loadProgram();
+      await loadProgramHistory();
       if (!silent) showToast("Programme mis à jour ✓");
       highlightExercises(changedNames);
     }

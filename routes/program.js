@@ -3,6 +3,7 @@ const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
 const { requirePremium } = require("../middleware/premium");
 const { generateProgram, extractProgramParams } = require("../services/aiCoach");
+const { logProgramChange } = require("../services/programHistory");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -229,6 +230,7 @@ router.post("/adapt", async (req, res) => {
     const row = progR.rows[0];
     if (!row) return res.status(404).json({ error: "Aucun programme actif." });
 
+    const previousContent = JSON.parse(JSON.stringify(row.content));
     const program = row.content;
     (program.days || []).forEach(day => {
       (day.exercises || []).forEach(ex => {
@@ -239,9 +241,55 @@ router.post("/adapt", async (req, res) => {
     });
 
     await pool.query("UPDATE programs SET content=$1 WHERE id=$2", [JSON.stringify(program), row.id]);
+    logProgramChange(
+      req.session.userId, row.id, "adapt",
+      direction === "harder" ? "Charges augmentées de 10% (séance jugée trop facile)" : "Charges réduites de 10% (séance jugée difficile)",
+      previousContent
+    );
     res.json({ ok: true, program });
   } catch (err) {
     console.error("Erreur POST /program/adapt :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+// Historique des modifications du programme actif (fonctionnalite 3.7)
+router.get("/history", async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT id, program_id, change_type, change_description, created_at
+       FROM program_history WHERE user_id=$1 ORDER BY created_at DESC LIMIT 20`,
+      [req.session.userId]
+    );
+    res.json({ history: r.rows });
+  } catch (err) {
+    console.error("Erreur GET /program/history :", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+// Restaure le programme a l'etat qu'il avait juste avant cette modification.
+router.post("/history/:id/revert", async (req, res) => {
+  try {
+    const entryR = await pool.query(
+      "SELECT program_id, previous_content FROM program_history WHERE id=$1 AND user_id=$2",
+      [req.params.id, req.session.userId]
+    );
+    const entry = entryR.rows[0];
+    if (!entry) return res.status(404).json({ error: "Entrée d'historique introuvable." });
+
+    const progR = await pool.query(
+      "SELECT id, content FROM programs WHERE id=$1 AND user_id=$2 AND is_active=TRUE",
+      [entry.program_id, req.session.userId]
+    );
+    if (!progR.rows[0]) return res.status(404).json({ error: "Ce programme n'est plus actif." });
+
+    await pool.query("UPDATE programs SET content=$1 WHERE id=$2", [JSON.stringify(entry.previous_content), entry.program_id]);
+    logProgramChange(req.session.userId, entry.program_id, "revert", "Retour à une version précédente du programme", progR.rows[0].content);
+
+    res.json({ ok: true, program: entry.previous_content });
+  } catch (err) {
+    console.error("Erreur POST /program/history/:id/revert :", err);
     res.status(500).json({ error: "Erreur serveur." });
   }
 });

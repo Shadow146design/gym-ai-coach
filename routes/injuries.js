@@ -2,6 +2,7 @@ const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
 const { EXERCISE_DATABASE } = require("../services/aiCoach");
+const { logProgramChange } = require("../services/programHistory");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -62,6 +63,7 @@ router.post("/resolve/:id", async (req, res) => {
       );
       const row = progR.rows[0];
       if (row) {
+        const previousContent = JSON.parse(JSON.stringify(row.content));
         const program = row.content;
         const target = flag.exercise_name.toLowerCase();
 
@@ -91,6 +93,10 @@ router.post("/resolve/:id", async (req, res) => {
 
         if (adapted) {
           await pool.query("UPDATE programs SET content=$1 WHERE id=$2", [JSON.stringify(program), row.id]);
+          const desc = replacement
+            ? `${flag.exercise_name} remplacé par ${replacement} (blessure/gêne signalée)`
+            : `${flag.exercise_name} retiré du programme (blessure/gêne signalée)`;
+          logProgramChange(req.session.userId, row.id, "injury", desc, previousContent);
         }
       }
     }

@@ -4,6 +4,7 @@ const { requireAuth } = require("../middleware/auth");
 const { requirePremium, checkChatLimit, getChatUsage } = require("../middleware/premium");
 const { chatWithCoach, debriefSession, analyzePlateau, validateProgram } = require("../services/aiCoach");
 const { flagInjury, detectChatInjuryMention } = require("../services/injuries");
+const { logProgramChange } = require("../services/programHistory");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -130,6 +131,8 @@ router.post("/", checkChatLimit, async (req, res) => {
       try {
         validateProgram(result.newProgram);
         await pool.query("UPDATE programs SET content=$1 WHERE id=$2", [JSON.stringify(result.newProgram), programRow.id]);
+        const desc = result.changes?.length ? result.changes.join("; ") : "Programme modifié via le chat coach.";
+        logProgramChange(req.session.userId, programRow.id, "chat", desc, programRow.content);
       } catch (validationError) {
         console.error("Programme invalide refusé (anti-corruption) :", validationError.message);
         result.programUpdated = false;
