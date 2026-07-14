@@ -8,8 +8,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "db:init": "node scripts/init-db.js",
-    "db:migrate": "node scripts/migrate-profile.js",
-    "seed:exercises": "node scripts/seed-exercise-demos.js"
+    "db:migrate": "node scripts/migrate-profile.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

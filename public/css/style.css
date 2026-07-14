@@ -341,6 +341,7 @@ select option { background: var(--bg-card-solid); }
 }
 .exercise-modal-media img { max-width: 100%; border-radius: var(--radius); }
 .exercise-demo-img { max-height: 300px; width: auto; object-fit: contain; }
+.exercise-anim-svg { width: 100%; max-height: 260px; height: auto; }
 .exercise-modal-body h2 { text-align: left; margin-bottom: 8px; }
 .exercise-modal-desc { color: var(--chalk-dim); font-size: .9rem; margin: 12px 0; }
 .exercise-muscle-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }

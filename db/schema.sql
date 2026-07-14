@@ -234,16 +234,6 @@ CREATE TABLE IF NOT EXISTS nutrition_plans (
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Cache local des demonstrations d'exercice (image/description/muscles)
--- recuperees depuis l'API Wger (remplace exercise_videos/YouTube).
-CREATE TABLE IF NOT EXISTS exercise_demos (
-  exercise_name TEXT PRIMARY KEY,
-  image_url     TEXT,
-  description   TEXT,
-  muscles       TEXT[],
-  cached_at     TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
 CREATE TABLE IF NOT EXISTS teams (
   id         SERIAL PRIMARY KEY,
   name       TEXT NOT NULL,
