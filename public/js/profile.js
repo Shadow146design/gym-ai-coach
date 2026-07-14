@@ -67,12 +67,34 @@ function renderPhysical() {
   form.elements.height_cm.addEventListener("input", updateImc);
 }
 
+const MORPHOTYPES = {
+  "Ectomorphe": {
+    desc: "Silhouette fine, métabolisme rapide, prise de muscle plus lente.",
+    advice: "Priorise les mouvements poly-articulaires lourds (squat, développé couché, rowing) avec peu de séries mais des charges progressives, et limite le cardio pour préserver les calories destinées à la prise de masse.",
+  },
+  "Mésomorphe": {
+    desc: "Silhouette athlétique naturelle, bonne réponse à l'entraînement classique.",
+    advice: "Un programme équilibré force/hypertrophie fonctionne bien pour ton profil — varie les rep ranges (6-12) et garde un volume standard.",
+  },
+  "Endomorphe": {
+    desc: "Prise de masse (muscle et graisse) plus facile, métabolisme plus lent.",
+    advice: "Ajoute du cardio ou des supersets en fin de séance, réduis les temps de repos (45-60s), et privilégie les exercices sur machine/poulie qui préservent les articulations si le poids de corps est élevé.",
+  },
+};
+
+function morphotypeFromImc(imc) {
+  if (imc < 18.5) return "Ectomorphe";
+  if (imc < 25) return "Mésomorphe";
+  return "Endomorphe";
+}
+
 function updateImc() {
   const form = document.getElementById("profile-form");
   const weight = parseFloat(form.elements.weight_kg.value);
   const height = parseFloat(form.elements.height_cm.value);
   const box = document.getElementById("imc-box");
-  if (!weight || !height) { box.classList.add("hidden"); return; }
+  const morphBox = document.getElementById("morphology-box");
+  if (!weight || !height) { box.classList.add("hidden"); morphBox.classList.add("hidden"); return; }
   const imc = weight / ((height / 100) ** 2);
   let label = "Poids normal";
   if (imc < 18.5) label = "Insuffisance pondérale";
@@ -80,6 +102,14 @@ function updateImc() {
   else if (imc >= 30) label = "Obésité";
   box.textContent = `IMC : ${imc.toFixed(1)} — ${label}`;
   box.classList.remove("hidden");
+
+  const morpho = MORPHOTYPES[morphotypeFromImc(imc)];
+  const morphName = morphotypeFromImc(imc);
+  morphBox.innerHTML = `
+    <div><strong>Morphotype : ${morphName}</strong> — ${morpho.desc}</div>
+    <div class="muted" style="font-size:.85rem">Ton programme est adapté à ta morphologie ${morphName.toLowerCase()}.</div>
+    <div class="muted" style="font-size:.85rem">💡 ${morpho.advice}</div>`;
+  morphBox.classList.remove("hidden");
 }
 
 function renderGoals() {
