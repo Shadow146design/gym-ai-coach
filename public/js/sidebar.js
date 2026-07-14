@@ -182,13 +182,6 @@ if (_themePref === "system") {
             🔔${notifUnread > 0 ? `<span class="sidebar-bell-badge">${notifUnread > 9 ? "9+" : notifUnread}</span>` : ""}
           </button>
         </div>
-        <div class="notif-panel hidden" id="notif-panel">
-          <div class="notif-panel-head">
-            <span>Notifications</span>
-            <button type="button" class="notif-mark-all" id="notif-mark-all">Tout marquer lu</button>
-          </div>
-          <div class="notif-panel-list" id="notif-panel-list"></div>
-        </div>
         <nav class="sidebar-nav">${navHtml}</nav>
         <div class="sidebar-lang">
           <button type="button" class="sidebar-lang-btn${lang === "fr" ? " active" : ""}" data-lang="fr">FR</button>
@@ -243,6 +236,20 @@ if (_themePref === "system") {
     document.body.insertAdjacentHTML("afterbegin", sidebarHtml);
     document.body.insertAdjacentHTML("beforeend", bottomNavHtml);
 
+    // Le panneau de notifications est rendu directement sur <body> (pas
+    // imbrique dans <aside class="sidebar">, qui a overflow:hidden pour
+    // masquer les libelles pendant l'animation de largeur reduite/tablette) :
+    // sinon, meme en position:fixed, le panneau se retrouvait rogne par ce
+    // overflow:hidden ancetre au lieu de s'afficher pleinement au-dessus.
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="notif-panel hidden" id="notif-panel">
+        <div class="notif-panel-head">
+          <span>Notifications</span>
+          <button type="button" class="notif-mark-all" id="notif-mark-all">Tout marquer lu</button>
+        </div>
+        <div class="notif-panel-list" id="notif-panel-list"></div>
+      </div>`);
+
     const bannerContainer = document.createElement("div");
     bannerContainer.id = "top-message-banner-container";
     document.body.appendChild(bannerContainer);
@@ -281,10 +288,26 @@ if (_themePref === "system") {
 
     const bellBtn = document.getElementById("sidebar-bell");
     const notifPanel = document.getElementById("notif-panel");
+
+    // Positionne le panneau juste sous/à droite de la cloche (desktop/tablette
+    // uniquement : sur mobile le CSS le fixe en pleine largeur en haut, cf. style.css).
+    function positionNotifPanel() {
+      if (window.innerWidth <= 768 || !bellBtn) return;
+      const r = bellBtn.getBoundingClientRect();
+      const panelWidth = 320;
+      const left = Math.min(r.left, window.innerWidth - panelWidth - 12);
+      notifPanel.style.top = `${r.bottom + 8}px`;
+      notifPanel.style.left = `${Math.max(12, left)}px`;
+    }
+
     bellBtn?.addEventListener("click", async () => {
       const willOpen = notifPanel.classList.contains("hidden");
+      if (willOpen) positionNotifPanel();
       notifPanel.classList.toggle("hidden");
       if (willOpen) await loadNotifPanel();
+    });
+    window.addEventListener("resize", () => {
+      if (!notifPanel.classList.contains("hidden")) positionNotifPanel();
     });
     document.addEventListener("click", e => {
       if (!notifPanel.classList.contains("hidden") && !notifPanel.contains(e.target) && e.target !== bellBtn) {
