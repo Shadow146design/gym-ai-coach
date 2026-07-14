@@ -481,6 +481,7 @@ select option { background: var(--bg-card-solid); }
   transition: border-color .18s var(--ease), transform .18s var(--ease);
 }
 .kpi-tile:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+.kpi-tile .kpi-icon { font-size: 1.1rem; margin-bottom: 6px; line-height: 1; opacity: .85; }
 .kpi-tile .kpi-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--chalk-dim); margin-bottom: 7px; }
 .kpi-tile .kpi-value { font-family: var(--font-mono); font-size: 1.85rem; color: var(--chalk); line-height: 1.1; }
 .kpi-tile .kpi-sub { font-size: .72rem; color: var(--chalk-dim); margin-top: 5px; }
@@ -498,6 +499,11 @@ select option { background: var(--bg-card-solid); }
 .record-tile:hover { transform: translateY(-2px); }
 .record-tile .rec-ex { font-size: .75rem; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 4px; }
 .record-tile .rec-val { font-family: var(--font-mono); font-size: 1.5rem; color: var(--gold); }
+.record-tile .rec-medal { position: absolute; top: 10px; right: 12px; font-size: 1.2rem; }
+.record-tile.record-tile-medal { position: relative; padding-right: 40px; }
+.record-tile-rank1 { border-left-color: #e8b33d; box-shadow: var(--shadow-sm), 0 0 16px rgba(232,179,61,.15); }
+.record-tile-rank2 { border-left-color: #c9c6c1; }
+.record-tile-rank3 { border-left-color: #c07a3e; }
 
 .chart-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); }
 

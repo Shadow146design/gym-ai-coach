@@ -49,10 +49,10 @@ async function init() {
   const targetTxt = targetPerWeek ? `Objectif : ${targetPerWeek}j/sem` : "";
 
   document.getElementById("kpi-grid").innerHTML = `
-    <div class="kpi-tile"><div class="kpi-label">Séances totales</div><div class="kpi-value">${totalSessions}</div></div>
-    <div class="kpi-tile"><div class="kpi-label">Durée moy.</div><div class="kpi-value">${avgSessionMinutes || "—"}<span style="font-size:.9rem"> min</span></div></div>
-    <div class="kpi-tile"><div class="kpi-label">Assiduité (4 sem.)</div><div class="kpi-value" style="color:${completionRate>=80?"var(--green)":completionRate>=50?"var(--gold)":"var(--rust-soft)"}">${completionTxt}</div><div class="kpi-sub">${targetTxt}</div></div>
-    <div class="kpi-tile"><div class="kpi-label">Dernière séance</div><div class="kpi-value" style="font-size:1.2rem">${lastDate}</div></div>`;
+    <div class="kpi-tile"><div class="kpi-icon">📊</div><div class="kpi-label">Séances totales</div><div class="kpi-value">${totalSessions}</div></div>
+    <div class="kpi-tile"><div class="kpi-icon">⏱️</div><div class="kpi-label">Durée moy.</div><div class="kpi-value">${avgSessionMinutes || "—"}<span style="font-size:.9rem"> min</span></div></div>
+    <div class="kpi-tile"><div class="kpi-icon">🎯</div><div class="kpi-label">Assiduité (4 sem.)</div><div class="kpi-value" style="color:${completionRate>=80?"var(--green)":completionRate>=50?"var(--gold)":"var(--rust-soft)"}">${completionTxt} ${completionRate>=80?"▲":completionRate<50?"▼":""}</div><div class="kpi-sub">${targetTxt}</div></div>
+    <div class="kpi-tile"><div class="kpi-icon">📅</div><div class="kpi-label">Dernière séance</div><div class="kpi-value" style="font-size:1.2rem">${lastDate}</div></div>`;
 
   if (!isFree) {
     // ── Fréquence 4 semaines ───────────────────────────────
@@ -77,8 +77,10 @@ async function init() {
   }
 
   // ── Records persos ───────────────────────────────────────
-  document.getElementById("records-grid").innerHTML = records.map(r => `
-    <div class="record-tile">
+  const medals = ["🥇", "🥈", "🥉"];
+  document.getElementById("records-grid").innerHTML = records.map((r, i) => `
+    <div class="record-tile${i < 3 ? ` record-tile-medal record-tile-rank${i+1}` : ""}">
+      ${medals[i] ? `<div class="rec-medal">${medals[i]}</div>` : ""}
       <div class="rec-ex">${esc(r.exercise_name)}</div>
       <div class="rec-val">${Number(r.max_weight)} kg</div>
     </div>`).join("");
@@ -210,8 +212,8 @@ async function loadProgressChart(exerciseName) {
       datasets: [{
         label: `${exerciseName} (kg)`,
         data: weights,
-        borderColor: "#7aa8b8",
-        backgroundColor: "rgba(122,168,184,.15)",
+        borderColor: "#c94d28",
+        backgroundColor: "rgba(201,77,40,.15)",
         pointBackgroundColor: "#e8b33d",
         pointBorderColor: "#e8b33d",
         pointRadius: 5,
@@ -255,8 +257,8 @@ function renderMuscleRadar(muscleGroupVolume) {
       datasets: [{
         label: "Volume 30j (kg)",
         data,
-        borderColor: "#e56a44",
-        backgroundColor: "rgba(201,77,40,.18)",
+        borderColor: "#3da874",
+        backgroundColor: "rgba(61,168,116,.18)",
         pointBackgroundColor: "#e8b33d",
         pointBorderColor: "#e8b33d",
       }],
