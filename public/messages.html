@@ -15,9 +15,15 @@
 
   <div class="messages-shell">
     <!-- Liste conversations -->
-    <div class="conv-panel">
+    <div class="conv-panel" id="conv-panel">
       <div class="conv-panel-head">Conversations</div>
+      <div class="conv-search-wrap" id="conv-search-wrap">
+        <input id="conv-search" type="text" class="conv-search" placeholder="Rechercher…" autocomplete="off"/>
+      </div>
       <div id="conv-list"></div>
+      <div id="conv-search-empty" class="hidden messages-empty">
+        <p class="muted" style="font-size:.85rem">Aucune conversation trouvée.</p>
+      </div>
       <div id="conv-empty" class="hidden messages-empty">
         <div class="messages-empty-icon">💬</div>
         <p>Tu n'as pas encore de messages.</p>
@@ -27,7 +33,7 @@
     </div>
 
     <!-- Zone de chat -->
-    <div class="chat-panel">
+    <div class="chat-panel" id="chat-panel">
       <div id="chat-header" class="chat-panel-head"></div>
       <div id="review-invite" class="hidden"></div>
       <div id="chat-msgs" class="chat-panel-msgs"></div>

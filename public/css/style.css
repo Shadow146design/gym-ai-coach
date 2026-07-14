@@ -1335,8 +1335,28 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
   height: 600px;
 }
 @media (max-width: 640px) {
-  .messages-shell { grid-template-columns: 1fr; height: auto; }
-  .conv-panel { max-height: 260px; }
+  .messages-shell {
+    grid-template-columns: 1fr 1fr;
+    height: calc(100dvh - 200px);
+    min-height: 420px;
+    position: relative;
+    overflow: hidden;
+  }
+  .conv-panel, .chat-panel {
+    grid-column: 1 / -1; grid-row: 1;
+    transition: transform .25s var(--ease);
+    max-height: none;
+  }
+  .conv-panel { transform: translateX(0); }
+  .chat-panel { transform: translateX(100%); }
+  .messages-shell.show-chat .conv-panel { transform: translateX(-100%); }
+  .messages-shell.show-chat .chat-panel { transform: translateX(0); }
+  .chat-back-btn { display: inline-flex !important; }
+}
+
+.chat-back-btn {
+  display: none; background: none; border: none; color: var(--chalk);
+  font-size: 1.1rem; cursor: pointer; padding: 4px 6px 4px 0; line-height: 1; flex-shrink: 0;
 }
 
 .conv-panel { border-right: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; }
@@ -1344,6 +1364,12 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
   padding: 13px 16px; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em;
   color: var(--chalk-dim); border-bottom: 1px solid var(--border); font-weight: 600;
 }
+.conv-search-wrap { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.conv-search {
+  width: 100%; font-size: .84rem; padding: 7px 10px; border-radius: 8px;
+  background: var(--bg-hover); border: 1px solid var(--border); color: var(--chalk);
+}
+.conv-search:focus { border-color: var(--rust); outline: none; }
 
 /* ── Conversations ── */
 .conv-item {
@@ -1387,6 +1413,12 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
 }
 .chat-panel-msgs::-webkit-scrollbar { width: 4px; }
 .chat-panel-msgs::-webkit-scrollbar-thumb { background: var(--chalk-faint); border-radius: 4px; }
+
+.msg-date-sep { display: flex; align-items: center; justify-content: center; margin: 6px 0; align-self: center; }
+.msg-date-sep span {
+  font-size: .68rem; color: var(--chalk-dim); background: var(--bg-hover);
+  padding: 3px 12px; border-radius: 20px; text-transform: capitalize;
+}
 
 .msg-row { display: flex; align-items: flex-end; gap: 8px; max-width: 78%; }
 .msg-row.them { align-self: flex-start; }

@@ -4,6 +4,7 @@ let pollInterval = null;
 let myId = null;
 let lastMsgCount = 0;
 let audioCtx = null;
+let allConversations = [];
 
 async function init() {
   const me = await fetch("/api/auth/me").then(r=>r.json());
@@ -18,17 +19,34 @@ async function init() {
 
 async function loadConversations() {
   const r = await fetch("/api/messages/conversations").then(r=>r.json());
-  const list = document.getElementById("conv-list");
+  allConversations = r.conversations || [];
   const empty = document.getElementById("conv-empty");
 
-  if (!r.conversations?.length) {
-    list.innerHTML = "";
+  if (!allConversations.length) {
+    document.getElementById("conv-list").innerHTML = "";
+    document.getElementById("conv-search-wrap")?.classList.add("hidden");
     empty.classList.remove("hidden");
     return;
   }
   empty.classList.add("hidden");
+  document.getElementById("conv-search-wrap")?.classList.remove("hidden");
+  renderConversations();
+}
 
-  list.innerHTML = r.conversations.map(c => `
+function renderConversations() {
+  const list = document.getElementById("conv-list");
+  const searchEmpty = document.getElementById("conv-search-empty");
+  const q = (document.getElementById("conv-search")?.value || "").trim().toLowerCase();
+  const filtered = q ? allConversations.filter(c => c.other_name.toLowerCase().includes(q)) : allConversations;
+
+  if (!filtered.length) {
+    list.innerHTML = "";
+    searchEmpty.classList.remove("hidden");
+    return;
+  }
+  searchEmpty.classList.add("hidden");
+
+  list.innerHTML = filtered.map(c => `
     <div class="conv-item ${currentWith===c.other_id?'active':''}" onclick="openConversation(${c.other_id})" id="conv-${c.other_id}">
       <div class="conv-avatar">${c.other_avatar ? `<img src="${esc(c.other_avatar)}"/>` : "👤"}</div>
       <div class="conv-meta">
@@ -41,12 +59,15 @@ async function loadConversations() {
     </div>`).join("");
 }
 
+document.getElementById("conv-search")?.addEventListener("input", renderConversations);
+
 async function openConversation(withId) {
   currentWith = withId;
   lastMsgCount = 0;
   if (pollInterval) clearInterval(pollInterval);
 
   document.getElementById("chat-placeholder").classList.add("hidden");
+  document.getElementById("conv-panel")?.parentElement.classList.add("show-chat");
 
   const r = await fetch(`/api/messages/${withId}`).then(r=>r.json());
   currentOther = r.other || null;
@@ -54,10 +75,12 @@ async function openConversation(withId) {
   const form = document.getElementById("chat-form");
 
   header.innerHTML = currentOther
-    ? `<div class="chat-panel-head-avatar">${currentOther.avatar_url ? `<img src="${esc(currentOther.avatar_url)}"/>` : "👤"}</div>
+    ? `<button type="button" class="chat-back-btn" id="chat-back-btn" aria-label="Retour">←</button>
+       <div class="chat-panel-head-avatar">${currentOther.avatar_url ? `<img src="${esc(currentOther.avatar_url)}"/>` : "👤"}</div>
        <span class="chat-panel-head-name">${esc(currentOther.name)}</span>
        <span class="chat-panel-head-role">${esc(currentOther.role)}</span>`
     : "Conversation";
+  document.getElementById("chat-back-btn")?.addEventListener("click", closeConversationMobile);
 
   renderMessages(r.messages || [], true);
   form.classList.remove("hidden");
@@ -66,6 +89,10 @@ async function openConversation(withId) {
   pollInterval = setInterval(() => refreshMessages(withId), 3000);
   loadConversations();
   maybeShowReviewInvite(withId);
+}
+
+function closeConversationMobile() {
+  document.getElementById("conv-panel")?.parentElement.classList.remove("show-chat");
 }
 
 // ── Notation du coach (fonctionnalité 6) ──────────────────
@@ -148,16 +175,25 @@ function renderMessages(msgs, isInitialLoad = false) {
   }
   lastMsgCount = msgs.length;
 
+  let lastDateKey = null;
   box.innerHTML = msgs.map(m => {
+    const d = new Date(m.created_at);
+    const dateKey = d.toDateString();
+    let sepHtml = "";
+    if (dateKey !== lastDateKey) {
+      sepHtml = `<div class="msg-date-sep"><span>${dateLabel(d)}</span></div>`;
+      lastDateKey = dateKey;
+    }
+
     const isMe = m.from_id === myId;
-    const time = new Date(m.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    const time = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
     const avatarHtml = !isMe
       ? `<div class="msg-row-avatar">${currentOther?.avatar_url ? `<img src="${esc(currentOther.avatar_url)}"/>` : "👤"}</div>`
       : "";
     const readHtml = isMe
       ? `<span class="msg-read-tick${m.read_at ? " read" : ""}">${m.read_at ? "✓✓ Lu" : "✓ Envoyé"}</span>`
       : "";
-    return `<div class="msg-row ${isMe ? "me" : "them"}">
+    return `${sepHtml}<div class="msg-row ${isMe ? "me" : "them"}">
       ${avatarHtml}
       <div class="msg-bubble">
         <div class="msg-text">${esc(m.content)}</div>
@@ -167,6 +203,17 @@ function renderMessages(msgs, isInitialLoad = false) {
   }).join("");
 
   if (wasBottom || isInitialLoad) box.scrollTop = box.scrollHeight;
+}
+
+function dateLabel(d) {
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return "Aujourd'hui";
+  if (d.toDateString() === yesterday.toDateString()) return "Hier";
+  const days = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+  const months = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
 }
 
 function playPing() {
