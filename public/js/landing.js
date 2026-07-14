@@ -13,6 +13,17 @@ document.getElementById("nav-login-btn")?.addEventListener("click", e => {
   document.getElementById("auth")?.scrollIntoView({ behavior: "smooth" });
 });
 
+// Compteur d'utilisateurs en temps reel (masque si la route echoue, pour
+// ne jamais afficher un "—" fige en cas de probleme reseau).
+fetch("/api/stats/public")
+  .then(r => r.ok ? r.json() : Promise.reject())
+  .then(data => {
+    if (!data.totalUsers) return;
+    document.getElementById("hero-stats-users").textContent = data.totalUsers;
+    document.getElementById("hero-stats").hidden = false;
+  })
+  .catch(() => {});
+
 // Animations subtiles au scroll (progressive enhancement : visible par defaut sans JS)
 document.querySelectorAll(".reveal").forEach(el => el.classList.add("reveal-init"));
 if ("IntersectionObserver" in window) {

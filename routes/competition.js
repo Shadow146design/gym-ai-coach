@@ -1,6 +1,7 @@
 const express = require("express");
 const pool = require("../db/pool");
 const { requireAuth } = require("../middleware/auth");
+const { cached } = require("../services/cache");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -21,19 +22,25 @@ router.get("/leaderboard", async (req, res) => {
   try {
     const { start, end } = weekBounds();
 
-    const rankedR = await pool.query(
-      `SELECT id, name, avatar_url, volume, sessions, RANK() OVER (ORDER BY volume DESC) AS rank
-       FROM (
-         SELECT u.id, u.name, u.avatar_url,
-           COALESCE(SUM(l.weight * l.reps), 0) AS volume,
-           COUNT(DISTINCT l.performed_at::date) AS sessions
-         FROM users u
-         JOIN logs l ON l.user_id = u.id AND l.performed_at >= $1 AND l.performed_at < $2
-         WHERE u.role IN ('premium','coach','admin')
-         GROUP BY u.id
-       ) sub
-       ORDER BY volume DESC`,
-      [start, end]
+    // Le classement complet (identique pour tous les utilisateurs de la
+    // semaine) est cache 5 min ; yourRank/yourVolume restent calcules a
+    // chaque requete a partir de ce resultat cache, donc pas de fuite de
+    // personnalisation entre utilisateurs.
+    const rankedR = await cached(`leaderboard:${start.toISOString()}`, 5 * 60 * 1000, () =>
+      pool.query(
+        `SELECT id, name, avatar_url, volume, sessions, RANK() OVER (ORDER BY volume DESC) AS rank
+         FROM (
+           SELECT u.id, u.name, u.avatar_url,
+             COALESCE(SUM(l.weight * l.reps), 0) AS volume,
+             COUNT(DISTINCT l.performed_at::date) AS sessions
+           FROM users u
+           JOIN logs l ON l.user_id = u.id AND l.performed_at >= $1 AND l.performed_at < $2
+           WHERE u.role IN ('premium','coach','admin')
+           GROUP BY u.id
+         ) sub
+         ORDER BY volume DESC`,
+        [start, end]
+      )
     );
 
     const top10 = rankedR.rows.slice(0, 10).map(r => ({

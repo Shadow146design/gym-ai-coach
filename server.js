@@ -35,6 +35,7 @@ const affiliationsRoutes = require("./routes/affiliations");
 const supportRoutes = require("./routes/support");
 const pushRoutes = require("./routes/push");
 const contactRoutes = require("./routes/contact");
+const statsRoutes = require("./routes/stats");
 const { sendReminderEmail, sendWeeklyRecapEmail } = require("./services/email");
 const { sendPushToUser } = require("./services/push");
 
@@ -92,6 +93,7 @@ app.use("/api/injuries", injuriesRoutes);
 app.use("/api/teams", teamsRoutes);
 app.use("/api/affiliations", affiliationsRoutes);
 app.use("/api/support", supportRoutes);
+app.use("/api/stats", statsRoutes);
 app.use("/api/push", pushRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/auth",         oauthRoutes);
