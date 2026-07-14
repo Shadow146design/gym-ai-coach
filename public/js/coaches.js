@@ -16,6 +16,35 @@ function renderSkeletons() {
 }
 
 let myRole = "user";
+let allCoaches = [];
+let mineAssignment = null;
+
+function populateSpecialtyFilter(coaches) {
+  const specs = new Set();
+  coaches.forEach(c => (c.specialties || []).forEach(s => specs.add(s)));
+  const select = document.getElementById("filter-specialty");
+  [...specs].sort().forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s;
+    opt.textContent = s;
+    select.appendChild(opt);
+  });
+}
+
+function applyFilters() {
+  const specialty = document.getElementById("filter-specialty").value;
+  const price = document.getElementById("filter-price").value;
+  const filtered = allCoaches.filter(c => {
+    if (specialty && !(c.specialties || []).includes(specialty)) return false;
+    if (price === "free" && c.price_monthly > 0) return false;
+    if (price === "paid" && !(c.price_monthly > 0)) return false;
+    return true;
+  });
+  renderCoaches(filtered);
+}
+
+document.getElementById("filter-specialty").addEventListener("change", applyFilters);
+document.getElementById("filter-price").addEventListener("change", applyFilters);
 
 async function init() {
   const me = await fetch("/api/auth/me").then(r=>r.json());
@@ -41,20 +70,33 @@ async function init() {
   }
 
   const r = await fetch("/api/coaches").then(r=>r.json());
+  allCoaches = r.coaches || [];
+  mineAssignment = mineRes.assignment || null;
+
+  if (allCoaches.length) {
+    populateSpecialtyFilter(allCoaches);
+    document.getElementById("coaches-filters").classList.remove("hidden");
+  }
+
+  renderCoaches(allCoaches);
+}
+
+function renderCoaches(coaches) {
   const grid = document.getElementById("coaches-grid");
   const empty = document.getElementById("empty");
   grid.innerHTML = "";
 
-  if (!r.coaches?.length) { empty.classList.remove("hidden"); return; }
+  if (!coaches.length) { empty.classList.remove("hidden"); empty.querySelector("p").textContent = allCoaches.length ? "Aucun coach ne correspond à ces filtres." : "Reviens bientôt !"; return; }
+  empty.classList.add("hidden");
 
-  r.coaches.forEach(coach => {
+  coaches.forEach(coach => {
     const card = document.createElement("div");
     card.className = "card";
     card.style.display = "flex";
     card.style.flexDirection = "column";
     card.style.gap = "14px";
 
-    const alreadyMine = mineRes.assignment?.coach_id === coach.id;
+    const alreadyMine = mineAssignment?.coach_id === coach.id;
     const specs = (coach.specialties || []).map(s => `<span style="font-size:.72rem;background:var(--bg-hover);padding:3px 8px;border-radius:4px;color:var(--chalk-dim)">${esc(s)}</span>`).join(" ");
     const isPaid = coach.price_monthly > 0;
     const price = isPaid ? `${coach.price_monthly}€/mois` : "Gratuit";

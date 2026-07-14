@@ -21,6 +21,16 @@
     <span id="my-coach-txt"></span>
     <span id="my-coach-msg-btn"></span>
   </div>
+  <div id="coaches-filters" class="hidden" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
+    <select id="filter-specialty" style="max-width:220px">
+      <option value="">Toutes spécialités</option>
+    </select>
+    <select id="filter-price" style="max-width:180px">
+      <option value="">Tous tarifs</option>
+      <option value="free">Gratuit</option>
+      <option value="paid">Payant</option>
+    </select>
+  </div>
   <div id="coaches-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px"></div>
   <div id="empty" class="empty-state hidden"><h3>Aucun coach disponible</h3><p class="muted" style="margin-top:8px">Reviens bientôt !</p></div>
 </div>
