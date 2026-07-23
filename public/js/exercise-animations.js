@@ -444,6 +444,14 @@ function stripAccentsForAnim(s) {
     .join("");
 }
 
+// Test un mot entier (limite de mot), pas une simple sous-chaine : "dos" ne
+// doit PAS matcher a l'interieur de "abdos" (bug constate le 2026-07-23 —
+// "Montées de genoux", muscle_group "Abdos", tombait a tort sur l'animation
+// rowing via n.includes("dos")).
+function hasWordAnim(str, word) {
+  return new RegExp(`\\b${word}\\b`).test(str);
+}
+
 // Regles de correspondance nom d'exercice -> cle d'animation, evaluees dans
 // l'ordre (premiere regle qui matche gagne). Classees du plus specifique au
 // plus general (ex: "leg extension"/"leg curl" AVANT "extension"/"curl"
@@ -473,11 +481,13 @@ const ANIMATION_MATCH_RULES = [
   { key: "tirage vertical", test: n => (n.includes("tirage") || n.includes("poulie haute")) && !n.includes("horizontal") && !n.includes("face") },
   // Bras : generiques "curl"/"extension" seulement apres avoir exclu leg curl/extension ci-dessus.
   { key: "curl barre", test: n => n.includes("curl") },
-  { key: "extension triceps", test: n => n.includes("pushdown") || n.includes("triceps") || (n.includes("extension") && !n.includes("lombaire") && !n.includes("dos")) },
+  // "dips" AVANT le "triceps" generique : "Dips triceps" decrit le mouvement par
+  // son nom structurel (dips), le muscle cible ne doit pas eclipser ce mouvement.
+  { key: "dips", test: n => n.includes("dip") },
+  { key: "extension triceps", test: n => n.includes("pushdown") || n.includes("triceps") || (n.includes("extension") && !n.includes("lombaire") && !hasWordAnim(n, "dos")) },
   // "elevation" seul, mais pas frontale/arriere/oiseau (mouvement different, pas lateral).
   { key: "élévations latérales", test: n => n.includes("elevation") && !n.includes("frontale") && !n.includes("arriere") && !n.includes("oiseau") },
   { key: "rowing barre", test: n => n.includes("face pull") },
-  { key: "dips", test: n => n.includes("dip") },
   // Abdos / gainage.
   { key: "crunch", test: n => n.includes("crunch") },
   { key: "planche", test: n => n.includes("planche") },
@@ -494,7 +504,7 @@ const ANIMATION_MATCH_RULES = [
 // garantissant qu'aucun exercice ne se retrouve jamais sans animation.
 const FALLBACK_MATCH_RULES = [
   { key: "élévations latérales", test: n => n.includes("epaul") || n.includes("shoulder") },
-  { key: "rowing barre", test: n => n.includes("dos") || n.includes("back") || n.includes("tirage") || n.includes("rowing") },
+  { key: "rowing barre", test: n => hasWordAnim(n, "dos") || n.includes("back") || n.includes("tirage") || n.includes("rowing") },
   { key: "développé couché", test: n => n.includes("pec") || n.includes("poitrine") || n.includes("chest") || n.includes("couche") },
   { key: "squat", test: n => n.includes("jambe") || n.includes("cuiss") || n.includes("quad") || n.includes("leg") || n.includes("squat") },
   { key: "curl barre", test: n => n.includes("bras") || n.includes("bicep") || n.includes("curl") },
