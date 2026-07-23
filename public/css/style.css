@@ -1175,8 +1175,15 @@ body.focus-mode .rest-timer-overlay .rest-skip { font-size: 1rem; margin-top: 10
   justify-content: space-around;
   box-shadow: var(--shadow-sm);
 }
-.hstat { text-align: center; flex: 1; }
-.hstat-icon { font-size: 1.15rem; margin-bottom: 4px; line-height: 1; }
+.hstat { text-align: center; flex: 1; padding: 6px 4px; border-radius: var(--radius); }
+.hstat-icon {
+  font-size: 1.15rem; margin-bottom: 6px; line-height: 1;
+  width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  margin-left: auto; margin-right: auto; background: var(--bg-hover);
+}
+.hstat:nth-child(1) .hstat-icon { background: var(--rust-bg); }
+.hstat:nth-child(3) .hstat-icon { background: var(--gold-bg); }
+.hstat:nth-child(5) .hstat-icon { background: var(--green-bg); }
 .hstat-val { font-family: var(--font-mono); font-size: 1.5rem; color: var(--chalk); }
 .hstat-lbl { font-size: .7rem; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: .04em; margin-top: 3px; }
 .hstat-sep { width: 1px; height: 36px; background: var(--border); }
@@ -1230,6 +1237,28 @@ body.focus-mode .rest-timer-overlay .rest-skip { font-size: 1rem; margin-top: 10
 }
 .home-record-row:last-child { border: none; }
 .home-record-val { font-family: var(--font-mono); color: var(--gold); font-size: 1rem; }
+.home-record-row.home-record-top {
+  background: linear-gradient(90deg, var(--gold-bg), transparent);
+  margin: 0 -14px; padding: 9px 14px; border-radius: 8px; border-bottom-color: transparent;
+}
+.home-record-medal { margin-right: 8px; }
+
+/* Défis hebdomadaires */
+.weekly-challenge { margin-bottom: 14px; }
+.weekly-challenge:last-child { margin-bottom: 0; }
+.weekly-challenge-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: .85rem; color: var(--chalk-dim); margin-bottom: 6px;
+}
+.weekly-challenge-track {
+  height: 8px; border-radius: 4px; background: var(--bg-hover); overflow: hidden;
+}
+.weekly-challenge-fill {
+  height: 100%; border-radius: 4px; width: 0;
+  transition: width 1s var(--ease, ease-out);
+}
+.weekly-challenge-fill-rust { background: var(--grad-rust, var(--rust)); }
+.weekly-challenge-fill-green { background: var(--green); }
 
 @media (max-width: 480px) {
   .home-hero { flex-direction: column; align-items: flex-start; }

@@ -13,6 +13,7 @@ async function init() {
   await Promise.all([
     loadKPIs(), loadNextSession(), loadCalendar(), loadRecords(),
     loadLastAndTodayRecord(), loadDailyTip(), loadNutritionTip(), loadPlateauAlert(), loadFatigueAlert(), loadFormScore(),
+    loadWeeklyChallenges(),
   ]);
 
   maybeStartTour();
@@ -439,11 +440,52 @@ async function loadRecords() {
       el.innerHTML = `<p class="muted" style="font-size:.85rem">Logge ta première séance pour voir tes records ici.</p>`;
       return;
     }
-    el.innerHTML = r.records.slice(0, 6).map(rec => `
-      <div class="home-record-row">
-        <span>${esc(rec.exercise_name)}</span>
+    const medals = ["🥇", "🥈", "🥉"];
+    el.innerHTML = r.records.slice(0, 6).map((rec, i) => `
+      <div class="home-record-row${i < 3 ? " home-record-top" : ""}">
+        <span>${medals[i] ? `<span class="home-record-medal">${medals[i]}</span>` : ""}${esc(rec.exercise_name)}</span>
         <span class="home-record-val">${rec.max_weight} kg</span>
       </div>`).join("");
+  } catch { el.innerHTML = `<p class="muted" style="font-size:.85rem">Impossible de charger.</p>`; }
+}
+
+// Défis hebdomadaires : calculés à partir des données déjà en base (pas de
+// nouvelle table) — séances de la semaine vs objectif du programme, et
+// volume de la semaine vs semaine précédente.
+async function loadWeeklyChallenges() {
+  const el = document.getElementById("weekly-challenges");
+  try {
+    const [progRes, weeklyRes] = await Promise.all([
+      fetch("/api/program/active").then(r => r.json()),
+      fetch("/api/logs/weekly").then(r => r.json()),
+    ]);
+    const weeks = weeklyRes.weeks || [];
+    const thisWeek = weeks[0] || { sessions: 0, volume: 0 };
+    const lastWeek = weeks[1] || { sessions: 0, volume: 0 };
+
+    const targetDays = Number(progRes.program?.questionnaire?.joursParSemaine) || (progRes.program?.content?.days?.length) || 3;
+    const sessionsDone = Number(thisWeek.sessions) || 0;
+    const sessionsPct = Math.min(100, Math.round((sessionsDone / targetDays) * 100));
+
+    const volNow = Number(thisWeek.volume) || 0;
+    const volPrev = Number(lastWeek.volume) || 0;
+    const volPct = volPrev > 0 ? Math.min(100, Math.round((volNow / volPrev) * 100)) : (volNow > 0 ? 100 : 0);
+
+    el.innerHTML = `
+      <div class="weekly-challenge">
+        <div class="weekly-challenge-row">
+          <span>Séances cette semaine</span>
+          <span class="mono">${sessionsDone}/${targetDays}</span>
+        </div>
+        <div class="weekly-challenge-track"><div class="weekly-challenge-fill weekly-challenge-fill-rust" style="width:${sessionsPct}%"></div></div>
+      </div>
+      <div class="weekly-challenge">
+        <div class="weekly-challenge-row">
+          <span>Volume vs semaine dernière</span>
+          <span class="mono">${volPrev > 0 ? volPct + "%" : "—"}</span>
+        </div>
+        <div class="weekly-challenge-track"><div class="weekly-challenge-fill weekly-challenge-fill-green" style="width:${volPct}%"></div></div>
+      </div>`;
   } catch { el.innerHTML = `<p class="muted" style="font-size:.85rem">Impossible de charger.</p>`; }
 }
 
