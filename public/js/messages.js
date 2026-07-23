@@ -77,8 +77,12 @@ async function openConversation(withId) {
   header.innerHTML = currentOther
     ? `<button type="button" class="chat-back-btn" id="chat-back-btn" aria-label="Retour">←</button>
        <div class="chat-panel-head-avatar">${currentOther.avatar_url ? `<img src="${esc(currentOther.avatar_url)}"/>` : "👤"}</div>
-       <span class="chat-panel-head-name">${esc(currentOther.name)}</span>
-       <span class="chat-panel-head-role">${esc(currentOther.role)}</span>`
+       <div class="chat-panel-head-info">
+         <span class="chat-panel-head-name">${esc(currentOther.name)}</span>
+         ${currentOther.online
+           ? `<span class="chat-online-status online">● En ligne</span>`
+           : `<span class="chat-panel-head-role">${esc(currentOther.role)}</span>`}
+       </div>`
     : "Conversation";
   document.getElementById("chat-back-btn")?.addEventListener("click", closeConversationMobile);
 
@@ -237,6 +241,7 @@ async function sendMsg() {
   const text = input.value.trim();
   if (!text || !currentWith) return;
   input.value = "";
+  input.style.height = "auto";
   await fetch(`/api/messages/${currentWith}`, {
     method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({content:text})
   });
@@ -246,6 +251,18 @@ async function sendMsg() {
 document.getElementById("chat-form").addEventListener("submit", e => {
   e.preventDefault();
   sendMsg();
+});
+
+const msgInputEl = document.getElementById("msg-input");
+msgInputEl.addEventListener("input", () => {
+  msgInputEl.style.height = "auto";
+  msgInputEl.style.height = Math.min(msgInputEl.scrollHeight, 120) + "px";
+});
+msgInputEl.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMsg();
+  }
 });
 initVoiceInput("msg-input", "msg-mic-btn");
 

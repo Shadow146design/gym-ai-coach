@@ -28,7 +28,16 @@
         <p class="muted" style="font-size:.85rem">Aucune conversation trouvée.</p>
       </div>
       <div id="conv-empty" class="hidden messages-empty">
-        <div class="messages-empty-icon">💬</div>
+        <svg class="messages-empty-svg" viewBox="0 0 120 90" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="8" y="10" width="70" height="50" rx="10" fill="var(--bg-hover)" stroke="var(--border)" stroke-width="2"/>
+          <path d="M20 60 L20 74 L36 60" fill="var(--bg-hover)" stroke="var(--border)" stroke-width="2"/>
+          <rect x="42" y="34" width="70" height="46" rx="10" fill="var(--bg-card)" stroke="var(--rust)" stroke-width="2"/>
+          <path d="M96 80 L96 90 L84 80" fill="var(--bg-card)" stroke="var(--rust)" stroke-width="2"/>
+          <line x1="55" y1="48" x2="98" y2="48" stroke="var(--chalk-faint)" stroke-width="3" stroke-linecap="round"/>
+          <line x1="55" y1="58" x2="88" y2="58" stroke="var(--chalk-faint)" stroke-width="3" stroke-linecap="round"/>
+          <line x1="20" y1="26" x2="60" y2="26" stroke="var(--chalk-faint)" stroke-width="3" stroke-linecap="round"/>
+          <line x1="20" y1="36" x2="50" y2="36" stroke="var(--chalk-faint)" stroke-width="3" stroke-linecap="round"/>
+        </svg>
         <p>Tu n'as pas encore de messages.</p>
         <p class="muted" style="font-size:.82rem">Choisis un coach sur la page Coaches pour commencer à échanger.</p>
         <a class="btn btn-primary btn-sm" href="/coaches.html">Voir les coaches</a>
@@ -41,11 +50,20 @@
       <div id="review-invite" class="hidden"></div>
       <div id="chat-msgs" class="chat-panel-msgs"></div>
       <div id="chat-placeholder" class="messages-empty">
-        <div class="messages-empty-icon">👈</div>
+        <svg class="messages-empty-svg" viewBox="0 0 120 90" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="8" y="10" width="70" height="50" rx="10" fill="var(--bg-hover)" stroke="var(--border)" stroke-width="2"/>
+          <path d="M20 60 L20 74 L36 60" fill="var(--bg-hover)" stroke="var(--border)" stroke-width="2"/>
+          <rect x="42" y="34" width="70" height="46" rx="10" fill="var(--bg-card)" stroke="var(--rust)" stroke-width="2"/>
+          <path d="M96 80 L96 90 L84 80" fill="var(--bg-card)" stroke="var(--rust)" stroke-width="2"/>
+          <line x1="55" y1="48" x2="98" y2="48" stroke="var(--chalk-faint)" stroke-width="3" stroke-linecap="round"/>
+          <line x1="55" y1="58" x2="88" y2="58" stroke="var(--chalk-faint)" stroke-width="3" stroke-linecap="round"/>
+          <line x1="20" y1="26" x2="60" y2="26" stroke="var(--chalk-faint)" stroke-width="3" stroke-linecap="round"/>
+          <line x1="20" y1="36" x2="50" y2="36" stroke="var(--chalk-faint)" stroke-width="3" stroke-linecap="round"/>
+        </svg>
         <p class="muted">Choisis une conversation à gauche.</p>
       </div>
       <form id="chat-form" class="hidden chat-panel-input">
-        <input id="msg-input" type="text" placeholder="Écris ton message…" autocomplete="off"/>
+        <textarea id="msg-input" rows="1" placeholder="Écris ton message…" autocomplete="off"></textarea>
         <button type="button" class="mic-btn" id="msg-mic-btn" title="Dicter" aria-label="Dicter">🎤</button>
         <button class="btn btn-primary btn-icon" type="submit" title="Envoyer">➤</button>
       </form>

@@ -137,6 +137,7 @@ router.get("/me", async (req, res) => {
   if (!result.rows[0]) {
     return res.status(401).json({ error: "Non connecte." });
   }
+  pool.query("UPDATE users SET last_active=NOW() WHERE id=$1", [req.session.userId]).catch(() => {});
   res.json({ user: result.rows[0] });
 });
 

@@ -151,7 +151,10 @@ router.get("/:withId", async (req, res) => {
       WHERE (from_id=$1 AND to_id=$2) OR (from_id=$2 AND to_id=$1)
       ORDER BY created_at ASC LIMIT 200`, [uid, wid]);
     await pool.query("UPDATE messages SET read_at=NOW() WHERE to_id=$1 AND from_id=$2 AND read_at IS NULL", [uid, wid]);
-    const other = await pool.query("SELECT id,name,avatar_url,role FROM users WHERE id=$1", [wid]);
+    const other = await pool.query(
+      "SELECT id,name,avatar_url,role,(last_active > NOW() - INTERVAL '5 minutes') AS online FROM users WHERE id=$1",
+      [wid]
+    );
     res.json({ messages: r.rows, other: other.rows[0] });
   } catch (e) { res.status(500).json({ error: "Erreur serveur." }); }
 });
