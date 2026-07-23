@@ -20,18 +20,20 @@ async function init() {
     loadOneRm();
   }
 
-  const [dashRes, recordsRes, exercisesRes, streakRes] = await Promise.all([
+  const [dashRes, recordsRes, exercisesRes, streakRes, weeklyRes] = await Promise.all([
     fetch("/api/logs/dashboard-stats"),
     fetch("/api/logs/records"),
     fetch("/api/logs/exercises"),
     fetch("/api/logs/streak"),
+    fetch("/api/logs/weekly"),
   ]);
   loadWeekCompare();
-  const { totalSessions, avgSessionMinutes, weeklyFrequency, targetPerWeek, completionRate, muscleGroupVolume, lastSessionDate }
+  const { totalSessions, totalVolume, weeklyFrequency, targetPerWeek, completionRate, muscleGroupVolume, lastSessionDate }
     = await dashRes.json();
   const { records } = await recordsRes.json();
   const { exercises } = await exercisesRes.json();
-  const { current: streak } = await streakRes.json();
+  const { current: streak, best: bestStreak } = await streakRes.json();
+  const { weeks: compareWeeks } = await weeklyRes.json();
 
   shareData.totalSessions = totalSessions;
   shareData.streak = streak || 0;
@@ -43,16 +45,17 @@ async function init() {
     return;
   }
 
-  // ── KPI globaux ──────────────────────────────────────────
-  const lastDate = lastSessionDate ? new Date(lastSessionDate).toLocaleDateString("fr-FR") : "—";
-  const completionTxt = completionRate !== null ? `${completionRate}%` : "—";
-  const targetTxt = targetPerWeek ? `Objectif : ${targetPerWeek}j/sem` : "";
+  // ── KPI globaux (4 metriques cles + tendance vs semaine precedente) ──
+  const [thisWeek, lastWeek] = compareWeeks || [];
+  const volTrend = thisWeek && lastWeek ? Math.round(Number(thisWeek.volume) - Number(lastWeek.volume)) : null;
+  const volTrendHtml = volTrend == null ? "" :
+    volTrend > 0 ? `<span style="color:var(--green)">▲</span>` : volTrend < 0 ? `<span style="color:var(--red)">▼</span>` : `<span class="muted">=</span>`;
 
   document.getElementById("kpi-grid").innerHTML = `
-    <div class="kpi-tile"><div class="kpi-icon">📊</div><div class="kpi-label">Séances totales</div><div class="kpi-value">${totalSessions}</div></div>
-    <div class="kpi-tile"><div class="kpi-icon">⏱️</div><div class="kpi-label">Durée moy.</div><div class="kpi-value">${avgSessionMinutes || "—"}<span style="font-size:.9rem"> min</span></div></div>
-    <div class="kpi-tile"><div class="kpi-icon">🎯</div><div class="kpi-label">Assiduité (4 sem.)</div><div class="kpi-value" style="color:${completionRate>=80?"var(--green)":completionRate>=50?"var(--gold)":"var(--rust-soft)"}">${completionTxt} ${completionRate>=80?"▲":completionRate<50?"▼":""}</div><div class="kpi-sub">${targetTxt}</div></div>
-    <div class="kpi-tile"><div class="kpi-icon">📅</div><div class="kpi-label">Dernière séance</div><div class="kpi-value" style="font-size:1.2rem">${lastDate}</div></div>`;
+    <div class="kpi-tile"><div class="kpi-icon">📊</div><div class="kpi-label">Total séances</div><div class="kpi-value">${totalSessions}</div></div>
+    <div class="kpi-tile"><div class="kpi-icon">🏋️</div><div class="kpi-label">Volume total</div><div class="kpi-value">${Math.round((totalVolume||0)/1000).toLocaleString("fr-FR")}k ${volTrendHtml}</div><div class="kpi-sub">kg soulevés</div></div>
+    <div class="kpi-tile"><div class="kpi-icon">🔥</div><div class="kpi-label">Meilleur streak</div><div class="kpi-value">${bestStreak||0}j</div></div>
+    <div class="kpi-tile"><div class="kpi-icon">🏆</div><div class="kpi-label">Records battus</div><div class="kpi-value">${records?.length||0}</div></div>`;
 
   if (!isFree) {
     // ── Fréquence 4 semaines ───────────────────────────────
@@ -83,6 +86,7 @@ async function init() {
       ${medals[i] ? `<div class="rec-medal">${medals[i]}</div>` : ""}
       <div class="rec-ex">${esc(r.exercise_name)}</div>
       <div class="rec-val">${Number(r.max_weight)} kg</div>
+      ${r.achieved_at ? `<div class="rec-date">${new Date(r.achieved_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}</div>` : ""}
     </div>`).join("");
 
   if (!isFree) {

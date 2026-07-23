@@ -138,7 +138,7 @@ function renderCoaches(coaches) {
     const alreadyMine = mineAssignment?.coach_id === coach.id;
     const isRecommended = coach.id === recommendedCoachId;
     if (isRecommended) card.style.borderColor = "var(--rust)";
-    const specs = (coach.specialties || []).map(s => `<span style="font-size:.72rem;background:var(--bg-hover);padding:3px 8px;border-radius:4px;color:var(--chalk-dim)">${esc(s)}</span>`).join(" ");
+    const specs = (coach.specialties || []).map(s => `<span class="badge badge-blue">${esc(s)}</span>`).join(" ");
     const isPaid = coach.price_monthly > 0;
     const price = isPaid ? `${coach.price_monthly}€/mois` : "Gratuit";
     const needsPremium = isPaid && !["premium", "admin"].includes(myRole);
@@ -147,29 +147,25 @@ function renderCoaches(coaches) {
     if (alreadyMine) {
       ctaHtml = `<div style="text-align:center;font-size:.82rem;color:var(--green)">✅ Ton coach actuel</div>`;
     } else if (needsPremium) {
-      ctaHtml = `<a class="btn btn-ghost btn-sm" href="/premium.html">⭐ Passer Premium pour choisir ce coach</a>`;
+      ctaHtml = `<a class="btn btn-ghost btn-sm btn-block" href="/premium.html">⭐ Passer Premium pour choisir ce coach</a>`;
     } else {
-      ctaHtml = `<button class="btn btn-primary btn-sm" onclick="requestCoach(${coach.id},this)">Choisir ce coach</button>`;
+      ctaHtml = `<button class="btn btn-primary btn-block" onclick="requestCoach(${coach.id},this)">Contacter</button>`;
     }
 
     card.innerHTML = `
       ${isRecommended ? `<span style="position:absolute;top:-10px;right:14px;background:var(--grad-rust);color:#fff;font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.02em">✨ Recommandé pour toi</span>` : ""}
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:48px;height:48px;border-radius:50%;background:var(--rust-bg);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;overflow:hidden">
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px">
+        <div class="coach-card-avatar">
           ${coach.avatar_url ? `<img src="${esc(coach.avatar_url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>` : "🏋️"}
         </div>
-        <div>
-          <div style="font-weight:600">${esc(coach.name)}</div>
-          <div style="font-size:.78rem;color:var(--chalk-dim);display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <span>${coach.client_count} client${coach.client_count>1?"s":""} • ${price}</span>
-            ${coach.avg_rating ? `<span style="color:var(--gold)">⭐ ${coach.avg_rating} — ${coach.review_count} avis</span>` : `<span>Pas encore d'avis</span>`}
-            ${needsPremium ? `<span class="sidebar-badge badge-premium">Premium requis</span>` : ""}
-          </div>
-        </div>
+        <div style="font-weight:700;font-size:1.05rem">${esc(coach.name)}</div>
+        ${coach.avg_rating ? `<div style="color:var(--gold);font-size:.85rem">⭐ ${coach.avg_rating} <span style="color:var(--chalk-dim)">(${coach.review_count} avis)</span></div>` : `<div class="muted" style="font-size:.8rem">Pas encore d'avis</div>`}
+        <div style="font-family:var(--font-mono);font-size:1.1rem;color:var(--chalk);margin-top:2px">${price}</div>
+        <div style="font-size:.75rem;color:var(--chalk-dim)">${coach.client_count} client${coach.client_count>1?"s":""}${needsPremium ? ` <span class="badge badge-gold">Premium requis</span>` : ""}</div>
       </div>
-      ${isRecommended ? `<p style="font-size:.82rem;color:var(--rust-soft);margin:0">💡 ${esc(recommendedReason)}</p>` : ""}
-      ${coach.bio ? `<p style="font-size:.87rem;color:var(--chalk-dim);margin:0">${esc(coach.bio)}</p>` : ""}
-      ${specs ? `<div style="display:flex;flex-wrap:wrap;gap:6px">${specs}</div>` : ""}
+      ${isRecommended ? `<p style="font-size:.82rem;color:var(--rust-soft);margin:0;text-align:center">💡 ${esc(recommendedReason)}</p>` : ""}
+      ${coach.bio ? `<p class="coach-card-bio">${esc(coach.bio)}</p>` : ""}
+      ${specs ? `<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">${specs}</div>` : ""}
       ${ctaHtml}`;
     grid.appendChild(card);
   });

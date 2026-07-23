@@ -131,7 +131,9 @@ async function loadLastAndTodayRecord() {
       const date = new Date(r.lastSession.day).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
       lastEl.innerHTML = `
         <div style="font-family:var(--font-display);font-weight:600;font-size:1rem">${esc(date)}</div>
-        <div style="font-size:.82rem;color:var(--chalk-dim);margin-top:4px">${r.lastSession.exercises} exercice${r.lastSession.exercises > 1 ? "s" : ""} réalisé${r.lastSession.exercises > 1 ? "s" : ""}</div>`;
+        <div style="font-size:.82rem;color:var(--chalk-dim);margin-top:4px">${r.lastSession.exercises} exercice${r.lastSession.exercises > 1 ? "s" : ""} réalisé${r.lastSession.exercises > 1 ? "s" : ""}</div>
+        ${r.lastSession.volume ? `<div style="font-size:1rem;color:var(--gold);font-family:var(--font-mono);margin-top:6px">${Math.round(r.lastSession.volume).toLocaleString("fr-FR")} kg</div>` : ""}
+        <a href="/history.html" style="display:inline-block;margin-top:8px;font-size:.78rem;color:var(--chalk-dim)">Voir le détail →</a>`;
     } else {
       lastEl.innerHTML = `<p class="muted" style="font-size:.88rem">Pas encore de séance loggée.</p>`;
     }
@@ -139,9 +141,9 @@ async function loadLastAndTodayRecord() {
     if (r.topRecord) {
       const date = new Date(r.topRecord.achieved_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
       recordEl.innerHTML = `
-        <div style="font-family:var(--font-display);font-weight:600;font-size:1rem">${esc(r.topRecord.exercise_name)}</div>
+        <div style="font-family:var(--font-display);font-weight:600;font-size:1rem">${esc(r.topRecord.exercise_name)} ${r.topRecord.achieved_today ? `<span class="record-medal-pulse">🥇</span>` : ""}</div>
         <div style="font-size:1.1rem;color:var(--gold);font-family:var(--font-mono);margin-top:4px">${r.topRecord.max_weight} kg</div>
-        <div style="font-size:.78rem;color:var(--chalk-dim);margin-top:2px">le ${esc(date)}</div>`;
+        <div style="font-size:.78rem;color:var(--chalk-dim);margin-top:2px">${r.topRecord.achieved_today ? "Nouveau record aujourd'hui !" : `le ${esc(date)}`}</div>`;
     } else {
       recordEl.innerHTML = `<p class="muted" style="font-size:.88rem">Logge une séance pour débloquer tes records.</p>`;
     }
@@ -283,25 +285,19 @@ async function loadNextSession() {
     const totalSessions = Number(streakRes.totalSessions) || 0;
     const next = findNextProgramDay(days, trainedToday) || days[totalSessions % days.length];
     const exList = (next.exercises || []).slice(0, 4).map(e =>
-      `<div class="next-ex-row"><span>${esc(e.name)}</span><span class="mono" style="font-size:.78rem;color:var(--chalk-dim)">${e.sets}×${e.reps}</span></div>`
+      `<div class="next-ex-row"><span><span class="next-ex-dot" style="background:${getMuscleStyle(e.muscle_group || next.focus).color}"></span>${esc(e.name)}</span><span class="mono" style="font-size:.78rem;color:var(--chalk-dim)">${e.sets}×${e.reps}</span></div>`
     ).join("");
 
     el.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
-        <div>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <div style="font-family:var(--font-display);text-transform:uppercase;letter-spacing:.04em;font-size:1rem">${esc(next.day)}</div>
-            ${muscleBadgeHtml(next.focus)}
-          </div>
-          <div style="font-size:.82rem;color:var(--chalk-dim);margin:3px 0 12px">${esc(next.focus||"")}</div>
-          ${exList}
-          ${(next.exercises||[]).length > 4 ? `<div style="font-size:.75rem;color:var(--chalk-dim);margin-top:4px">+${(next.exercises.length-4)} autres exercices</div>` : ""}
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-          <a class="btn btn-primary" href="/session.html">▶ C'est parti !</a>
-          ${lowForm ? `<span style="font-size:.72rem;color:var(--gold)">(intensité réduite recommandée)</span>` : ""}
-        </div>
-      </div>`;
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="font-family:var(--font-display);font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:1.15rem">${esc(next.day)}</div>
+        ${muscleBadgeHtml(next.focus)}
+      </div>
+      <div style="font-size:.82rem;color:var(--chalk-dim);margin:3px 0 12px">${esc(next.focus||"")}</div>
+      ${exList}
+      ${(next.exercises||[]).length > 4 ? `<div style="font-size:.75rem;color:var(--chalk-dim);margin-top:4px">+${(next.exercises.length-4)} autres exercices</div>` : ""}
+      ${lowForm ? `<div style="font-size:.72rem;color:var(--gold);margin-top:10px">(intensité réduite recommandée)</div>` : ""}
+      <a class="btn btn-primary btn-block" href="/session.html" style="margin-top:14px">C'est parti ! ▶</a>`;
   } catch { el.innerHTML = `<p class="muted" style="font-size:.88rem">Impossible de charger.</p>`; }
 }
 

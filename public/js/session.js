@@ -55,6 +55,16 @@ async function init() {
   (recent || []).forEach(r => { recentLogs[r.exercise_name] = r; });
 
   buildDayPicker();
+
+  // Lien direct depuis une card de jour du dashboard (?day=<index>) : demarre
+  // directement ce jour sans repasser par l'etape de choix.
+  const dayParam = parseInt(new URLSearchParams(window.location.search).get("day"), 10);
+  if (Number.isInteger(dayParam) && program.content.days?.[dayParam]) {
+    selectedDay = program.content.days[dayParam];
+    startWarmup();
+    return;
+  }
+
   document.getElementById("step-pick").classList.remove("hidden");
 }
 
@@ -290,8 +300,14 @@ function updateSessionProgress() {
 
   const label = document.getElementById("session-progress-label");
   const fill = document.getElementById("session-progress-fill");
-  if (label) label.textContent = `${doneCount}/${cards.length} exercices complétés`;
-  if (fill) fill.style.width = `${cards.length ? (doneCount / cards.length) * 100 : 0}%`;
+  const currentIndex = Math.min(doneCount + 1, cards.length);
+  const pct = cards.length ? (doneCount / cards.length) * 100 : 0;
+  if (label) label.textContent = `Exercice ${currentIndex}/${cards.length} — Séance ${selectedDay?.focus || ""}`;
+  if (fill) {
+    fill.style.width = `${pct}%`;
+    fill.classList.toggle("progress-mid", pct >= 40 && pct < 80);
+    fill.classList.toggle("progress-high", pct >= 80);
+  }
 }
 
 // ── Mode Focus (fonctionnalité 3.8) ───────────────────────
@@ -357,10 +373,19 @@ function startRestTimer(seconds) {
   const overlay = document.createElement("div");
   overlay.className = "rest-timer-overlay";
   overlay.id = "rest-overlay";
+  const RING_R = 46;
+  const RING_CIRC = 2 * Math.PI * RING_R;
   overlay.innerHTML = `
     <div>
       <div class="rest-label">Repos</div>
-      <div class="rest-count" id="rest-count">${seconds}</div>
+      <div class="rest-ring-wrap">
+        <svg class="rest-ring" viewBox="0 0 100 100">
+          <circle class="rest-ring-bg" cx="50" cy="50" r="${RING_R}"></circle>
+          <circle class="rest-ring-fg" id="rest-ring-fg" cx="50" cy="50" r="${RING_R}"
+            stroke-dasharray="${RING_CIRC}" stroke-dashoffset="0"></circle>
+        </svg>
+        <div class="rest-ring-center"><div class="rest-count" id="rest-count">${seconds}</div></div>
+      </div>
     </div>
     <div>
       <div style="font-size:.75rem;color:var(--chalk-dim);margin-bottom:6px">Prochaine série</div>
@@ -368,11 +393,22 @@ function startRestTimer(seconds) {
     </div>`;
   document.body.appendChild(overlay);
 
+  // Vidage fluide de l'anneau sur toute la duree du repos (une seule
+  // transition CSS plutot qu'une mise a jour manuelle a chaque tick).
+  const ring = document.getElementById("rest-ring-fg");
+  ring.style.transition = `stroke-dashoffset ${seconds}s linear`;
+  requestAnimationFrame(() => { ring.style.strokeDashoffset = `${RING_CIRC}`; });
+
   let remaining = seconds;
   restTimerInterval = setInterval(() => {
     remaining--;
     const el = document.getElementById("rest-count");
     if (el) el.textContent = remaining;
+
+    // Vert -> orange -> rouge selon le temps restant (pas juste a la toute fin).
+    const ratio = remaining / seconds;
+    overlay.classList.toggle("rest-warn", ratio <= 0.5 && ratio > 0.2);
+    overlay.classList.toggle("rest-danger", ratio <= 0.2);
 
     if (remaining <= 0) {
       clearInterval(restTimerInterval);

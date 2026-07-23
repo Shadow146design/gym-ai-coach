@@ -141,12 +141,14 @@ router.get("/records", async (req, res) => {
     // calls cannot be nested") car un agregat ne peut pas en contenir un autre.
     // Le calcul doit se faire par ligne (weight * (1 + reps/30)) puis etre agrege.
     const r = await pool.query(
-      `SELECT exercise_name, MAX(weight) AS max_weight,
-              MAX(weight * (1 + reps::float/30)) AS estimated_1rm
+      `SELECT DISTINCT ON (exercise_name)
+              exercise_name, weight AS max_weight, performed_at AS achieved_at,
+              weight * (1 + reps::float/30) AS estimated_1rm
        FROM logs WHERE user_id=$1
-       GROUP BY exercise_name ORDER BY max_weight DESC`,
+       ORDER BY exercise_name, weight DESC, performed_at DESC`,
       [req.session.userId]
     );
+    r.rows.sort((a, b) => b.max_weight - a.max_weight);
     res.json({ records: r.rows });
   } catch (err) { res.status(500).json({ error: "Erreur serveur." }); }
 });
@@ -269,14 +271,20 @@ router.get("/streak", async (req, res) => {
 router.get("/summary", async (req, res) => {
   try {
     const uid = req.session.userId;
-    const [lastRes, recordRes, streakRes] = await Promise.all([
+    const [lastRes, lastVolumeRes, recordRes, streakRes] = await Promise.all([
       pool.query(
         `SELECT performed_at::date AS day, COUNT(DISTINCT exercise_name) AS exercises
          FROM logs WHERE user_id=$1 GROUP BY day ORDER BY day DESC LIMIT 1`,
         [uid]
       ),
       pool.query(
-        `SELECT exercise_name, MAX(weight) AS max_weight, MAX(performed_at) AS achieved_at
+        `SELECT SUM(weight*reps*sets) AS volume FROM logs WHERE user_id=$1
+         AND performed_at::date = (SELECT MAX(performed_at::date) FROM logs WHERE user_id=$1)`,
+        [uid]
+      ),
+      pool.query(
+        `SELECT exercise_name, MAX(weight) AS max_weight, MAX(performed_at) AS achieved_at,
+                (MAX(performed_at)::date = CURRENT_DATE) AS achieved_today
          FROM logs WHERE user_id=$1 GROUP BY exercise_name ORDER BY max_weight DESC LIMIT 1`,
         [uid]
       ),
@@ -300,7 +308,7 @@ router.get("/summary", async (req, res) => {
     }
 
     res.json({
-      lastSession: lastRes.rows[0] || null,
+      lastSession: lastRes.rows[0] ? { ...lastRes.rows[0], volume: Number(lastVolumeRes.rows[0]?.volume) || 0 } : null,
       topRecord: recordRes.rows[0] || null,
       streak,
     });
@@ -370,6 +378,9 @@ router.get("/dashboard-stats", async (req, res) => {
       "SELECT COUNT(DISTINCT performed_at::date) AS total FROM logs WHERE user_id=$1",
       [uid]
     );
+    const totalVolumeRes = await pool.query(
+      "SELECT SUM(weight*reps*sets) AS volume FROM logs WHERE user_id=$1", [uid]
+    );
     const lastRes = await pool.query(
       "SELECT MAX(performed_at) AS last FROM logs WHERE user_id=$1", [uid]
     );
@@ -423,6 +434,7 @@ router.get("/dashboard-stats", async (req, res) => {
 
     res.json({
       totalSessions: parseInt(sessRes.rows[0].total)||0,
+      totalVolume: Number(totalVolumeRes.rows[0]?.volume) || 0,
       lastSessionDate: lastRes.rows[0].last||null,
       weeklyFrequency, targetPerWeek, completionRate,
       avgSessionMinutes: null,

@@ -65,6 +65,26 @@
   /* Timing */
   --ease:      cubic-bezier(.16,1,.3,1);
   --ease-snap: cubic-bezier(.34,1.56,.64,1);
+
+  /* Alias design system 2025 (refonte visuelle) — pontent les noms de variables
+     "grand public" (bg-base, text-primary, radius-sm...) vers les valeurs du
+     design system existant, sans renommer les usages historiques ci-dessus. */
+  --bg-base:        var(--bg);
+  --bg-card-hover:  var(--bg-hover);
+  --bg-elevated:    #1c1c1c;
+  --bg-input:       #141414;
+  --rust-light:     var(--rust-soft);
+  --blue:           var(--steel);
+  --blue-bg:        rgba(79,122,138,.1);
+  --text-primary:   var(--chalk);
+  --text-secondary: var(--chalk-dim);
+  --text-muted:     var(--chalk-faint);
+  --border-hover:   var(--border-strong);
+  --border-focus:   rgba(201,77,40,.6);
+  --radius-sm:      8px;
+  --radius-md:      var(--radius);
+  --shadow-md:      var(--shadow-sm);
+  --shadow-rust:    0 4px 20px rgba(201,77,40,.2);
 }
 
 /* ——— Reset & base ——— */
@@ -357,11 +377,35 @@ select option { background: var(--bg-card-solid); }
 }
 .exercise-row .ex-meta span { display: block; font-size: .65rem; color: var(--chalk-dim); font-weight: 400; margin-top: 1px; }
 .day-card summary .day-label { display: inline-flex; align-items: center; gap: 6px; }
+.day-card-start-btn { margin: 14px 22px 18px; width: calc(100% - 44px); }
+
+.coach-card-avatar {
+  width: 80px; height: 80px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  background: var(--rust-bg); display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; margin-bottom: 4px;
+}
+.coach-card-bio {
+  font-size: .87rem; color: var(--chalk-dim); margin: 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.coach-alex-avatar {
+  width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+  background: var(--grad-rust); display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; box-shadow: var(--glow-rust);
+}
 .exercise-row .ex-notes { grid-column: 1 / -1; color: var(--chalk-dim); font-size: .8rem; margin-top: -2px; }
 .exercise-row.just-updated { background: rgba(61,168,116,.14); transition: background 3s ease; }
 
 /* Supersets (module H.1) */
-.superset-block { border-top: 1px solid var(--border-soft); padding: 10px 22px 14px; background: rgba(201,77,40,.04); }
+.superset-block {
+  border-top: 1px solid var(--border-soft); padding: 10px 22px 14px 30px; background: rgba(201,77,40,.04);
+  position: relative;
+}
+.superset-block::before {
+  content: ""; position: absolute; left: 22px; top: 14px; bottom: 16px; width: 3px;
+  border-radius: 2px; background: var(--grad-rust, var(--rust));
+}
 .superset-label { font-size: .68rem; font-weight: 700; letter-spacing: .06em; color: var(--rust-soft); text-transform: uppercase; margin-bottom: 4px; }
 .superset-block .exercise-row { border-top: none; padding: 6px 0; }
 .superset-plus { text-align: center; color: var(--chalk-dim); font-size: .8rem; padding: 2px 0; }
@@ -420,13 +464,19 @@ select option { background: var(--bg-card-solid); }
   transform: scale(1.015);
 }
 .session-exercise-card.active-exercise .session-exercise-header { background: var(--rust-bg); }
+.session-exercise-card.active-exercise .session-exercise-header h3 { font-size: 1.5rem; }
 .session-exercise-card.exercise-done { opacity: .55; }
 .session-exercise-card.exercise-done .session-exercise-header { background: var(--green-bg); }
 .session-exercise-card { transition: opacity .25s var(--ease), transform .25s var(--ease), box-shadow .25s var(--ease); }
 
 .session-progress-wrap { margin-bottom: 18px; }
 .session-progress-bar { height: 8px; border-radius: 20px; background: var(--bg-hover); overflow: hidden; }
-.session-progress-fill { height: 100%; background: var(--grad-rust); border-radius: 20px; transition: width .3s var(--ease); width: 0; }
+.session-progress-fill {
+  height: 100%; background: var(--grad-rust); border-radius: 20px;
+  transition: width .3s var(--ease), background .3s var(--ease); width: 0;
+}
+.session-progress-fill.progress-mid { background: var(--gold); }
+.session-progress-fill.progress-high { background: var(--green); }
 .session-progress-label { font-size: .75rem; color: var(--chalk-dim); margin-top: 6px; text-align: right; }
 
 .delta-badge {
@@ -501,6 +551,7 @@ select option { background: var(--bg-card-solid); }
 .record-tile:hover { transform: translateY(-2px); }
 .record-tile .rec-ex { font-size: .75rem; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 4px; }
 .record-tile .rec-val { font-family: var(--font-mono); font-size: 1.5rem; color: var(--gold); }
+.record-tile .rec-date { font-size: .68rem; color: var(--chalk-dim); margin-top: 2px; }
 .record-tile .rec-medal { position: absolute; top: 10px; right: 12px; font-size: 1.2rem; }
 .record-tile.record-tile-medal { position: relative; padding-right: 40px; }
 .record-tile-rank1 { border-left-color: #e8b33d; box-shadow: var(--shadow-sm), 0 0 16px rgba(232,179,61,.15); }
@@ -942,7 +993,14 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
 .cal-cell.cal-done .cal-num {
   background: var(--rust); color: #fff; font-weight: 600; box-shadow: var(--glow-rust);
 }
-.cal-cell.cal-today-pending .cal-num { border: 2px solid var(--rust); color: var(--rust-soft); font-weight: 600; }
+.cal-cell.cal-today-pending .cal-num {
+  border: 2px solid var(--rust); color: var(--rust-soft); font-weight: 600;
+  animation: cal-today-pulse 2s ease-in-out infinite;
+}
+@keyframes cal-today-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201,77,40,.35); }
+  50%      { box-shadow: 0 0 0 5px rgba(201,77,40,0); }
+}
 .cal-cell.cal-today-done .cal-num {
   background: var(--green); color: #fff; font-weight: 600; box-shadow: var(--glow-green);
 }
@@ -992,11 +1050,18 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
   from { transform: translateY(80px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
 }
+.rest-ring-wrap { position: relative; width: 64px; height: 64px; }
+.rest-ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+.rest-ring-bg { fill: none; stroke: var(--border-strong); stroke-width: 7; }
+.rest-ring-fg {
+  fill: none; stroke: var(--green); stroke-width: 7; stroke-linecap: round;
+  transition: stroke .3s var(--ease);
+}
+.rest-ring-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
 .rest-timer-overlay .rest-count {
   font-family: var(--font-mono);
-  font-size: 1.8rem;
-  color: var(--rust-soft);
-  min-width: 60px;
+  font-size: 1.1rem;
+  color: var(--chalk);
   text-align: center;
 }
 .rest-timer-overlay .rest-label {
@@ -1004,6 +1069,7 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
   color: var(--chalk-dim);
   text-transform: uppercase;
   letter-spacing: .05em;
+  margin-bottom: 6px;
 }
 .rest-timer-overlay .rest-skip {
   font-size: .75rem;
@@ -1011,8 +1077,14 @@ footer { text-align: center; color: var(--chalk-dim); font-size: .75rem; padding
   cursor: pointer;
   text-decoration: underline;
 }
+/* Vert -> orange -> rouge selon le temps restant */
+.rest-timer-overlay.rest-warn .rest-ring-fg { stroke: var(--gold); }
+.rest-timer-overlay.rest-warn .rest-count { color: var(--gold); }
+.rest-timer-overlay.rest-danger .rest-ring-fg { stroke: var(--red); }
+.rest-timer-overlay.rest-danger .rest-count { color: var(--red); }
 .rest-timer-overlay.done { border-color: var(--green); box-shadow: var(--shadow-lg), var(--glow-green); }
-.rest-timer-overlay.done .rest-count { color: var(--green); }
+.rest-timer-overlay.done .rest-count { color: var(--green); font-size: 1.4rem; }
+.rest-timer-overlay.done .rest-ring-fg { stroke: var(--green); }
 
 /* =========================================================
    CONFETTI (records battus, fonctionnalité 3.9)
@@ -1072,8 +1144,9 @@ body.focus-mode .rest-timer-overlay {
   flex-direction: column; justify-content: center; gap: 24px; z-index: 500;
   background: var(--bg);
 }
-body.focus-mode .rest-timer-overlay .rest-count { font-size: 6rem; min-width: auto; }
-body.focus-mode .rest-timer-overlay .rest-label { font-size: 1.1rem; }
+body.focus-mode .rest-ring-wrap { width: 260px; height: 260px; }
+body.focus-mode .rest-timer-overlay .rest-count { font-size: 4.5rem; min-width: auto; }
+body.focus-mode .rest-timer-overlay .rest-label { font-size: 1.1rem; text-align: center; }
 body.focus-mode .rest-timer-overlay .rest-skip { font-size: 1rem; margin-top: 10px; }
 
 /* =========================================================
@@ -1150,6 +1223,18 @@ body.focus-mode .rest-timer-overlay .rest-skip { font-size: 1rem; margin-top: 10
   from { transform: rotate(-150deg); opacity: 0; }
   to   { transform: rotate(-90deg); opacity: 1; }
 }
+.streak-ring-wrap::after {
+  content: ""; position: absolute; inset: -6px; border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(201,77,40,.25);
+  animation: streak-ring-pulse 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes streak-ring-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201,77,40,.22); }
+  50%      { box-shadow: 0 0 0 8px rgba(201,77,40,0); }
+}
+.record-medal-pulse { display: inline-block; animation: record-medal-pulse 1.4s ease-in-out infinite; }
+@keyframes record-medal-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.22); } }
 .streak-ring-center {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
 }
@@ -1220,11 +1305,14 @@ body.focus-mode .rest-timer-overlay .rest-skip { font-size: 1rem; margin-top: 10
 .next-ex-row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 7px 0;
   border-bottom: 1px solid var(--border-soft);
   font-size: .88rem;
 }
+.next-ex-row > span:first-child { display: inline-flex; align-items: center; }
 .next-ex-row:last-child { border: none; }
+.next-ex-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
 
 /* Records */
 .home-record-row {
@@ -1813,12 +1901,12 @@ body.focus-mode .rest-timer-overlay .rest-skip { font-size: 1rem; margin-top: 10
 .sidebar-item .icon { width: 18px; text-align: center; flex-shrink: 0; font-size: .92rem; }
 .sidebar-item .sidebar-msg-badge {
   margin-left: auto;
-  background: var(--grad-rust); color: #fff;
+  background: var(--red); color: #fff;
   font-family: var(--font-mono); font-size: .68rem; font-weight: 600;
   min-width: 18px; height: 18px; padding: 0 5px;
-  border-radius: 9px;
+  border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: var(--glow-rust);
+  box-shadow: 0 0 8px rgba(217,64,64,.4);
 }
 .sidebar-cta {
   background: var(--grad-rust); color: #fff;
@@ -1869,6 +1957,17 @@ body.focus-mode .rest-timer-overlay .rest-skip { font-size: 1rem; margin-top: 10
 .badge-coach   { background: rgba(79,122,138,.18); color: var(--steel-soft); }
 .badge-admin   { background: var(--rust-bg); color: var(--rust-soft); }
 .badge-free    { background: var(--bg-hover); color: var(--chalk-dim); }
+
+/* Badge generique reutilisable (refonte visuelle 2025) */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: .72rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+}
+.badge.badge-rust  { background: var(--rust-bg); color: var(--rust-light); }
+.badge.badge-gold  { background: var(--gold-bg); color: var(--gold); }
+.badge.badge-green { background: var(--green-bg); color: var(--green); }
+.badge.badge-blue  { background: var(--blue-bg); color: var(--blue); }
 .sidebar-logout {
   color: var(--chalk-dim); font-size: 1.15rem; flex-shrink: 0;
   width: 30px; height: 30px; border-radius: var(--radius);
