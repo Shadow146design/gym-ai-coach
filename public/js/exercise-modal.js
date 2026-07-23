@@ -125,6 +125,7 @@ function openExerciseModal(name, muscleGroupHint, notesHint) {
   // silhouette generique du groupe musculaire si aucun mouvement ne matche.
   const anim = typeof matchExerciseAnimation === "function" ? matchExerciseAnimation(lookupName) : null;
   const media = anim || bodySilhouetteSvg(svgCfg.view, svgCfg.regions);
+  const mediaFallbackNote = anim ? "" : `<p class="exercise-modal-media-note muted">Démonstration non disponible</p>`;
   const canAddToSession = typeof window.addExerciseToSession === "function";
 
   // Badges colorés : muscle principal (accent) + muscles secondaires (neutres).
@@ -140,6 +141,7 @@ function openExerciseModal(name, muscleGroupHint, notesHint) {
     <div class="modal-card exercise-modal-card">
       <button class="modal-close" type="button" id="exercise-modal-close">✕</button>
       <div class="exercise-modal-media" id="exercise-modal-media">${media}</div>
+      ${mediaFallbackNote}
       <div class="exercise-modal-body">
         <h2>${escExMod(name)}</h2>
         ${muscleBadges ? `<div class="exercise-muscle-badges">${muscleBadges}</div>` : ""}
@@ -149,6 +151,17 @@ function openExerciseModal(name, muscleGroupHint, notesHint) {
       </div>
     </div>`;
   document.body.appendChild(overlay);
+
+  // Certains navigateurs ne démarrent pas les animations CSS d'un SVG injecté
+  // dynamiquement tant qu'aucun reflow n'a eu lieu : on force ce reflow.
+  if (anim) {
+    document.getElementById("exercise-modal-media")?.querySelectorAll("[class]").forEach(el => {
+      const prev = el.style.animation;
+      el.style.animation = "none";
+      void el.offsetHeight;
+      el.style.animation = prev;
+    });
+  }
 
   const close = () => overlay.remove();
   document.getElementById("exercise-modal-close").addEventListener("click", close);
