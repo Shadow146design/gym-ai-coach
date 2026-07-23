@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+Allow: /premium.html
+Allow: /coaches.html
+Allow: /cgu.html
+Allow: /privacy.html
+Allow: /contact.html
+Disallow: /api/
+Disallow: /auth/
+Disallow: /admin.html
+Disallow: /dashboard.html
+Disallow: /session.html
+Disallow: /profile.html
+Disallow: /settings.html
+Disallow: /messages.html
+Disallow: /history.html
+Disallow: /stats.html
+Disallow: /questionnaire.html
+Disallow: /onboarding.html
+Disallow: /coach-dashboard.html
+Disallow: /coach-client.html
+Disallow: /u/
+
+Sitemap: https://gym-ai-coach-1wls.onrender.com/sitemap.xml
