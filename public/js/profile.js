@@ -321,11 +321,16 @@ function renderWeightChart(logs, targetWeight) {
   const labels = logs.map(l => new Date(l.measured_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }));
   const weights = logs.map(l => Number(l.weight_kg));
 
+  const ctx = canvas.getContext("2d");
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.clientHeight || 240);
+  gradient.addColorStop(0, "rgba(122,168,184,.35)");
+  gradient.addColorStop(1, "rgba(122,168,184,0)");
+
   const datasets = [{
     label: "Poids (kg)",
     data: weights,
     borderColor: "#7aa8b8",
-    backgroundColor: "rgba(122,168,184,.15)",
+    backgroundColor: gradient,
     pointBackgroundColor: "#e8b33d",
     pointBorderColor: "#e8b33d",
     pointRadius: 4,

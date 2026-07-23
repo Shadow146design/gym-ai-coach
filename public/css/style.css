@@ -2805,19 +2805,29 @@ body.landing { overflow-x: hidden; }
 .review-star:hover, .review-star.active { color: var(--gold); }
 
 /* Photos de progression (fonctionnalite 9) */
-.photos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+.photos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 480px) { .photos-grid { grid-template-columns: repeat(2, 1fr); } }
 .photo-tile { position: relative; border-radius: var(--radius-md); overflow: hidden; background: var(--bg-hover); border: 1px solid var(--border); }
 .photo-tile img { width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block; }
 .photo-tile-meta {
+  position: absolute; left: 0; right: 0; bottom: 0;
   display: flex; justify-content: space-between; align-items: center;
-  padding: 6px 8px; font-size: .7rem; color: var(--chalk-dim);
+  padding: 16px 8px 6px; font-size: .7rem; color: #fff;
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,.75));
+  opacity: 0; transition: opacity .18s var(--ease);
 }
+.photo-tile:hover .photo-tile-meta, .photo-tile:focus-within .photo-tile-meta { opacity: 1; }
 .photo-tile-delete {
-  background: none; border: none; color: var(--chalk-dim); cursor: pointer;
+  background: none; border: none; color: #fff; cursor: pointer;
   font-size: .8rem; padding: 2px 4px; line-height: 1; transition: color .15s;
 }
 .photo-tile-delete:hover { color: var(--red); }
-.photo-tile-caption { padding: 0 8px 8px; font-size: .78rem; color: var(--chalk-dim); }
+.photo-tile-caption {
+  position: absolute; top: 0; left: 0; right: 0; padding: 6px 8px; font-size: .78rem; color: #fff;
+  background: linear-gradient(180deg, rgba(0,0,0,.65), transparent);
+  opacity: 0; transition: opacity .18s var(--ease);
+}
+.photo-tile:hover .photo-tile-caption, .photo-tile:focus-within .photo-tile-caption { opacity: 1; }
 
 /* Periodisation 12 semaines (fonctionnalite 10) */
 .periodization-toggle-row {
