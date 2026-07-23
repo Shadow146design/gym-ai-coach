@@ -123,7 +123,9 @@ function openExerciseModal(name, muscleGroupHint, notesHint) {
   const svgCfg = MUSCLE_SVG_REGIONS[muscleGroup.toLowerCase().trim()] || { view: "front", regions: [] };
   // Pictogramme anime (exercise-animations.js) prioritaire ; repli sur la
   // silhouette generique du groupe musculaire si aucun mouvement ne matche.
-  const anim = typeof matchExerciseAnimation === "function" ? matchExerciseAnimation(lookupName) : null;
+  console.log("EXERCISE NAME:", lookupName, "(nom brut :", name, ", muscle_group :", muscleGroup, ")");
+  const anim = typeof matchExerciseAnimation === "function" ? matchExerciseAnimation(lookupName, muscleGroup) : null;
+  console.log("ANIMATION FOUND:", !!anim);
   const media = anim || bodySilhouetteSvg(svgCfg.view, svgCfg.regions);
   const mediaFallbackNote = anim ? "" : `<p class="exercise-modal-media-note muted">Démonstration non disponible</p>`;
   const canAddToSession = typeof window.addExerciseToSession === "function";

@@ -417,13 +417,36 @@ const ANIMATION_MATCH_RULES = [
   { key: "planche", test: n => n.includes("planche") },
 ];
 
+// Dernier recours (BUG 2 du 2026-07-23) : si aucune regle specifique
+// ci-dessus ne matche (nom d'exercice trop inhabituel/genere par l'IA),
+// rattache au moins l'animation du bon groupe musculaire plutot que de
+// renvoyer aucune animation. Evaluees dans l'ordre, sur le nom ET le
+// groupe musculaire combines.
+const FALLBACK_MATCH_RULES = [
+  { key: "élévations latérales", test: n => n.includes("epaul") || n.includes("shoulder") },
+  { key: "rowing barre", test: n => n.includes("dos") || n.includes("back") || n.includes("tirage") || n.includes("rowing") },
+  { key: "développé couché", test: n => n.includes("pec") || n.includes("poitrine") || n.includes("chest") || n.includes("couche") },
+  { key: "squat", test: n => n.includes("jamb") || n.includes("cuiss") || n.includes("quad") || n.includes("leg") || n.includes("squat") || n.includes("press") },
+  { key: "curl barre", test: n => n.includes("bras") || n.includes("bicep") || n.includes("curl") },
+  { key: "extension triceps", test: n => n.includes("tricep") || n.includes("extension") || n.includes("pushdown") },
+  { key: "hip thrust", test: n => n.includes("fessier") || n.includes("glute") || n.includes("hip") || n.includes("fente") },
+  { key: "mollets", test: n => n.includes("mollet") || n.includes("calf") },
+  { key: "crunch", test: n => n.includes("abdo") || n.includes("crunch") || n.includes("planche") || n.includes("releve") },
+];
+
 // Retourne le SVG animé (chaîne HTML) correspondant au nom d'exercice, ou
 // null si aucune animation n'est disponible (repli sur la silhouette
-// générique côté exercise-modal.js).
-function matchExerciseAnimation(name) {
+// générique côté exercise-modal.js). muscleGroup (optionnel) alimente
+// uniquement le dernier recours, quand le nom seul ne suffit pas.
+function matchExerciseAnimation(name, muscleGroup) {
   const n = stripAccentsForAnim(String(name || "").toLowerCase().trim());
   for (const rule of ANIMATION_MATCH_RULES) {
     if (rule.test(n)) return EXERCISE_ANIMATIONS[rule.key] || null;
+  }
+
+  const combined = stripAccentsForAnim(`${name || ""} ${muscleGroup || ""}`.toLowerCase().trim());
+  for (const rule of FALLBACK_MATCH_RULES) {
+    if (rule.test(combined)) return EXERCISE_ANIMATIONS[rule.key] || null;
   }
   return null;
 }

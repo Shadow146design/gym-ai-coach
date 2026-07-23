@@ -137,14 +137,36 @@ router.post("/", checkChatLimit, async (req, res) => {
     // programme reste intact et l'utilisateur est prevenu.
     if (result.programUpdated && programRow) {
       console.log("PROGRAMME GÉNÉRÉ:", JSON.stringify(result.newProgram, null, 2));
+
+      // TEMPORAIRE (diagnostic BUG 1 du 2026-07-23) : on tente validateProgram()
+      // et on logge le resultat, mais on NE bloque PLUS la sauvegarde si elle
+      // echoue, le temps de confirmer par les logs Render si c'est bien elle
+      // la cause du blocage. A RETIRER (restaurer le blocage sur echec) des
+      // que la cause reelle est confirmee.
+      let validationOk = true;
+      let validationErrorMsg = null;
       try {
         validateProgram(result.newProgram);
+      } catch (validationError) {
+        validationOk = false;
+        validationErrorMsg = validationError.message;
+        console.log("ERREUR VALIDATION:", validationError.message, validationError.stack);
+      }
+      console.log("[chat] validateProgram résultat :", validationOk ? "OK" : `ÉCHEC (${validationErrorMsg}) — sauvegarde forcée quand même (mode diagnostic)`);
+
+      console.log("SAVING PROGRAM:", JSON.stringify(result.newProgram?.days?.length), "jours");
+      console.log("FIRST DAY:", JSON.stringify(result.newProgram?.days?.[0]));
+
+      try {
         await pool.query("UPDATE programs SET content=$1 WHERE id=$2", [JSON.stringify(result.newProgram), programRow.id]);
         const desc = result.changes?.length ? result.changes.join("; ") : "Programme modifié via le chat coach.";
         logProgramChange(req.session.userId, programRow.id, "chat", desc, programRow.content);
-        console.log("[chat] programme sauvegardé avec succès pour l'utilisateur", req.session.userId);
-      } catch (validationError) {
-        console.log("ERREUR VALIDATION:", validationError.message, validationError.stack);
+        console.log("[chat] programme sauvegardé avec succès pour l'utilisateur", req.session.userId, validationOk ? "" : "(⚠️ SANS validation — mode diagnostic)");
+        if (!validationOk) {
+          result.reply = `${result.reply} ⚠️ (mode diagnostic : sauvegardé sans validation, erreur de validation ignorée : ${validationErrorMsg})`;
+        }
+      } catch (saveError) {
+        console.error("[chat] ERREUR SAUVEGARDE BASE :", saveError.message, saveError.stack);
         result.programUpdated = false;
         result.newProgram = null;
         result.changes = [];

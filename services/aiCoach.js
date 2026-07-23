@@ -567,6 +567,7 @@ async function chatWithCoach(history, ctx = {}) {
   const contextBlock = buildChatContext(ctx);
   const lastUserMsg = [...history].reverse().find(m => m.role === "user")?.content || "";
   const wantsModification = ctx.program && detectsModifyIntent(lastUserMsg);
+  console.log("detectModifyIntent:", { lastUserMsg, hasProgram: !!ctx.program, wantsModification });
 
   if (!wantsModification) {
     const response = await fetch(GROQ_URL, {
