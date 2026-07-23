@@ -123,24 +123,35 @@ router.post("/", checkChatLimit, async (req, res) => {
 
     const result = await chatWithCoach(history, context);
 
+    console.log("[chat] résultat chatWithCoach :", {
+      programUpdated: result.programUpdated,
+      hasProgramRow: !!programRow,
+      hasNewProgram: !!result.newProgram,
+      daysCount: result.newProgram?.days?.length || 0,
+      changes: result.changes,
+    });
+
     // Anti-corruption (voir services/aiCoach.js validateProgram) : on ne
     // touche JAMAIS au programme actuel en base tant que le nouveau n'a pas
     // ete valide structurellement. Si la validation echoue, l'ancien
     // programme reste intact et l'utilisateur est prevenu.
     if (result.programUpdated && programRow) {
+      console.log("PROGRAMME GÉNÉRÉ:", JSON.stringify(result.newProgram, null, 2));
       try {
         validateProgram(result.newProgram);
         await pool.query("UPDATE programs SET content=$1 WHERE id=$2", [JSON.stringify(result.newProgram), programRow.id]);
         const desc = result.changes?.length ? result.changes.join("; ") : "Programme modifié via le chat coach.";
         logProgramChange(req.session.userId, programRow.id, "chat", desc, programRow.content);
+        console.log("[chat] programme sauvegardé avec succès pour l'utilisateur", req.session.userId);
       } catch (validationError) {
-        console.error("Programme invalide refusé (anti-corruption) :", validationError.message);
-        console.error("[chat] newProgram rejeté :", JSON.stringify(result.newProgram, null, 2));
+        console.log("ERREUR VALIDATION:", validationError.message, validationError.stack);
         result.programUpdated = false;
         result.newProgram = null;
         result.changes = [];
         result.reply = `${result.reply} ⚠️ La modification n'a pas pu être appliquée en toute sécurité, ton programme actuel n'a pas été changé.`;
       }
+    } else if (!result.programUpdated) {
+      console.log("[chat] aucune modification détectée par l'IA (programUpdated=false) — programme non touché. Réponse :", result.reply);
     }
 
     res.json(result);

@@ -113,9 +113,30 @@ function closeVoiceAssistant() {
   vaOverlay.classList.remove("open");
 }
 
+// iOS Safari n'autorise speechSynthesis.speak() qu'a l'interieur d'un geste
+// utilisateur direct : les reponses de l'IA arrivent plus tard, apres un
+// aller-retour reseau asynchrone, donc hors de tout geste. Le contournement
+// standard est de "debloquer" le moteur en synthese avec un utterance vide
+// prononce de facon synchrone DANS le handler de clic (ici) — les appels
+// speak() suivants, meme asynchrones, restent alors autorises pour le reste
+// de la session.
+function vaUnlockSpeechSynthesisIOS() {
+  const synth = window.speechSynthesis;
+  if (!synth) return;
+  const warmup = new SpeechSynthesisUtterance("");
+  warmup.volume = 0;
+  synth.speak(warmup);
+}
+
 function openVoiceAssistant(sendFn) {
   console.log("openVoiceAssistant() appelé");
   if (vaActive || typeof sendFn !== "function") return;
+
+  const isIOS = isIOSDeviceVoiceAssistant();
+
+  // La synthese doit etre debloquee DANS ce meme handler de clic, avant tout
+  // await/callback — sinon les reponses vocales de l'IA resteront muettes sur iOS.
+  if (isIOS) vaUnlockSpeechSynthesisIOS();
 
   // La bulle doit TOUJOURS s'ouvrir au clic, meme sur un navigateur qui ne
   // supporte pas SpeechRecognition : avant, on retournait ici avant meme
@@ -132,14 +153,9 @@ function openVoiceAssistant(sendFn) {
   vaSetReplyText("");
   vaOverlay.classList.add("open");
 
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
   if (!SpeechRecognition) {
-    vaSetState("paused", "Utilise Chrome pour le coach vocal (reconnaissance vocale non supportée par ce navigateur).");
-    return;
-  }
-
-  if (isIOSDeviceVoiceAssistant()) {
-    vaSetState("listening", "Dictée vocale peu fiable sur iOS. Utilise Chrome sur ordinateur ou Android.");
+    vaSetState("paused", "Le coach vocal nécessite Chrome sur Android ou Safari 14+ sur iOS.");
     return;
   }
 
@@ -147,7 +163,10 @@ function openVoiceAssistant(sendFn) {
     const lang = (window.i18n && window.i18n.getLang() === "en") ? "en-US" : "fr-FR";
     vaRecognition = new SpeechRecognition();
     vaRecognition.lang = lang;
-    vaRecognition.continuous = true;
+    // iOS ne supporte pas le mode continu (la reconnaissance s'arrete d'elle-meme
+    // apres chaque enonce) : on relance manuellement apres chaque reponse plutot
+    // que de compter sur un flux continu comme sur desktop/Android.
+    vaRecognition.continuous = !isIOS;
     vaRecognition.interimResults = true;
 
     vaRecognition.addEventListener("result", e => {
@@ -155,6 +174,7 @@ function openVoiceAssistant(sendFn) {
       for (let i = 0; i < e.results.length; i++) transcript += e.results[i][0].transcript;
       vaLiveTranscript = transcript;
       vaSetUserText(transcript);
+      if (isIOS) return; // continuous=false : "end" se declenche seul, pas besoin de timer de silence
       clearTimeout(vaSilenceTimer);
       vaSilenceTimer = setTimeout(() => { try { vaRecognition.stop(); } catch {} }, 2000);
     });
@@ -179,7 +199,17 @@ function openVoiceAssistant(sendFn) {
     });
   }
 
-  vaStartListening();
+  // Demande explicite de la permission micro avant de demarrer la
+  // reconnaissance (surtout utile sur iOS, plus strict sur le sujet) —
+  // recognition.start() la demanderait implicitement, mais un getUserMedia
+  // explicite en amont rend l'invite immediate et le refus plus clair a gerer.
+  if (isIOS && navigator.mediaDevices?.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => { stream.getTracks().forEach(t => t.stop()); vaStartListening(); })
+      .catch(() => vaSetState("listening", "Accès au micro refusé. Autorise le micro dans les paramètres du navigateur."));
+  } else {
+    vaStartListening();
+  }
 }
 
 window.openVoiceAssistant = openVoiceAssistant;

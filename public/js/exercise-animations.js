@@ -320,6 +320,60 @@ const EXERCISE_ANIMATIONS = {
         <polyline class="stick move" points="105,150 65,190 60,250"/>
       </g>
     </svg>`,
+
+  "mollets": `
+    <svg viewBox="0 0 160 280" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+      <style>${STICK_STYLE}
+        .mo-body { animation: mo-raise 2s ease-in-out infinite; transform-origin: 80px 255px; }
+        @keyframes mo-raise { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
+      </style>
+      <line class="ground" x1="35" y1="258" x2="125" y2="258"/>
+      <g class="mo-body">
+        <circle class="joint" cx="80" cy="35" r="15"/>
+        <line class="stick" x1="80" y1="54" x2="80" y2="155"/>
+        <line class="stick" x1="80" y1="155" x2="60" y2="255"/>
+        <line class="stick move" x1="80" y1="155" x2="100" y2="255"/>
+        <line class="stick move" x1="100" y1="255" x2="100" y2="240"/>
+      </g>
+    </svg>`,
+
+  "crunch": `
+    <svg viewBox="0 0 260 160" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+      <style>${STICK_STYLE}
+        .cr-down { animation: cr-fade-down 2s ease-in-out infinite; }
+        .cr-up { animation: cr-fade-up 2s ease-in-out infinite; }
+        @keyframes cr-fade-down { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes cr-fade-up { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+      </style>
+      <line class="ground" x1="20" y1="130" x2="240" y2="130"/>
+      <g class="cr-down">
+        <circle class="joint" cx="215" cy="115" r="14"/>
+        <line class="stick move" x1="202" y1="118" x2="120" y2="118"/>
+        <polyline class="stick" points="120,118 90,95 90,50"/>
+        <polyline class="stick" points="90,50 60,35 60,15"/>
+      </g>
+      <g class="cr-up">
+        <circle class="joint" cx="200" cy="80" r="14"/>
+        <line class="stick move" x1="190" y1="90" x2="120" y2="115"/>
+        <polyline class="stick" points="120,115 90,95 90,50"/>
+        <polyline class="stick" points="90,50 60,35 60,15"/>
+      </g>
+    </svg>`,
+
+  "planche": `
+    <svg viewBox="0 0 260 140" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+      <style>${STICK_STYLE}
+        .pl-hold { animation: pl-pulse 2s ease-in-out infinite; transform-origin: 150px 90px; }
+        @keyframes pl-pulse { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.04); } }
+      </style>
+      <line class="ground" x1="20" y1="128" x2="240" y2="128"/>
+      <line class="stick" x1="60" y1="128" x2="60" y2="105"/>
+      <line class="stick" x1="220" y1="90" x2="230" y2="128"/>
+      <g class="pl-hold">
+        <circle class="joint" cx="225" cy="72" r="13"/>
+        <line class="stick move" x1="213" y1="80" x2="60" y2="105"/>
+      </g>
+    </svg>`,
 };
 
 // Retire les diacritiques (meme logique que exercise-modal.js, dupliquee ici
@@ -331,23 +385,36 @@ function stripAccentsForAnim(s) {
 }
 
 // Regles de correspondance nom d'exercice -> cle d'animation, evaluees dans
-// l'ordre (premiere regle qui matche gagne).
+// l'ordre (premiere regle qui matche gagne). Classees du plus specifique au
+// plus general (ex: "leg extension"/"leg curl" AVANT "extension"/"curl"
+// generiques, sans quoi le mouvement jambes serait eclipse par le mouvement
+// bras) — BUG 2 du 2026-07-23 : plusieurs exercices tombaient sur aucune
+// regle faute de mots-cles assez larges.
 const ANIMATION_MATCH_RULES = [
+  // Développé : variantes les plus specifiques d'abord.
+  { key: "développé militaire", test: n => n.includes("developpe militaire") || n.includes("militaire") },
   { key: "développé couché", test: n => n.includes("developpe couche") },
-  { key: "squat", test: n => n.includes("squat") },
-  { key: "rowing barre", test: n => n.includes("rowing") },
-  { key: "tractions", test: n => n.includes("traction") },
-  { key: "développé militaire", test: n => n.includes("developpe militaire") },
-  { key: "curl barre", test: n => n.includes("curl") && (n.includes("barre") || n.includes("ez")) },
-  { key: "extension triceps", test: n => (n.includes("extension") && n.includes("triceps")) || n.includes("pushdown") },
-  { key: "leg press", test: n => n.includes("presse") || n.includes("leg press") },
+  // Jambes isolees : "leg X" avant le "X" generique correspondant.
   { key: "leg extension", test: n => n.includes("leg extension") },
   { key: "leg curl", test: n => n.includes("leg curl") },
-  { key: "élévations latérales", test: n => n.includes("elevations laterales") || n.includes("elevation laterale") },
-  { key: "tirage vertical", test: n => n.includes("tirage vertical") },
-  { key: "hip thrust", test: n => n.includes("hip thrust") },
-  { key: "dips", test: n => n.includes("dips") || n.includes("dip") },
+  { key: "leg press", test: n => n.includes("leg press") || n.includes("presse") },
+  { key: "squat", test: n => n.includes("squat") || n.includes("hack") },
   { key: "fentes", test: n => n.includes("fente") },
+  { key: "hip thrust", test: n => n.includes("hip") },
+  { key: "mollets", test: n => n.includes("mollet") },
+  // Dos/tirage.
+  { key: "rowing barre", test: n => n.includes("rowing") },
+  { key: "tractions", test: n => n.includes("traction") },
+  { key: "tirage vertical", test: n => n.includes("tirage") && !n.includes("horizontal") && !n.includes("face") },
+  // Bras : generiques "curl"/"extension" seulement apres avoir exclu leg curl/extension ci-dessus.
+  { key: "curl barre", test: n => n.includes("curl") },
+  { key: "extension triceps", test: n => n.includes("pushdown") || n.includes("triceps") || (n.includes("extension") && !n.includes("lombaire") && !n.includes("dos")) },
+  // "elevation" seul, mais pas frontale/arriere/oiseau (mouvement different, pas lateral).
+  { key: "élévations latérales", test: n => n.includes("elevation") && !n.includes("frontale") && !n.includes("arriere") && !n.includes("oiseau") },
+  { key: "dips", test: n => n.includes("dip") },
+  // Abdos / gainage.
+  { key: "crunch", test: n => n.includes("crunch") },
+  { key: "planche", test: n => n.includes("planche") },
 ];
 
 // Retourne le SVG animé (chaîne HTML) correspondant au nom d'exercice, ou

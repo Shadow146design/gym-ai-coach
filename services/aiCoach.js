@@ -484,15 +484,20 @@ Style de réponse :
 - Ne jamais inventer de données médicales. Pour une douleur qui persiste ou s'aggrave, oriente
   vers un médecin ou kiné — sans être alarmiste pour une simple courbature.`;
 
-// Module D.1 — mots-cles qui declenchent le mode modification du programme
-const MODIFY_TRIGGER_WORDS = [
-  "refaire", "changer", "pas bien", "nul", "trop facile", "trop dur", "je n'aime pas",
-  "remplace", "sans les", "ajoute", "enlève", "enleve", "modifier", "pas fan de", "douleur",
-  "je préfère", "je prefere", "peux-tu changer", "nouveau programme",
+// Module D.1 — mots-cles qui declenchent le mode modification du programme.
+// Utilise des radicaux (plutot que des mots entiers) pour couvrir les
+// conjugaisons courantes : "change"/"changer"/"changé" matchent tous
+// "chang", par exemple. Incident du 2026-07-23 : "change le jeudi en séance
+// jambes" ne matchait ni "changer" ni aucune autre entree exacte -> la
+// demande etait traitee comme un simple chat, jamais sauvegardee.
+const MODIFY_TRIGGER_STEMS = [
+  "refai", "chang", "pas bien", "nul", "trop facile", "trop dur", "aime pas",
+  "rempla", "sans les", "ajout", "enlev", "enlèv", "supprim", "retir", "modifi",
+  "pas fan de", "douleur", "préfère", "prefere", "nouveau programme",
 ];
 function detectsModifyIntent(text) {
   const lower = (text || "").toLowerCase();
-  return MODIFY_TRIGGER_WORDS.some(w => lower.includes(w));
+  return MODIFY_TRIGGER_STEMS.some(w => lower.includes(w));
 }
 
 const MODIFY_SYSTEM = `Tu es un coach sportif expert qui peut MODIFIER le programme d'entrainement
@@ -505,6 +510,9 @@ Règles de modification :
   repos adaptés, pas de superset sur composé lourd, notes techniques précises)
 - Si la demande mentionne une douleur/blessure, retire ou remplace l'exercice concerné par une
   alternative plus sûre pour la même zone musculaire
+- IMPORTANT : "newProgram.days" doit TOUJOURS contenir la liste COMPLÈTE de tous les jours du
+  programme (le ou les jours modifiés ET tous les jours inchangés), jamais uniquement le(s) jour(s)
+  modifié(s) — sinon les jours non renvoyés seraient perdus lors de la sauvegarde
 
 Réponds UNIQUEMENT avec un JSON valide, sans texte ni markdown :
 {
@@ -593,17 +601,44 @@ async function chatWithCoach(history, ctx = {}) {
   if (!response.ok) throw new Error(`Erreur Groq chat (${response.status})`);
   const data = await response.json();
   const raw = data.choices?.[0]?.message?.content;
+  console.log("[chatWithCoach] réponse brute Groq (modification) :", raw);
 
   try {
-    const parsed = JSON.parse(raw);
+    const parsed = parseJsonRobust(raw);
+    console.log("[chatWithCoach] PROGRAMME GÉNÉRÉ :", JSON.stringify(parsed.newProgram, null, 2));
+    const programUpdated = !!parsed.programUpdated && !!parsed.newProgram?.days?.length;
+    console.log("[chatWithCoach] programUpdated détecté :", programUpdated, {
+      parsedProgramUpdated: parsed.programUpdated,
+      hasNewProgram: !!parsed.newProgram,
+      daysCount: parsed.newProgram?.days?.length || 0,
+    });
     return {
       reply: parsed.reply || "J'ai mis à jour ton programme.",
-      programUpdated: !!parsed.programUpdated && !!parsed.newProgram?.days?.length,
+      programUpdated,
       newProgram: parsed.newProgram || null,
       changes: parsed.changes || [],
     };
-  } catch {
+  } catch (parseError) {
+    console.error("[chatWithCoach] échec du parsing JSON de la réponse Groq :", parseError.message);
     return { reply: raw || "Je n'arrive pas à répondre, réessaie.", programUpdated: false, newProgram: null, changes: [] };
+  }
+}
+
+// Parseur robuste (module D.1 bis) : Groq respecte generalement
+// response_format: json_object, mais retourne parfois le JSON entoure de
+// backticks markdown (```json ... ```) ou precede/suivi de texte. Tente un
+// JSON.parse direct d'abord, puis un nettoyage + extraction du premier bloc
+// { ... } avant d'abandonner.
+function parseJsonRobust(text) {
+  if (!text) throw new Error("Réponse vide.");
+  try {
+    return JSON.parse(text);
+  } catch {
+    const clean = text.replace(/```json\s*/gi, "").replace(/```/g, "").trim();
+    const start = clean.indexOf("{");
+    const end = clean.lastIndexOf("}");
+    if (start === -1 || end === -1 || end <= start) throw new Error("Pas de JSON trouvé dans la réponse.");
+    return JSON.parse(clean.substring(start, end + 1));
   }
 }
 
