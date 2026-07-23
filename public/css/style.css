@@ -352,7 +352,7 @@ select option { background: var(--bg-card-solid); }
 .exercise-row .ex-badge { display: inline-block; font-size: .72rem; background: var(--rust-bg); color: var(--rust-soft); border-radius: 4px; padding: 2px 8px; margin-top: 3px; }
 .exercise-row .ex-meta {
   font-family: var(--font-mono); font-size: .78rem; text-align: center; white-space: nowrap;
-  color: var(--steel-soft); background: rgba(79,122,138,.14); border-radius: 20px; padding: 4px 10px;
+  color: var(--rust-soft); background: var(--rust-bg); border-radius: 20px; padding: 4px 10px;
   align-self: center; font-weight: 600;
 }
 .exercise-row .ex-meta span { display: block; font-size: .65rem; color: var(--chalk-dim); font-weight: 400; margin-top: 1px; }
@@ -2834,6 +2834,10 @@ body.landing { overflow-x: hidden; }
 .periodization-phase-name { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
 .periodization-track { height: 8px; border-radius: 4px; background: var(--bg-hover); overflow: hidden; margin: 10px 0 6px; }
 .periodization-fill { height: 100%; background: var(--grad-rust, linear-gradient(135deg, #c94d28, #e06040)); border-radius: 4px; transition: width .3s; }
+.periodization-fill.phase-accumulation { background: var(--steel, #4f7a8a); }
+.periodization-fill.phase-intensification { background: var(--rust, #c94d28); }
+.periodization-fill.phase-pic { background: var(--red, #d94040); }
+.periodization-fill.phase-decharge { background: var(--green, #3da874); }
 
 .wellness-slider-group { text-align: left; margin-bottom: 18px; }
 .wellness-slider-group label {

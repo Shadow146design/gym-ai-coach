@@ -254,13 +254,16 @@ function renderPeriodization(program) {
   }) || phases[0];
   const phaseIndex = phases.indexOf(phase) + 1;
 
+  const phaseColors = ["phase-accumulation", "phase-intensification", "phase-pic", "phase-decharge"];
+  const phaseColorClass = phaseColors[Math.min(phaseIndex, 4) - 1] || phaseColors[0];
+
   box.classList.remove("hidden");
   box.innerHTML = `
     <div class="periodization-card">
       <div class="periodization-card-title">📅 Périodisation 12 semaines</div>
       <div class="periodization-phase-name">Phase ${phaseIndex} — ${esc(phase.name)} — Semaine ${week}/12</div>
       <div class="muted" style="font-size:.85rem">${esc(phase.volumeNote || "")}${phase.volumeNote && phase.intensityNote ? " · " : ""}${esc(phase.intensityNote || "")}</div>
-      <div class="periodization-track"><div class="periodization-fill" style="width:${Math.round((week / 12) * 100)}%"></div></div>
+      <div class="periodization-track"><div class="periodization-fill ${phaseColorClass}" style="width:${Math.round((week / 12) * 100)}%"></div></div>
     </div>`;
 }
 
