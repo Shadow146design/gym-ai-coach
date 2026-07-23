@@ -374,6 +374,66 @@ const EXERCISE_ANIMATIONS = {
         <line class="stick move" x1="213" y1="80" x2="60" y2="105"/>
       </g>
     </svg>`,
+
+  "pompes": `
+    <svg viewBox="0 0 260 140" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+      <style>${STICK_STYLE}
+        .pu-body { animation: pu-press 2s ease-in-out infinite; transform-origin: 60px 128px; }
+        @keyframes pu-press { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-22px); } }
+      </style>
+      <line class="ground" x1="20" y1="128" x2="240" y2="128"/>
+      <g class="pu-body">
+        <circle class="joint" cx="222" cy="78" r="13"/>
+        <line class="stick" x1="210" y1="86" x2="60" y2="105"/>
+        <line class="stick" x1="60" y1="105" x2="60" y2="128"/>
+        <line class="stick move" x1="200" y1="90" x2="200" y2="128"/>
+        <line class="stick move" x1="150" y1="98" x2="150" y2="128"/>
+      </g>
+    </svg>`,
+
+  "deadlift": `
+    <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+      <style>${STICK_STYLE}
+        .dl-down { animation: dl-fade-down 2.4s ease-in-out infinite; }
+        .dl-up { animation: dl-fade-up 2.4s ease-in-out infinite; }
+        @keyframes dl-fade-down { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes dl-fade-up { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+      </style>
+      <line class="ground" x1="55" y1="258" x2="145" y2="258"/>
+      <g class="dl-down">
+        <circle class="joint" cx="110" cy="90" r="15"/>
+        <polyline class="stick" points="110,109 100,160 75,200"/>
+        <line class="stick" x1="75" y1="200" x2="70" y2="255"/>
+        <line class="stick" x1="75" y1="200" x2="95" y2="255"/>
+        <line class="stick move" x1="100" y1="130" x2="70" y2="215"/>
+        <line class="equip" x1="55" y1="215" x2="90" y2="215" stroke-width="7"/>
+      </g>
+      <g class="dl-up">
+        <circle class="joint" cx="100" cy="35" r="15"/>
+        <line class="stick" x1="100" y1="54" x2="100" y2="155"/>
+        <line class="stick" x1="100" y1="155" x2="80" y2="255"/>
+        <line class="stick" x1="100" y1="155" x2="120" y2="255"/>
+        <line class="stick move" x1="85" y1="90" x2="75" y2="180"/>
+        <line class="equip" x1="60" y1="180" x2="95" y2="180" stroke-width="7"/>
+      </g>
+    </svg>`,
+
+  "effort": `
+    <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+      <style>${STICK_STYLE}
+        .ef-arms { animation: ef-push 2s ease-in-out infinite; transform-origin: 100px 110px; }
+        @keyframes ef-push { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(28px); } }
+      </style>
+      <line class="ground" x1="55" y1="258" x2="145" y2="258"/>
+      <circle class="joint" cx="100" cy="35" r="15"/>
+      <line class="stick" x1="100" y1="54" x2="100" y2="155"/>
+      <line class="stick" x1="100" y1="155" x2="80" y2="255"/>
+      <line class="stick" x1="100" y1="155" x2="120" y2="255"/>
+      <g class="ef-arms">
+        <line class="stick move" x1="100" y1="80" x2="100" y2="110"/>
+        <line class="stick move" x1="100" y1="110" x2="140" y2="110"/>
+      </g>
+    </svg>`,
 };
 
 // Retire les diacritiques (meme logique que exercise-modal.js, dupliquee ici
@@ -391,9 +451,14 @@ function stripAccentsForAnim(s) {
 // bras) — BUG 2 du 2026-07-23 : plusieurs exercices tombaient sur aucune
 // regle faute de mots-cles assez larges.
 const ANIMATION_MATCH_RULES = [
-  // Développé : variantes les plus specifiques d'abord.
-  { key: "développé militaire", test: n => n.includes("developpe militaire") || n.includes("militaire") },
-  { key: "développé couché", test: n => n.includes("developpe couche") },
+  // Pompes/push-ups AVANT toute regle "jambes"/"press" generique : des variantes
+  // comme "Pompes avec les jambes surelevees" faisaient matcher a tort l'animation
+  // squat via le mot "jambes" (bug constate sur donnees reelles le 2026-07-23).
+  { key: "pompes", test: n => n.includes("pompe") || n.includes("push-up") || n.includes("push up") || n.includes("pushup") },
+  // Développé : variantes les plus specifiques d'abord (avec equivalents anglais).
+  { key: "développé militaire", test: n => n.includes("developpe militaire") || n.includes("militaire") || n.includes("overhead press") || n.includes("shoulder press") },
+  { key: "développé couché", test: n => n.includes("developpe couche") || n.includes("bench press") || n.includes("chest press") || n.includes("chest fly") },
+  { key: "deadlift", test: n => n.includes("deadlift") || n.includes("souleve de terre") },
   // Jambes isolees : "leg X" avant le "X" generique correspondant.
   { key: "leg extension", test: n => n.includes("leg extension") },
   { key: "leg curl", test: n => n.includes("leg curl") },
@@ -402,15 +467,16 @@ const ANIMATION_MATCH_RULES = [
   { key: "fentes", test: n => n.includes("fente") },
   { key: "hip thrust", test: n => n.includes("hip") },
   { key: "mollets", test: n => n.includes("mollet") },
-  // Dos/tirage.
-  { key: "rowing barre", test: n => n.includes("rowing") },
-  { key: "tractions", test: n => n.includes("traction") },
-  { key: "tirage vertical", test: n => n.includes("tirage") && !n.includes("horizontal") && !n.includes("face") },
+  // Dos/tirage (avec equivalents anglais).
+  { key: "rowing barre", test: n => n.includes("rowing") || n.includes("barbell row") || n.includes("dumbbell row") || (n.includes("row") && !n.includes("grow")) },
+  { key: "tractions", test: n => n.includes("traction") || n.includes("pull-up") || n.includes("pull up") || n.includes("pullup") },
+  { key: "tirage vertical", test: n => (n.includes("tirage") || n.includes("poulie haute")) && !n.includes("horizontal") && !n.includes("face") },
   // Bras : generiques "curl"/"extension" seulement apres avoir exclu leg curl/extension ci-dessus.
   { key: "curl barre", test: n => n.includes("curl") },
   { key: "extension triceps", test: n => n.includes("pushdown") || n.includes("triceps") || (n.includes("extension") && !n.includes("lombaire") && !n.includes("dos")) },
   // "elevation" seul, mais pas frontale/arriere/oiseau (mouvement different, pas lateral).
   { key: "élévations latérales", test: n => n.includes("elevation") && !n.includes("frontale") && !n.includes("arriere") && !n.includes("oiseau") },
+  { key: "rowing barre", test: n => n.includes("face pull") },
   { key: "dips", test: n => n.includes("dip") },
   // Abdos / gainage.
   { key: "crunch", test: n => n.includes("crunch") },
@@ -421,17 +487,24 @@ const ANIMATION_MATCH_RULES = [
 // ci-dessus ne matche (nom d'exercice trop inhabituel/genere par l'IA),
 // rattache au moins l'animation du bon groupe musculaire plutot que de
 // renvoyer aucune animation. Evaluees dans l'ordre, sur le nom ET le
-// groupe musculaire combines.
+// groupe musculaire combines. "press" et "jamb" seuls sont volontairement
+// exclus ici (trop ambigus : "Bench Press"/"Pompes...jambes..." les
+// declenchaient a tort avant d'etre geres par des regles specifiques
+// ci-dessus) — la toute derniere regle "effort" est un attrape-tout
+// garantissant qu'aucun exercice ne se retrouve jamais sans animation.
 const FALLBACK_MATCH_RULES = [
   { key: "élévations latérales", test: n => n.includes("epaul") || n.includes("shoulder") },
   { key: "rowing barre", test: n => n.includes("dos") || n.includes("back") || n.includes("tirage") || n.includes("rowing") },
   { key: "développé couché", test: n => n.includes("pec") || n.includes("poitrine") || n.includes("chest") || n.includes("couche") },
-  { key: "squat", test: n => n.includes("jamb") || n.includes("cuiss") || n.includes("quad") || n.includes("leg") || n.includes("squat") || n.includes("press") },
+  { key: "squat", test: n => n.includes("jambe") || n.includes("cuiss") || n.includes("quad") || n.includes("leg") || n.includes("squat") },
   { key: "curl barre", test: n => n.includes("bras") || n.includes("bicep") || n.includes("curl") },
   { key: "extension triceps", test: n => n.includes("tricep") || n.includes("extension") || n.includes("pushdown") },
   { key: "hip thrust", test: n => n.includes("fessier") || n.includes("glute") || n.includes("hip") || n.includes("fente") },
   { key: "mollets", test: n => n.includes("mollet") || n.includes("calf") },
   { key: "crunch", test: n => n.includes("abdo") || n.includes("crunch") || n.includes("planche") || n.includes("releve") },
+  // Attrape-tout absolu : garantit qu'aucun exercice ne reste jamais sans pictogramme,
+  // meme un nom totalement inconnu ("Burpees", "Montées de genoux"...).
+  { key: "effort", test: () => true },
 ];
 
 // Retourne le SVG animé (chaîne HTML) correspondant au nom d'exercice, ou
