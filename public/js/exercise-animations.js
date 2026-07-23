@@ -80,6 +80,24 @@ const EXERCISE_ANIMATIONS = {
       </g>
     </svg>`,
 
+  "rowing haltère unilatéral": `
+    <svg viewBox="0 0 260 200" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+      <style>${STICK_STYLE}
+        .rowu-arm { animation: rowu-pull 2s ease-in-out infinite; }
+        @keyframes rowu-pull { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-38px); } }
+      </style>
+      <rect class="bench" x="20" y="118" width="90" height="11" rx="5"/>
+      <circle class="joint" cx="150" cy="55" r="15"/>
+      <line class="stick" x1="150" y1="70" x2="105" y2="115"/>
+      <line class="stick" x1="105" y1="115" x2="55" y2="118"/>
+      <line class="stick" x1="150" y1="70" x2="175" y2="150"/>
+      <line class="stick" x1="150" y1="70" x2="205" y2="150"/>
+      <g class="rowu-arm">
+        <line class="stick move" x1="150" y1="90" x2="150" y2="160"/>
+        <rect class="equip" x="140" y="160" width="20" height="14" rx="3"/>
+      </g>
+    </svg>`,
+
   "tractions": `
     <svg viewBox="0 0 200 270" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
       <style>${STICK_STYLE}
@@ -142,6 +160,24 @@ const EXERCISE_ANIMATIONS = {
         <line class="stick move" x1="75" y1="122" x2="70" y2="180"/>
         <line class="stick move" x1="125" y1="122" x2="130" y2="180"/>
         <line class="equip" x1="62" y1="180" x2="138" y2="180" stroke-width="7"/>
+      </g>
+    </svg>`,
+
+  "curl pupitre": `
+    <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg" class="exercise-anim-svg">
+      <style>${STICK_STYLE}
+        .curlp-arm { animation: curlp-flex 1.8s ease-in-out infinite; transform-origin: 130px 105px; }
+        @keyframes curlp-flex { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-120deg); } }
+      </style>
+      <circle class="joint" cx="70" cy="35" r="15"/>
+      <line class="stick" x1="70" y1="54" x2="65" y2="130"/>
+      <line class="stick" x1="65" y1="130" x2="50" y2="195"/>
+      <line class="stick" x1="65" y1="130" x2="85" y2="195"/>
+      <polyline class="bench" points="90,60 145,90 145,140 90,140" fill="none" stroke-width="3"/>
+      <line class="stick" x1="70" y1="60" x2="130" y2="105"/>
+      <g class="curlp-arm">
+        <line class="stick move" x1="130" y1="105" x2="150" y2="150"/>
+        <circle class="equip" cx="150" cy="155" r="8"/>
       </g>
     </svg>`,
 
@@ -475,11 +511,16 @@ const ANIMATION_MATCH_RULES = [
   { key: "fentes", test: n => n.includes("fente") },
   { key: "hip thrust", test: n => n.includes("hip") },
   { key: "mollets", test: n => n.includes("mollet") },
-  // Dos/tirage (avec equivalents anglais).
+  // Dos/tirage (avec equivalents anglais). Rowing unilateral halterre AVANT le
+  // rowing barre generique : mouvement bien distinct (un bras, appui sur banc),
+  // sans quoi il partageait a tort la meme animation que le rowing barre bilateral.
+  { key: "rowing haltère unilatéral", test: n => n.includes("rowing") && (n.includes("haltere") || n.includes("unilateral") || n.includes("dumbbell")) },
   { key: "rowing barre", test: n => n.includes("rowing") || n.includes("barbell row") || n.includes("dumbbell row") || (n.includes("row") && !n.includes("grow")) },
   { key: "tractions", test: n => n.includes("traction") || n.includes("pull-up") || n.includes("pull up") || n.includes("pullup") },
   { key: "tirage vertical", test: n => (n.includes("tirage") || n.includes("poulie haute")) && !n.includes("horizontal") && !n.includes("face") },
-  // Bras : generiques "curl"/"extension" seulement apres avoir exclu leg curl/extension ci-dessus.
+  // Bras : "curl pupitre" (Scott/preacher) AVANT le "curl" generique : mouvement
+  // assis/coude cale, bien different du curl debout, sinon partageait la meme animation.
+  { key: "curl pupitre", test: n => n.includes("curl") && (n.includes("pupitre") || n.includes("scott") || n.includes("preacher")) },
   { key: "curl barre", test: n => n.includes("curl") },
   // "dips" AVANT le "triceps" generique : "Dips triceps" decrit le mouvement par
   // son nom structurel (dips), le muscle cible ne doit pas eclipser ce mouvement.
