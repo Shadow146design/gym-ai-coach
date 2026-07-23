@@ -135,6 +135,7 @@ router.post("/", checkChatLimit, async (req, res) => {
         logProgramChange(req.session.userId, programRow.id, "chat", desc, programRow.content);
       } catch (validationError) {
         console.error("Programme invalide refusé (anti-corruption) :", validationError.message);
+        console.error("[chat] newProgram rejeté :", JSON.stringify(result.newProgram, null, 2));
         result.programUpdated = false;
         result.newProgram = null;
         result.changes = [];

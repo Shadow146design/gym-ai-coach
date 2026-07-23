@@ -310,23 +310,44 @@ function applyMorphologySubstitutions(program, morphology) {
 // TOUT programme avant qu'il ne soit ecrit en base, que ce soit a la
 // generation initiale ou lors d'une modification via le chat.
 function validateProgram(program) {
+  console.log("[validateProgram] validation démarrée", {
+    hasProgram: !!program,
+    daysCount: Array.isArray(program?.days) ? program.days.length : 0,
+  });
+
   if (!program || !Array.isArray(program.days) || program.days.length === 0) {
+    console.log("[validateProgram] échec : pas de jours", { program });
     throw new Error("Programme invalide : pas de jours");
   }
+
   for (const day of program.days) {
-    if (!day.day || !Array.isArray(day.exercises) || day.exercises.length === 0) {
+    if (!day || typeof day !== "object" || !day.day || !Array.isArray(day.exercises) || day.exercises.length === 0) {
+      console.log("[validateProgram] échec : jour incomplet", { day });
       throw new Error("Programme invalide : jour incomplet");
     }
+    if (!day.focus) day.focus = "Séance"; // valeur par défaut
+
     for (const ex of day.exercises) {
-      if (!ex || typeof ex !== "object" || Array.isArray(ex) || !ex.name) {
+      if (!ex || typeof ex !== "object" || Array.isArray(ex) || typeof ex.name !== "string" || !ex.name.trim()) {
+        console.log("[validateProgram] échec : exercice sans nom", { day: day.day, ex });
         throw new Error("Programme invalide : exercice sans nom");
       }
-      if (!ex.sets || ex.sets < 1) ex.sets = 3; // valeur par défaut
-      if (!ex.reps) ex.reps = "10-12"; // valeur par défaut
+      if (!ex.sets || Number(ex.sets) < 1) {
+        console.log("[validateProgram] champ 'sets' manquant/invalide, valeur par défaut appliquée", { exercise: ex.name, sets: ex.sets });
+        ex.sets = 3; // valeur par défaut
+      }
+      if (!ex.reps) {
+        console.log("[validateProgram] champ 'reps' manquant, valeur par défaut appliquée", { exercise: ex.name });
+        ex.reps = "10-12"; // valeur par défaut
+      }
       if (!ex.rest_seconds) ex.rest_seconds = 60;
       if (!ex.muscle_group) ex.muscle_group = "Autre";
+      if (!ex.notes) ex.notes = "";
+      if (ex.is_superset_with === undefined) ex.is_superset_with = null;
     }
   }
+
+  console.log("[validateProgram] validation réussie");
   return program; // retourne le programme corrigé
 }
 
