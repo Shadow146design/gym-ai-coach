@@ -18,6 +18,42 @@ function renderSkeletons() {
 let myRole = "user";
 let allCoaches = [];
 let mineAssignment = null;
+let recommendedCoachId = null;
+let recommendedReason = "";
+
+// Suggestion de coach (section 3.10) : associe l'objectif principal de
+// l'utilisateur aux specialites des coaches via des mots-cles, sans appel IA
+// supplementaire (le mapping est stable et gratuit a executer a chaque visite).
+const GOAL_SPECIALTY_KEYWORDS = [
+  { goalWords: ["masse", "muscl", "hypertrophie", "grossir"], specWords: ["masse", "hypertrophie", "musculation"] },
+  { goalWords: ["perte", "poids", "sécher", "secher", "maigrir", "cardio"], specWords: ["perte de poids", "cardio", "sèche", "seche", "nutrition"] },
+  { goalWords: ["force", "powerlifting", "1rm"], specWords: ["force", "powerlifting"] },
+  { goalWords: ["débutant", "debutant", "reprise"], specWords: ["débutant", "debutant"] },
+  { goalWords: ["blessure", "rééducation", "reeducation", "douleur"], specWords: ["rééducation", "reeducation", "prévention", "prevention"] },
+];
+
+async function computeRecommendation() {
+  try {
+    const profile = await fetch("/api/profile/full").then(r => r.ok ? r.json() : null).catch(() => null);
+    const mainGoalRaw = profile?.user?.main_goal || "";
+    const mainGoal = mainGoalRaw.toLowerCase();
+    if (!mainGoal) return;
+
+    const matchedSpecWords = GOAL_SPECIALTY_KEYWORDS
+      .filter(rule => rule.goalWords.some(w => mainGoal.includes(w)))
+      .flatMap(rule => rule.specWords);
+    if (!matchedSpecWords.length) return;
+
+    for (const coach of allCoaches) {
+      const specs = (coach.specialties || []).map(s => s.toLowerCase());
+      if (specs.some(s => matchedSpecWords.some(w => s.includes(w)))) {
+        recommendedCoachId = coach.id;
+        recommendedReason = `Basé sur ton objectif ("${mainGoalRaw}"), ce coach serait un bon choix pour toi.`;
+        return;
+      }
+    }
+  } catch {}
+}
 
 function populateSpecialtyFilter(coaches) {
   const specs = new Set();
@@ -78,6 +114,8 @@ async function init() {
     document.getElementById("coaches-filters").classList.remove("hidden");
   }
 
+  if (!mineAssignment && allCoaches.length) await computeRecommendation();
+
   renderCoaches(allCoaches);
 }
 
@@ -95,8 +133,11 @@ function renderCoaches(coaches) {
     card.style.display = "flex";
     card.style.flexDirection = "column";
     card.style.gap = "14px";
+    card.style.position = "relative";
 
     const alreadyMine = mineAssignment?.coach_id === coach.id;
+    const isRecommended = coach.id === recommendedCoachId;
+    if (isRecommended) card.style.borderColor = "var(--rust)";
     const specs = (coach.specialties || []).map(s => `<span style="font-size:.72rem;background:var(--bg-hover);padding:3px 8px;border-radius:4px;color:var(--chalk-dim)">${esc(s)}</span>`).join(" ");
     const isPaid = coach.price_monthly > 0;
     const price = isPaid ? `${coach.price_monthly}€/mois` : "Gratuit";
@@ -112,6 +153,7 @@ function renderCoaches(coaches) {
     }
 
     card.innerHTML = `
+      ${isRecommended ? `<span style="position:absolute;top:-10px;right:14px;background:var(--grad-rust);color:#fff;font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.02em">✨ Recommandé pour toi</span>` : ""}
       <div style="display:flex;align-items:center;gap:12px">
         <div style="width:48px;height:48px;border-radius:50%;background:var(--rust-bg);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;overflow:hidden">
           ${coach.avatar_url ? `<img src="${esc(coach.avatar_url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>` : "🏋️"}
@@ -125,6 +167,7 @@ function renderCoaches(coaches) {
           </div>
         </div>
       </div>
+      ${isRecommended ? `<p style="font-size:.82rem;color:var(--rust-soft);margin:0">💡 ${esc(recommendedReason)}</p>` : ""}
       ${coach.bio ? `<p style="font-size:.87rem;color:var(--chalk-dim);margin:0">${esc(coach.bio)}</p>` : ""}
       ${specs ? `<div style="display:flex;flex-wrap:wrap;gap:6px">${specs}</div>` : ""}
       ${ctaHtml}`;
