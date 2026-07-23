@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Erreur serveur — Gym AI Coach</title>
+<meta name="description" content="Une erreur inattendue est survenue sur Gym AI Coach."/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#c94d28"/>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body class="landing">
+<div class="shell" style="max-width:480px;padding-top:80px;text-align:center">
+  <a href="/" style="display:inline-flex;align-items:center;gap:8px;margin-bottom:40px;text-decoration:none;color:var(--chalk)">
+    <img src="/logo.svg" alt="" width="26" height="26"/>
+    <span style="font-family:var(--font-display);font-weight:700">Gym AI Coach</span>
+  </a>
+  <div class="empty-state">
+    <div style="font-size:3.5rem;margin-bottom:6px;opacity:.7">⚠️</div>
+    <h1 style="font-family:var(--font-display);text-transform:uppercase;letter-spacing:.03em;font-size:1.4rem">500</h1>
+    <p class="muted" style="margin-top:8px">Quelque chose s'est mal passé de notre côté.</p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px">
+      <a class="btn btn-primary" href="/">Retour à l'accueil</a>
+      <button class="btn btn-ghost" type="button" id="report-issue-btn">Signaler ce problème</button>
+    </div>
+  </div>
+</div>
+<script src="/js/bug-report.js"></script>
+<script>
+  document.getElementById("report-issue-btn").addEventListener("click", () => window.openBugReportModal?.());
+</script>
+<script src="/js/pwa.js"></script>
+</body>
+</html>

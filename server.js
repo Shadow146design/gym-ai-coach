@@ -123,7 +123,8 @@ app.use((err, req, res, next) => {
     [err.message || String(err), err.stack || null, req.method, req.originalUrl, req.session?.userId || null]
   ).catch(() => {});
   if (res.headersSent) return next(err);
-  res.status(500).json({ error: "Erreur serveur." });
+  if (req.path.startsWith("/api/")) return res.status(500).json({ error: "Erreur serveur." });
+  res.status(500).sendFile(path.join(__dirname, "public", "500.html"));
 });
 
 // Retrograde les comptes dont le Premium offert par parrainage (fonctionnalite 5)
